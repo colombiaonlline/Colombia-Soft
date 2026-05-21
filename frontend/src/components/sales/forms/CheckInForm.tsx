@@ -1,0 +1,98 @@
+import { LuPlane } from "react-icons/lu";
+import { FormField, Input, Combobox } from "../../ui/Form";
+import { CheckInData } from "../../../types";
+import { ClientInfoSection, VoucherField, FinancialSection } from "./VoucherField";
+
+interface CheckInFormProps {
+  checkIn: CheckInData;
+  client: any;
+  suppliers?: any[];
+  onChange: (updates: Partial<CheckInData>) => void;
+}
+
+export function CheckInForm({ checkIn, client, suppliers, onChange }: CheckInFormProps) {
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {client && <ClientInfoSection client={client} />}
+
+      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+        <h4 className="text-xs font-bold text-primary uppercase tracking-widest mb-4 flex items-center gap-2">
+          <LuPlane size={14} /> Gestión de Check-in
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField label="Nombre del Pasajero">
+            <Input value={checkIn.passengerName} onChange={(e) => onChange({ passengerName: e.target.value })} placeholder="Nombre completo" />
+          </FormField>
+          <div className="grid grid-cols-3 gap-2">
+            <FormField label="Tipo Doc" className="col-span-1">
+              <Combobox
+                value={checkIn.docType}
+                onChange={(val) => onChange({ docType: val })}
+                options={[
+                  { value: "CC", label: "C.C." },
+                  { value: "CE", label: "C.E." },
+                  { value: "PP", label: "P.P." },
+                ]}
+              />
+            </FormField>
+            <FormField label="Nº Documento" className="col-span-2">
+              <Input value={checkIn.docNumber} onChange={(e) => onChange({ docNumber: e.target.value })} placeholder="Número" />
+            </FormField>
+          </div>
+          <FormField label="Vuelo o Reserva">
+            <Input value={checkIn.flightOrReservation} onChange={(e) => onChange({ flightOrReservation: e.target.value })} placeholder="Ej: AV123 o XYZ789" />
+          </FormField>
+          <FormField label="Fecha de Viaje">
+            <Input type="datetime-local" value={checkIn.travelDate} onChange={(e) => onChange({ travelDate: e.target.value })} />
+          </FormField>
+          <FormField label="Silla Preferida">
+            <Input value={checkIn.seat} onChange={(e) => onChange({ seat: e.target.value })} placeholder="Ej: 12A o Pasillo" />
+          </FormField>
+          <FormField label="Equipaje">
+            <Combobox
+              value={checkIn.baggage}
+              onChange={(val) => onChange({ baggage: val })}
+              options={[
+                { value: "Solo Artículo Personal", label: "Solo Artículo Personal" },
+                { value: "Maleta de Mano (10kg)", label: "Maleta de Mano (10kg)" },
+                { value: "Bodega (23kg)", label: "Bodega (23kg)" },
+              ]}
+            />
+          </FormField>
+          <FormField label="Celular">
+            <Input value={checkIn.phone} onChange={(e) => onChange({ phone: e.target.value })} placeholder="+57 300 123 4567" />
+          </FormField>
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="wheelchair"
+              checked={checkIn.needsWheelchair}
+              onChange={(e) => onChange({ needsWheelchair: e.target.checked })}
+              className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+            />
+            <label htmlFor="wheelchair" className="text-sm font-medium text-gray-700">
+              Requiere Silla de Ruedas
+            </label>
+          </div>
+          <FormField label="Observaciones Especiales" className="md:col-span-2">
+            <Input value={checkIn.specialNeeds} onChange={(e) => onChange({ specialNeeds: e.target.value })} placeholder="Alergias, asistencia, etc." />
+          </FormField>
+        </div>
+      </div>
+
+      <FinancialSection 
+        supplierName={checkIn.supplierName}
+        supplierCost={checkIn.supplierCost}
+        ta={checkIn.ta}
+        suppliers={suppliers}
+        onChange={(updates) => onChange(updates)}
+      />
+
+      <VoucherField 
+        voucher={checkIn.voucher} 
+        sendVoucher={checkIn.sendVoucher} 
+        onChange={(updates) => onChange(updates)} 
+      />
+    </div>
+  );
+}

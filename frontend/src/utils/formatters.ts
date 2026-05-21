@@ -1,0 +1,48 @@
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    maximumFractionDigits: 0
+  }).format(amount);
+}
+
+export function formatDate(dateStr: string): string {
+  if (!dateStr) return '-';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('es-CO');
+}
+
+export function formatDateInput(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
+export function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+export function generateId(array: { id: number }[]): number {
+  return array.length > 0 ? Math.max(...array.map(i => i.id)) + 1 : 1;
+}
+
+export function getDaysUntil(dateStr: string): number {
+  const date = new Date(dateStr);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  date.setHours(0, 0, 0, 0);
+  const diff = date.getTime() - today.getTime();
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+export function getCurrentMonth(): { start: string; end: string } {
+  const today = new Date();
+  const start = new Date(today.getFullYear(), today.getMonth(), 1);
+  return {
+    start: formatDateInput(start),
+    end: formatDateInput(today)
+  };
+}

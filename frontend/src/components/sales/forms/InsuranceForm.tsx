@@ -1,0 +1,153 @@
+import { AlertCircle, Users, Briefcase, Trash2, PlusCircle } from "lucide-react";
+import { FormField, Input, Combobox, Select } from "../../ui/Form";
+import { Button } from "../../ui/Button";
+import { InsuranceData, GuestInfo } from "../../../types";
+
+interface InsuranceFormProps {
+  insurance: InsuranceData;
+  onChange: (updates: Partial<InsuranceData>) => void;
+  data: any;
+}
+
+export function InsuranceForm({ insurance, onChange, data }: InsuranceFormProps) {
+  const addMember = () => {
+    onChange({ members: [...insurance.members, { name: "", docType: "CC", docNumber: "" }] });
+  };
+
+  const removeMember = (mIdx: number) => {
+    onChange({ members: insurance.members.filter((_, i) => i !== mIdx) });
+  };
+
+  const updateMember = (mIdx: number, mUpdates: Partial<GuestInfo>) => {
+    const nextMembers = [...insurance.members];
+    nextMembers[mIdx] = { ...nextMembers[mIdx], ...mUpdates };
+    onChange({ members: nextMembers });
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+        <h4 className="text-xs font-bold text-primary uppercase tracking-widest mb-4 flex items-center gap-2">
+          <AlertCircle size={14} />
+          Datos del Seguro de Viaje
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField label="Nombre del Contacto">
+            <Input
+              value={insurance.contactName}
+              onChange={(e) => onChange({ contactName: e.target.value })}
+              placeholder="Nombre completo"
+            />
+          </FormField>
+          <FormField label="Teléfono">
+            <Input
+              value={insurance.contactNumber}
+              onChange={(e) => onChange({ contactNumber: e.target.value })}
+              placeholder="Ej: +57 300 123 4567"
+            />
+          </FormField>
+          <FormField label="Dirección">
+            <Input
+              value={insurance.address}
+              onChange={(e) => onChange({ address: e.target.value })}
+              placeholder="Dirección de residencia"
+            />
+          </FormField>
+          <FormField label="Proveedor">
+            <Combobox
+              value={insurance.supplier}
+              onChange={(val) => onChange({ supplier: val })}
+              options={data.config.suppliers.map((s: any) => ({ value: s.name, label: s.name }))}
+              placeholder="Seleccionar proveedor..."
+            />
+          </FormField>
+        </div>
+      </div>
+
+      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-xs font-bold text-primary uppercase tracking-widest flex items-center gap-2">
+            <Users size={14} />
+            Miembros del Grupo
+          </h4>
+          <Button variant="outline" size="sm" onClick={addMember}>
+            <PlusCircle size={14} className="mr-1" />
+            Agregar
+          </Button>
+        </div>
+        <div className="space-y-3">
+          {insurance.members.map((member, mIdx) => (
+            <div key={mIdx} className="flex gap-2 items-start">
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2">
+                <Input
+                  value={member.name}
+                  onChange={(e) => updateMember(mIdx, { name: e.target.value })}
+                  placeholder="Nombre completo"
+                />
+                <Select
+                  value={member.docType}
+                  onChange={(e) => updateMember(mIdx, { docType: e.target.value })}
+                  options={data.config.documentTypes.map((d: any) => ({
+                    value: d.name,
+                    label: d.name,
+                  }))}
+                />
+                <Input
+                  value={member.docNumber}
+                  onChange={(e) => updateMember(mIdx, { docNumber: e.target.value })}
+                  placeholder="Número de documento"
+                />
+              </div>
+              {insurance.members.length > 1 && (
+                <Button variant="outline" size="sm" onClick={() => removeMember(mIdx)}>
+                  <Trash2 size={14} className="text-red-500" />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-emerald-50/20 p-4 rounded-xl border border-emerald-100">
+        <h4 className="text-xs font-bold text-emerald-700 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <Briefcase size={14} /> Información Financiera
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField label="Costo Proveedor">
+            <Input
+              type="number"
+              value={insurance.supplierCost === 0 ? "" : insurance.supplierCost}
+              onChange={(e) =>
+                onChange({
+                  supplierCost:
+                    e.target.value === "" ? 0 : Number(e.target.value),
+                })
+              }
+            />
+          </FormField>
+          <FormField label="Valor TA">
+            <Input
+              type="number"
+              value={insurance.ta === 0 ? "" : insurance.ta}
+              onChange={(e) =>
+                onChange({
+                  ta: e.target.value === "" ? 0 : Number(e.target.value),
+                })
+              }
+            />
+          </FormField>
+          <FormField label="Método de Pago">
+            <Select
+              value={insurance.supplierPaymentMethod}
+              onChange={(e) => onChange({ supplierPaymentMethod: e.target.value })}
+              options={data.config.cards.map((m: any) => ({
+                value: m.name,
+                label: m.lastFourDigits ? `${m.name} (**${m.lastFourDigits})` : m.name,
+              }))}
+            />
+          </FormField>
+        </div>
+      </div>
+    </div>
+  );
+}

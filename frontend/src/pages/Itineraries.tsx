@@ -1,0 +1,543 @@
+import { useState, useMemo } from 'react';
+import { 
+  ChevronLeft, ChevronRight, Plane, X, Calendar as CalendarIcon, 
+  UserCheck, PlaneTakeoff, PlaneLanding, Search, Filter, AlertCircle,
+  Clock, CheckCircle2, UploadCloud
+} from 'lucide-react';
+import { Card, CardHeader, CardBody } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Badge } from '../components/ui/Badge';
+import { useData } from '../context/DataContext';
+import { usePermissions } from '../context/PermissionsContext';
+import { Modal } from '../components/ui/Modal';
+import { FormField } from '../components/ui/Form';
+import { formatDate } from '../utils/formatters';
+import { Flight } from '../types';
+
+const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const DAYS = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
+
+export default function Itineraries() {
+  const { data, updateFlight } = useData();
+  const { canEdit: canEditItinerary, canView } = usePermissions();
+  const [activeTab, setActiveTab] = useState<'calendar' | 'checkin'>('calendar');
+  const [calendarTab, setCalendarTab] = useState<'ida' | 'regreso'>('ida');
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
+  const [checkinSearch, setCheckinSearch] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [isCheckinModalOpen, setIsCheckinModalOpen] = useState(false);
+  const [selectedFlightForCheckin, setSelectedFlightForCheckin] = useState<Flight | null>(null);
+  const [checkinFile, setCheckinFile] = useState<File | null>(null);
+  const [isSending, setIsSending] = useState(false);
+
+  // Estadísticas y filtros
+  const pendingCheckins = useMemo(() => {
+    return data.flights.filter(f => f.checkin === 'pendiente').sort((a, b) => a.date.localeCompare(b.date));
+  }, [data.flights]);
+
+  const filteredPending = useMemo(() => {
+    return pendingCheckins.filter(f => 
+      f.passenger.toLowerCase().includes(checkinSearch.toLowerCase()) ||
+      f.route.toLowerCase().includes(checkinSearch.toLowerCase())
+    );
+  }, [pendingCheckins, checkinSearch]);
+
+  // Cliente vinculado al vuelo seleccionado en el modal (memoizado)
+  const modalClient = useMemo(() =>
+    data.clients.find(c => c.name === selectedFlightForCheckin?.passenger)
+  , [data.clients, selectedFlightForCheckin]);
+
+  const flightsIda = data.flights.filter(f => f.type === 'ida');
+  const flightsRegreso = data.flights.filter(f => f.type === 'regreso');
+
+  const getDaysInMonth = (month: number, year: number) => new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (month: number, year: number) => new Date(year, month, 1).getDay();
+
+  const changeMonth = (delta: number) => {
+    let newMonth = currentMonth + delta;
+    let newYear = currentYear;
+    if (newMonth > 11) { newMonth = 0; newYear++; }
+    if (newMonth < 0) { newMonth = 11; newYear--; }
+    setCurrentMonth(newMonth);
+    setCurrentYear(newYear);
+  };
+
+  const handleMarkCheckin = (flightId: number, passenger: string) => {
+    if (!canEditItinerary('itineraries')) return;
+    const flight = data.flights.find(f => f.id === flightId);
+    if (flight) {
+      setSelectedFlightForCheckin(flight);
+      setIsCheckinModalOpen(true);
+      setCheckinFile(null);
+    }
+  };
+
+  const confirmCheckin = async () => {
+    if (!selectedFlightForCheckin || !checkinFile) return;
+
+    setIsSending(true);
+    
+    // Simular envío de correo y procesamiento de archivo
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    const client = data.clients.find(c => c.name === selectedFlightForCheckin.passenger);
+    const emailTo = client ? client.email : 'el cliente';
+
+    updateFlight(selectedFlightForCheckin.id, { checkin: 'realizado' });
+    
+    setIsSending(false);
+    setIsCheckinModalOpen(false);
+    setSuccessMessage(`Check-in enviado exitosamente a ${emailTo}`);
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+  };
+
+  const calendarDays = useMemo(() => {
+    const daysInMonth = getDaysInMonth(currentMonth, currentYear);
+    const firstDay = getFirstDayOfMonth(currentMonth, currentYear);
+    const daysInPrevMonth = getDaysInMonth(currentMonth - 1, currentYear);
+    const days: { day: number; month: number; year: number; flights: Flight[] }[] = [];
+
+    // Rellenar días del mes anterior
+    for (let i = firstDay - 1; i >= 0; i--) {
+      const day = daysInPrevMonth - i;
+      const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+      const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+      days.push({ day, month: prevMonth, year: prevYear, flights: [] });
+    }
+
+    // Días del mes actual
+    for (let i = 1; i <= daysInMonth; i++) {
+      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+      const dayFlights = data.flights.filter(f => f.date === dateStr && f.type === calendarTab);
+      days.push({ day: i, month: currentMonth, year: currentYear, flights: dayFlights });
+    }
+
+    // Rellenar días del mes siguiente
+    while (days.length % 7 !== 0) {
+      const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+      const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+      days.push({ day: days.length - firstDay - daysInMonth + 1, month: nextMonth, year: nextYear, flights: [] });
+    }
+
+    return days;
+  }, [currentMonth, currentYear, data.flights, calendarTab]);
+
+  const toggleDay = (dayKey: string) => {
+    setExpandedDays(prev => {
+      const next = new Set(prev);
+      if (next.has(dayKey)) next.delete(dayKey);
+      else next.add(dayKey);
+      return next;
+    });
+  };
+
+  const getDayKey = (day: number, month: number, year: number) => 
+    `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  if (!canView('itineraries')) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] text-gray-500">
+        <AlertCircle size={48} className="mb-4 opacity-20" />
+        <p className="text-lg font-medium">Acceso Restringido</p>
+        <p className="text-sm">No tiene permisos para ver itinerarios.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 relative">
+      {showSuccess && (
+        <div className="fixed top-20 right-6 z-[100] bg-green-50 border border-green-200 text-green-700 px-6 py-4 rounded-xl shadow-xl flex items-center gap-3 animate-slide-in-right">
+          <div className="bg-green-500 text-white rounded-full p-1">
+            <CheckCircle2 size={18} />
+          </div>
+          <div>
+            <p className="font-bold text-sm">Operación Exitosa</p>
+            <p className="text-xs opacity-90">{successMessage}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Header y Navegación Principal */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in">
+        <div>
+          <h1 className="text-3xl font-bold text-primary flex items-center gap-3">
+            <CalendarIcon className="text-accent w-8 h-8" /> Itinerarios de Vuelo
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">Seguimiento de salidas, regresos y gestión de check-in.</p>
+        </div>
+        <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-border w-fit h-fit">
+          <button
+            onClick={() => setActiveTab('calendar')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'calendar' ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+          >
+            <CalendarIcon size={16} /> Calendario
+          </button>
+          <button
+            onClick={() => setActiveTab('checkin')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all relative ${activeTab === 'checkin' ? 'bg-primary text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}
+          >
+            <UserCheck size={16} /> Check-in
+            {pendingCheckins.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                {pendingCheckins.length}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {activeTab === 'calendar' ? (
+        <div className="animate-fade-in space-y-6">
+          {/* Sub-navegación para el Calendario */}
+          <div className="flex bg-gray-100/50 p-1 rounded-xl w-fit mx-auto border border-gray-border">
+            <button
+              onClick={() => setCalendarTab('ida')}
+              className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-bold transition-all ${calendarTab === 'ida' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-blue-400'}`}
+            >
+              <PlaneTakeoff size={16} /> Vuelos de Ida ({flightsIda.length})
+            </button>
+            <button
+              onClick={() => setCalendarTab('regreso')}
+              className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-bold transition-all ${calendarTab === 'regreso' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-indigo-400'}`}
+            >
+              <PlaneLanding size={16} /> Vuelos de Regreso ({flightsRegreso.length})
+            </button>
+          </div>
+
+          {/* Controles del Calendario */}
+          <Card className="overflow-hidden border-none shadow-lg">
+            <div className="flex items-center justify-between p-4 bg-white border-b border-gray-border">
+              <div className="flex items-center gap-4">
+                <h2 className="text-lg font-bold text-primary">{MONTHS[currentMonth]} {currentYear}</h2>
+                <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-border">
+                  <button onClick={() => changeMonth(-1)} className="p-1 hover:bg-white hover:shadow-sm rounded-md transition-all text-gray-500">
+                    <ChevronLeft size={18} />
+                  </button>
+                  <button onClick={() => { setCurrentMonth(new Date().getMonth()); setCurrentYear(new Date().getFullYear()); }} className="px-2 py-1 text-xs font-bold text-primary hover:bg-white hover:shadow-sm rounded-md transition-all">
+                    HOY
+                  </button>
+                  <button onClick={() => changeMonth(1)} className="p-1 hover:bg-white hover:shadow-sm rounded-md transition-all text-gray-500">
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
+                <div className="flex items-center gap-1.5">
+                  <div className={`w-3 h-3 rounded-full ${calendarTab === 'ida' ? 'bg-blue-500' : 'bg-indigo-600'}`}></div> 
+                  Mostrando {calendarTab === 'ida' ? 'Salidas' : 'Regresos'}
+                </div>
+              </div>
+            </div>
+
+            <CardBody className="p-0">
+              <div className="grid grid-cols-7 bg-gray-50/50">
+                {DAYS.map(day => (
+                  <div key={day} className="py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest border-r border-gray-border/50 last:border-r-0">
+                    {day}
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 border-t border-gray-border/50">
+                {calendarDays.map((item, i) => {
+                  const isOtherMonth = item.month !== currentMonth;
+                  const dayKey = getDayKey(item.day, item.month, item.year);
+                  const isExpanded = expandedDays.has(dayKey);
+                  const isToday = dayKey === todayStr;
+                  const dayFlights = item.flights;
+                  const displayFlights = isExpanded ? dayFlights : dayFlights.slice(0, 3);
+                  
+                  return (
+                    <div
+                      key={i}
+                      className={`min-h-[140px] p-2 border-r border-b border-gray-border/50 relative group transition-colors ${isOtherMonth ? 'bg-gray-50/30' : 'bg-white hover:bg-primary/[0.02]'}`}
+                    >
+                      <div className={`text-xs font-bold mb-2 flex items-center justify-center w-7 h-7 rounded-full transition-all ${isToday ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110' : isOtherMonth ? 'text-gray-300' : 'text-gray-500'}`}>
+                        {item.day}
+                      </div>
+
+                      <div className="space-y-1">
+                        {displayFlights.map(flight => {
+                          const client = data.clients.find(c => c.name === flight.passenger);
+                          const docInfo = client ? `\n${client.docType}: ${client.docNumber}` : '';
+                          return (
+                          <div
+                            key={flight.id}
+                            title={`${flight.passenger}${docInfo}\nHora: ${flight.time}\nCheck-in: ${flight.checkin}`}
+                            className={`px-2 py-1 rounded-md text-[10px] font-semibold border flex items-center gap-1 shadow-sm transition-transform hover:scale-[1.02] ${
+                              flight.type === 'ida' 
+                                ? 'bg-blue-50 border-blue-100 text-blue-700' 
+                                : 'bg-indigo-50 border-indigo-100 text-indigo-800'
+                            }`}
+                          >
+                            {flight.type === 'ida' ? <PlaneTakeoff size={10} className="shrink-0" /> : <PlaneLanding size={10} className="shrink-0" />}
+                            <span className="truncate flex-1">{flight.passenger}</span>
+                            <span className="opacity-60 shrink-0">{flight.time}</span>
+                            <span title={flight.checkin === 'realizado' ? 'Check-in realizado' : 'Check-in pendiente'}
+                              className={`w-1.5 h-1.5 rounded-full shrink-0 ${flight.checkin === 'realizado' ? 'bg-green-500' : 'bg-yellow-400'}`}
+                            />
+                          </div>
+                          );
+                        })}
+                      </div>
+
+                      {dayFlights.length > 3 && (
+                        <button
+                          onClick={() => toggleDay(dayKey)}
+                          className="mt-2 w-full py-1 text-[9px] font-bold text-accent uppercase tracking-tighter hover:bg-accent/5 rounded transition-colors border border-accent/10"
+                        >
+                          {isExpanded ? 'Ver menos' : `+${dayFlights.length - 3} más vuelos`}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+      ) : (
+        <div className="animate-fade-in space-y-6">
+          {/* Gestión de Check-in */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2 space-y-4">
+              <Card className="border-none shadow-lg">
+                <CardHeader actions={
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                    <input
+                      type="text"
+                      placeholder="Buscar pasajero o ruta..."
+                      className="pl-9 pr-10 py-1.5 text-sm bg-gray-50 border border-gray-border rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      value={checkinSearch}
+                      onChange={e => setCheckinSearch(e.target.value)}
+                    />
+                    {checkinSearch && (
+                      <button onClick={() => setCheckinSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded">
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                }>
+                  Pasajeros Pendientes
+                </CardHeader>
+                <CardBody className="p-0">
+                  {filteredPending.length > 0 ? (
+                    <div className="divide-y divide-gray-border">
+                      {filteredPending.map(flight => {
+                        const date = new Date(flight.date);
+                        const today = new Date();
+                        today.setHours(0,0,0,0);
+                        const isUrgente = date.getTime() <= today.getTime() + (48 * 60 * 60 * 1000);
+                        const client = data.clients.find(c => c.name === flight.passenger);
+
+                        return (
+                          <div key={flight.id} className="p-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
+                            <div className="flex items-center gap-4">
+                              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${isUrgente ? 'bg-red-50 border-red-100 text-red-500 animate-pulse' : 'bg-blue-50 border-blue-100 text-blue-500'}`}>
+                                <Plane size={24} className={flight.type === 'regreso' ? 'rotate-180' : ''} />
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-primary">{flight.passenger}</span>
+                                  {client && (
+                                    <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200">
+                                      {client.docType}: {client.docNumber}
+                                    </span>
+                                  )}
+                                  {isUrgente && <Badge variant="danger" className="text-[10px] py-0">URGENTE</Badge>}
+                                </div>
+                                <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                                  <span className="flex items-center gap-1"><Filter size={12} /> {flight.route}</span>
+                                  <span className="flex items-center gap-1"><Clock size={12} /> {formatDate(flight.date)} - {flight.time}</span>
+                                  <span className="font-medium text-primary/60">{flight.airline}</span>
+                                </div>
+                              </div>
+                            </div>
+                            {canEditItinerary('itineraries') && (
+                              <Button 
+                                size="sm" 
+                                onClick={() => handleMarkCheckin(flight.id, flight.passenger)}
+                                className="shadow-md shadow-primary/10 whitespace-nowrap"
+                              >
+                                <UserCheck size={16} /> Realizar Check-in
+                              </Button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center p-12 text-gray-400">
+                      <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-4">
+                        <CheckCircle2 size={32} />
+                      </div>
+                      <p className="font-bold text-gray-600">¡Todo al día!</p>
+                      <p className="text-sm">No hay check-ins pendientes para los próximos vuelos.</p>
+                    </div>
+                  )}
+                </CardBody>
+              </Card>
+            </div>
+
+            <div className="space-y-6">
+              <Card className="bg-primary text-white border-none shadow-xl shadow-primary/20">
+                <CardBody className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-white/20 rounded-xl">
+                      <Clock size={24} />
+                    </div>
+                    <Badge variant="accent" className="bg-white/20 text-white border-none">PRÓXIMAS 48H</Badge>
+                  </div>
+                  <h3 className="text-sm font-medium text-white/80 uppercase tracking-wider">Check-ins Críticos</h3>
+                  <p className="text-3xl font-bold mt-1">
+                    {pendingCheckins.filter(f => {
+                      const date = new Date(f.date);
+                      const today = new Date();
+                      today.setHours(0,0,0,0);
+                      return date.getTime() <= today.getTime() + (48 * 60 * 60 * 1000);
+                    }).length}
+                  </p>
+                  <p className="text-xs text-white/60 mt-4 leading-relaxed">
+                    Recuerda que el check-in debe realizarse al menos 24 horas antes de la salida para evitar inconvenientes.
+                  </p>
+                </CardBody>
+              </Card>
+
+              <Card className="border-none shadow-lg">
+                <CardHeader>Resumen de Vuelos</CardHeader>
+                <CardBody className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 text-blue-600 rounded-lg"><PlaneTakeoff size={18} /></div>
+                      <span className="text-sm font-medium text-gray-600">Salidas</span>
+                    </div>
+                    <span className="font-bold text-primary">{data.flights.filter(f => f.type === 'ida').length}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg"><PlaneLanding size={18} /></div>
+                      <span className="text-sm font-medium text-gray-600">Regresos</span>
+                    </div>
+                    <span className="font-bold text-primary">{data.flights.filter(f => f.type === 'regreso').length}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-green-100 text-green-600 rounded-lg"><CheckCircle2 size={18} /></div>
+                      <span className="text-sm font-medium text-gray-600">Completados</span>
+                    </div>
+                    <span className="font-bold text-primary">{data.flights.filter(f => f.checkin === 'realizado').length}</span>
+                  </div>
+                </CardBody>
+              </Card>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para Realizar Check-in y Adjuntar Archivo */}
+      <Modal
+        isOpen={isCheckinModalOpen}
+        onClose={() => !isSending && setIsCheckinModalOpen(false)}
+        title="Enviar Check-in"
+        size="sm"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setIsCheckinModalOpen(false)} disabled={isSending}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={confirmCheckin} 
+              disabled={!checkinFile || isSending}
+              className="relative"
+            >
+              {isSending ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                  Enviando...
+                </>
+              ) : (
+                'Enviar al Cliente'
+              )}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg">
+            <p className="text-xs text-blue-700 font-medium mb-1">Pasajero:</p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-bold text-primary">{selectedFlightForCheckin?.passenger}</p>
+              {modalClient && (
+                <span className="text-[10px] bg-white/50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-100 font-bold">
+                  {modalClient.docType}: {modalClient.docNumber}
+                </span>
+              )}
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 bg-gray-50 border border-gray-border rounded-lg">
+              <p className="text-xs text-gray-500 font-medium mb-1">Ruta:</p>
+              <p className="text-sm font-bold text-primary">{selectedFlightForCheckin?.route}</p>
+            </div>
+            <div className="p-3 bg-gray-50 border border-gray-border rounded-lg">
+              <p className="text-xs text-gray-500 font-medium mb-1">Fecha y Hora:</p>
+              <p className="text-sm font-bold text-primary">
+                {selectedFlightForCheckin ? formatDate(selectedFlightForCheckin.date) : ''} {selectedFlightForCheckin?.time}
+              </p>
+            </div>
+            <div className="p-3 bg-gray-50 border border-gray-border rounded-lg">
+              <p className="text-xs text-gray-500 font-medium mb-1">Aerolínea:</p>
+              <p className="text-sm font-bold text-primary">{selectedFlightForCheckin?.airline}</p>
+            </div>
+            <div className="p-3 bg-gray-50 border border-gray-border rounded-lg">
+              <p className="text-xs text-gray-500 font-medium mb-1">Enviar a:</p>
+              <p className="text-sm font-bold text-primary truncate" title={modalClient?.email}>
+                {modalClient?.email || 'Sin correo registrado'}
+              </p>
+            </div>
+          </div>
+
+          <FormField label="Adjuntar Documento de Check-in">
+            <div className="relative group">
+              <input
+                type="file"
+                onChange={(e) => setCheckinFile(e.target.files?.[0] || null)}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                accept=".pdf,.jpg,.jpeg,.png"
+              />
+              <div className={`p-6 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${checkinFile ? 'border-green-400 bg-green-50' : 'border-gray-300 bg-white group-hover:border-primary group-hover:bg-primary/5'}`}>
+                {checkinFile ? (
+                  <>
+                    <CheckCircle2 size={28} className="text-green-500" />
+                    <p className="text-xs font-bold text-green-700 truncate max-w-full px-2 text-center">{checkinFile.name}</p>
+                    <p className="text-[10px] text-green-600">Archivo listo para enviar</p>
+                    <button type="button" onClick={() => setCheckinFile(null)} className="text-[10px] text-red-400 hover:text-red-600 underline mt-1">Cambiar archivo</button>
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud size={28} className="text-gray-300" />
+                    <p className="text-xs font-bold text-gray-500 uppercase">Seleccionar PDF o Imagen</p>
+                    <p className="text-[10px] text-gray-400">Haz clic o arrastra aquí</p>
+                  </>
+                )}
+              </div>
+            </div>
+          </FormField>
+
+          <div className="flex items-start gap-2 p-2 bg-amber-50 border border-amber-100 rounded-lg text-[10px] text-amber-700">
+            <AlertCircle size={14} className="shrink-0 mt-0.5" />
+            <p>Al confirmar, el documento se enviará automáticamente al correo registrado del cliente.</p>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}
