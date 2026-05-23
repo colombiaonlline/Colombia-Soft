@@ -29,8 +29,14 @@ export async function registerPayment(saleId: number, data: Record<string, unkno
   return res.data.data;
 }
 
-export async function deletePayment(saleId: number, paymentId: string) {
-  await api.delete(`/sales/${saleId}/payments/${paymentId}`);
+export async function deletePayment(saleId: number, paymentId: string, body?: Record<string, unknown>) {
+  const res = await api.delete(`/sales/${saleId}/payments/${paymentId}`, { data: body });
+  return res.data.data;
+}
+
+export async function getSalePayments(saleId: number) {
+  const res = await api.get(`/sales/${saleId}/payments`);
+  return res.data.data;
 }
 
 // Productos (15 tipos)

@@ -11,6 +11,7 @@ interface SalesTableProps {
   clients: Client[];
   users: User[];
   onViewDetail: (sale: Sale) => void;
+  onPrefetchDetail?: (sale: Sale) => void;
   onDownloadVoucher: (sale: Sale) => void;
   onEdit: (sale: Sale) => void;
   onDelete: (sale: Sale) => void;
@@ -23,6 +24,7 @@ export default function SalesTable({
   clients,
   users,
   onViewDetail,
+  onPrefetchDetail,
   onDownloadVoucher,
   onEdit,
   onDelete,
@@ -134,6 +136,7 @@ export default function SalesTable({
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => onViewDetail(sale)}
+                  onMouseEnter={() => onPrefetchDetail?.(sale)}
                   title="Ver detalle"
                 >
                   <Eye size={14} />

@@ -509,6 +509,7 @@ export interface Sale {
   ta?: number;
   supplierCost?: number;
   payments?: PaymentRecord[];
+  servicesSummary?: Array<{ tipo: string; label: string; detail: string | null }>;
 }
 
 export interface Flight {

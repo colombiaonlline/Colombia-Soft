@@ -56,6 +56,11 @@ interface SaleDetailModalProps {
   onViewProductDetails: (product: { type: string; data: any[] }) => void;
 }
 
+const isAlreadyFull = (sale: Sale | null): boolean => {
+  if (!sale) return false;
+  return sale.ticketData !== undefined || sale.hotelData !== undefined || sale.planData !== undefined;
+};
+
 export default function SaleDetailModal({
   isOpen,
   onClose,
@@ -66,21 +71,37 @@ export default function SaleDetailModal({
   const [fullSale, setFullSale] = useState<Sale | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [pendingProductView, setPendingProductView] = useState<{ key: string; label: string } | null>(null);
 
   useEffect(() => {
     if (isOpen && selectedSale) {
-      setLoading(true);
-      setError("");
-      api.getSale(selectedSale.id).then(fetched => {
-        setFullSale(fetched);
-      }).catch(() => {
+      if (isAlreadyFull(selectedSale)) {
         setFullSale(selectedSale);
-        setError("No se pudieron cargar los detalles completos");
-      }).finally(() => setLoading(false));
+        setLoading(false);
+        setError("");
+      } else {
+        setLoading(true);
+        setError("");
+        api.getSale(selectedSale.id).then(fetched => {
+          setFullSale(fetched);
+        }).catch(() => {
+          setFullSale(selectedSale);
+          setError("No se pudieron cargar los detalles completos");
+        }).finally(() => setLoading(false));
+      }
     } else {
       setFullSale(null);
+      setPendingProductView(null);
     }
   }, [isOpen, selectedSale]);
+
+  useEffect(() => {
+    if (fullSale && isAlreadyFull(fullSale) && pendingProductView) {
+      const data = (fullSale as any)[pendingProductView.key] || [];
+      onViewProductDetails({ type: pendingProductView.label, data });
+      setPendingProductView(null);
+    }
+  }, [fullSale, pendingProductView]);
 
   if (!selectedSale) return null;
 
@@ -91,26 +112,52 @@ export default function SaleDetailModal({
   const gananciaNeta = sale.total - supplierCost - commissionAmount;
 
   const productSections = [
-    { key: "ticketData", label: "Tiquetería" },
-    { key: "hotelData", label: "Hotelería" },
-    { key: "insuranceData", label: "Seguros" },
-    { key: "planData", label: "Planes" },
-    { key: "checkInData", label: "CheckIn" },
-    { key: "migrationData", label: "Migración" },
-    { key: "simCardData", label: "SimCard" },
-    { key: "carRentalData", label: "AlquilerAutos" },
-    { key: "fincaData", label: "Finca" },
-    { key: "tourData", label: "Tour" },
-    { key: "conventionData", label: "Evento" },
-    { key: "restaurantData", label: "Restaurante" },
-    { key: "visaData", label: "Visa" },
-    { key: "passportData", label: "Pasaporte" },
-    { key: "petServiceData", label: "Mascotas" },
+    { key: "ticketData", label: "Tiquetería", summaryType: "tiqueteria" },
+    { key: "hotelData", label: "Hotelería", summaryType: "hoteleria" },
+    { key: "insuranceData", label: "Seguros", summaryType: "seguros" },
+    { key: "planData", label: "Planes", summaryType: "planes" },
+    { key: "checkInData", label: "CheckIn", summaryType: "checkin" },
+    { key: "migrationData", label: "Migración", summaryType: "migracion" },
+    { key: "simCardData", label: "SimCard", summaryType: "simcard" },
+    { key: "carRentalData", label: "AlquilerAutos", summaryType: "autos" },
+    { key: "fincaData", label: "Finca", summaryType: "fincas" },
+    { key: "tourData", label: "Tour", summaryType: "tours" },
+    { key: "conventionData", label: "Evento", summaryType: "eventos" },
+    { key: "restaurantData", label: "Restaurante", summaryType: "restaurantes" },
+    { key: "visaData", label: "Visa", summaryType: "visas" },
+    { key: "passportData", label: "Pasaporte", summaryType: "pasaportes" },
+    { key: "petServiceData", label: "Mascotas", summaryType: "mascotas" },
   ];
 
-  const hasAnyProduct = productSections.some(
+  const hasAnyProduct = (sale.servicesSummary && sale.servicesSummary.length > 0) || productSections.some(
     ({ key }) => (sale as any)[key] && (sale as any)[key].length > 0
   );
+
+  const getCustomObservations = (obs: string) => {
+    if (!obs) return "";
+    const parts = obs.split("\n---\n");
+    if (parts.length > 1) {
+      return parts[1].trim();
+    }
+    const txt = parts[0].trim();
+    const hasServiceKeywords = productSections.some(({ label }) => 
+      txt.toLowerCase().includes(label.toLowerCase())
+    ) || txt.toLowerCase().includes("luticket") || txt.toLowerCase().includes("decameron");
+    
+    if (hasServiceKeywords && txt.split("\n").length <= 2) {
+      return "";
+    }
+    return txt;
+  };
+
+  const onViewProductClick = (key: string, label: string) => {
+    if (fullSale && isAlreadyFull(fullSale)) {
+      const data = (fullSale as any)[key] || [];
+      onViewProductDetails({ type: label, data });
+    } else {
+      setPendingProductView({ key, label });
+    }
+  };
 
   return (
     <Modal
@@ -281,37 +328,45 @@ export default function SaleDetailModal({
           <h4 className="text-sm font-bold text-primary border-b border-gray-200 pb-2 mb-3 flex items-center gap-2">
             <ShoppingBag size={16} className="text-accent" /> Desglose de Servicios
           </h4>
-          {loading ? (
-            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 justify-center">
-              <Loader2 size={18} className="animate-spin text-accent" />
-              <span className="text-sm text-gray-500 font-medium">Cargando servicios de esta venta...</span>
-            </div>
-          ) : !hasAnyProduct ? (
+          {!hasAnyProduct ? (
             <p className="text-sm text-gray-400 italic p-4 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
               No hay servicios registrados para esta venta.
             </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {productSections.map(({ key, label }) => {
-                const data = (sale as any)[key];
-                if (!data || data.length === 0) return null;
+              {productSections.map(({ key, label, summaryType }) => {
+                // If fullSale has loaded, check if this section has products.
+                // Otherwise, check if this category exists in servicesSummary.
+                const hasProduct = fullSale 
+                  ? ((fullSale as any)[key] && (fullSale as any)[key].length > 0)
+                  : (sale.servicesSummary || []).some(s => s.tipo === summaryType);
+
+                if (!hasProduct) return null;
+                
+                const isPending = pendingProductView?.key === key;
+                const itemsCount = fullSale ? ((fullSale as any)[key]?.length || 0) : 1;
+
                 return (
-                  <div key={key} className="bg-gray-50 border border-gray-200 p-3 rounded-lg flex items-center justify-between">
+                  <div key={key} className="bg-gray-50 border border-gray-200 p-3 rounded-lg flex items-center justify-between shadow-sm">
                     <div className="flex items-center gap-2 text-sm font-bold text-gray-700">
                       {PRODUCT_ICONS[label] || <ShoppingBag size={16} className="text-primary" />}
-                      {label} ({data.length})
+                      {label} {fullSale ? `(${itemsCount})` : ""}
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() =>
-                        onViewProductDetails({
-                          type: label,
-                          data,
-                        })
-                      }
+                      disabled={isPending}
+                      onClick={() => onViewProductClick(key, label)}
+                      className="text-xs py-1.5 px-3 border-gray-200 text-gray-700 hover:bg-gray-50"
                     >
-                      Ver Detalles
+                      {isPending ? (
+                        <span className="flex items-center gap-1">
+                          <Loader2 size={12} className="animate-spin text-accent" />
+                          Cargando...
+                        </span>
+                      ) : (
+                        "Ver Detalles"
+                      )}
                     </Button>
                   </div>
                 );
@@ -321,43 +376,41 @@ export default function SaleDetailModal({
         </div>
 
         {/* Observaciones */}
-        {sale.observations && sale.observations.trim() !== "" && (
-          <div>
-            <h5 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
-              Observaciones Adicionales
-            </h5>
-            <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100 whitespace-pre-wrap">
-              {sale.observations.split("\n---\n").pop()}
-            </p>
-          </div>
-        )}
+        {(() => {
+          const customObs = getCustomObservations(sale.observations || "");
+          if (!customObs) return null;
+          return (
+            <div>
+              <h5 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
+                Observaciones Adicionales
+              </h5>
+              <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100 whitespace-pre-wrap shadow-inner">
+                {customObs}
+              </p>
+            </div>
+          );
+        })()}
 
         {/* Historial de Pagos */}
-        {loading ? (
-          <div>
-            <h5 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
-              Historial de Pagos
-            </h5>
-            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 justify-center">
-              <Loader2 size={18} className="animate-spin text-accent" />
-              <span className="text-sm text-gray-500 font-medium">Cargando pagos...</span>
+        {(() => {
+          const payments = sale.payments || [];
+          if (payments.length === 0) return null;
+          return (
+            <div>
+              <h5 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
+                Historial de Pagos
+              </h5>
+              <div className="space-y-2">
+                {payments.map((p: any, i: number) => (
+                  <div key={i} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
+                    <span className="font-bold text-gray-800 text-sm">{formatCurrency(p.amount)}</span>
+                    <span className="text-xs text-gray-500 font-medium">{p.method} · {formatDate(p.date)}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ) : (sale as any).payments && (sale as any).payments.length > 0 ? (
-          <div>
-            <h5 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
-              Historial de Pagos
-            </h5>
-            <div className="space-y-2">
-              {(sale as any).payments.map((p: any, i: number) => (
-                <div key={i} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-100">
-                  <span className="font-bold text-gray-800">{formatCurrency(p.amount)}</span>
-                  <span className="text-xs text-gray-500">{p.method} · {formatDate(p.date)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
+          );
+        })()}
       </div>
     </Modal>
   );

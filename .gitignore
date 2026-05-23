@@ -1,0 +1,56 @@
+# ==========================================
+# iTea Soft - Root Gitignore for Monorepo
+# ==========================================
+
+# Node / Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment files (Never commit sensitive credentials!)
+.env
+.env.local
+.env.production
+.env.development
+.env.test
+.env*.local
+
+# IDEs / Editors / System Files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+ehthumbs.db
+*.tmp
+
+# ==========================================
+# Backend Specific
+# ==========================================
+backend/node_modules/
+backend/dist/
+backend/build/
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/prisma/*.db
+backend/prisma/*.db-journal
+
+# ==========================================
+# Frontend Specific
+# ==========================================
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.tsbuildinfo
+frontend/.vite/
+
+# Temporary & logs
+logs/
+*.log

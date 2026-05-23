@@ -9,7 +9,7 @@ export {
 } from './clients';
 export {
   listSales, getSale, createSale, updateSale, deleteSale,
-  registerPayment, deletePayment, createProduct, updateProduct, deleteProduct,
+  registerPayment, deletePayment, getSalePayments, createProduct, updateProduct, deleteProduct,
 } from './sales';
 export {
   listFlights, updateCheckin,

@@ -37,31 +37,110 @@ exports.list = async (req, res, next) => {
           cliente: { select: { persona: { select: { nombres: true, apellidos: true } } } },
           usuario: { select: { persona: { select: { nombres: true, apellidos: true } } } },
           comisionista: { select: { persona: { select: { nombres: true, apellidos: true } } } },
+          pagosVenta: {
+            select: { id: true, monto: true, fechaPago: true, metodoPago: { select: { nombre: true } } },
+            orderBy: { fechaPago: 'asc' }
+          },
+          detalleVentas: {
+            select: {
+              categoria: true,
+              nombreServicio: true,
+              origen: true,
+              destino: true,
+              pasajerosDetalle: {
+                select: {
+                  persona: {
+                    select: {
+                      nombres: true,
+                      apellidos: true
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       })
     ]);
 
-    const data = ventas.map(v => ({
-      id: v.id,
-      clientId: v.clienteId,
-      clientName: `${v.cliente.persona.nombres} ${v.cliente.persona.apellidos}`,
-      asesorId: v.usuarioId,
-      asesorName: `${v.usuario.persona.nombres} ${v.usuario.persona.apellidos}`,
-      date: v.creadoAt,
-      total: v.montoTotal,
-      status: v.status,
-      observations: v.observaciones,
-      isCredit: v.esCredito,
-      creditDueDate: v.fechaVenceCredito,
-      creditPaidAmount: v.montoPagadoCredito,
-      commissionAgentId: v.comisionistaId,
-      commissionAgentName: v.comisionista ? `${v.comisionista.persona.nombres} ${v.comisionista.persona.apellidos}` : null,
-      commissionAgentAmount: v.montoComisionBruto,
-      commissionAgentNetPayment: v.montoComisionNeto,
-      supplierCost: v.costoProveedorTotal,
-      ta: v.taTotal,
-      isSettled: v.comisionLiquidada,
-    }));
+    const data = ventas.map(v => {
+      // Build a lightweight services summary from detalleVentas
+      const servicesSummary = (v.detalleVentas || []).map(d => {
+        const tipo = d.categoria;
+        let label = tipo;
+        let detail = null;
+
+        const labelMap = {
+          tiqueteria: 'Tiquetería',
+          hoteleria: 'Hotelería',
+          seguros: 'Seguro',
+          planes: 'Plan',
+          checkin: 'Check-in',
+          migracion: 'Migración',
+          simcard: 'SIM Card',
+          autos: 'Renta de Auto',
+          fincas: 'Finca',
+          tours: 'Tour',
+          eventos: 'Evento',
+          restaurantes: 'Restaurante',
+          visas: 'Visa',
+          pasaportes: 'Pasaporte',
+          mascotas: 'Mascota'
+        };
+
+        if (labelMap[tipo]) {
+          label = labelMap[tipo];
+        }
+
+        // Build elegant detail based on generic fields
+        const route = (d.origen && d.destino) ? `${d.origen}→${d.destino}` : null;
+        const pax = d.pasajerosDetalle?.[0]?.persona;
+        const paxName = pax ? `${pax.nombres} ${pax.apellidos}` : null;
+
+        if (tipo === 'tiqueteria') {
+          detail = [route, paxName].filter(Boolean).join(' · ');
+        } else {
+          // For other services, use nombreServicio if it's different from the generic label, or route/pax
+          const hasCustomName = d.nombreServicio && d.nombreServicio !== label;
+          detail = [
+            hasCustomName ? d.nombreServicio : null,
+            route,
+            paxName
+          ].filter(Boolean).join(' · ');
+        }
+
+        return { tipo, label, detail: detail || null };
+      });
+
+      return {
+        id: v.id,
+        clientId: v.clienteId,
+        clientName: `${v.cliente.persona.nombres} ${v.cliente.persona.apellidos}`,
+        asesorId: v.usuarioId,
+        asesorName: `${v.usuario.persona.nombres} ${v.usuario.persona.apellidos}`,
+        date: v.creadoAt,
+        total: v.montoTotal,
+        status: v.status,
+        observations: v.observaciones,
+        isCredit: v.esCredito,
+        creditDueDate: v.fechaVenceCredito,
+        creditPaidAmount: v.montoPagadoCredito,
+        commissionAgentId: v.comisionistaId,
+        commissionAgentName: v.comisionista ? `${v.comisionista.persona.nombres} ${v.comisionista.persona.apellidos}` : null,
+        commissionAgentAmount: v.montoComisionBruto,
+        commissionAgentNetPayment: v.montoComisionNeto,
+        supplierCost: v.costoProveedorTotal,
+        ta: v.taTotal,
+        isSettled: v.comisionLiquidada,
+        payments: (v.pagosVenta || []).map(p => ({
+          id: p.id,
+          date: p.fechaPago,
+          amount: p.monto,
+          method: p.metodoPago?.nombre || null
+        })),
+        servicesSummary,
+      };
+    });
 
     success(res, data, buildMeta(total, page, perPage));
   } catch (err) {
@@ -84,7 +163,7 @@ const PRODUCT_INCLUDES = {
   },
   hoteleria: { prodHoteleria: true },
   seguros: { prodSeguros: true },
-  planes: { prodPlanes: { include: { paquete: true } } },
+  planes: { prodPlanes: { include: { paquete: true, aerolinea: true } } },
   checkin: { prodCheckins: true },
   migracion: { prodMigracion: true },
   simcard: { prodSimcards: true },
@@ -173,6 +252,7 @@ const PRODUCT_TRANSFORMS = {
       packageId: p.paqueteId,
       packageName: p.paquete?.nombre || null,
       airline: String(p.aerolineaId || ''),
+      airlineName: p.aerolinea?.nombre || null,
       reservationNumber: p.nroReserva,
       ticketNumber: p.nroTiquete,
       startDate: p.fechaViajeInicio?.toISOString().split('T')[0] || null,
@@ -1166,34 +1246,32 @@ exports.remove = async (req, res, next) => {
 exports.registerPayment = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id);
-    const { amount, isTotal, method, reference } = req.body;
+    const { amount, isTotal, method, reference, currentPaidAmount, saleTotal } = req.body;
 
-    const venta = await prisma.ventas.findUnique({ where: { id } });
-    if (!venta) return error(res, 'Venta no encontrada', 404);
-
-    const currentPaid = venta.montoPagadoCredito || 0;
-    const newPaidAmount = isTotal ? venta.montoTotal : currentPaid + amount;
-    const newStatus = (isTotal || newPaidAmount >= venta.montoTotal) ? 'pagado' : 'abonado';
+    // If client sends totals, we can skip the findUnique — faster path
+    let newPaidAmount, newStatus;
     const metodoPagoId = await resolvePaymentMethodId(prisma, method);
 
-    let newPayment;
+    if (saleTotal !== undefined && currentPaidAmount !== undefined) {
+      newPaidAmount = isTotal ? saleTotal : (currentPaidAmount || 0) + amount;
+      newStatus = (isTotal || newPaidAmount >= saleTotal) ? 'pagado' : 'abonado';
+    } else {
+      // Fallback: fetch the venta
+      const venta = await prisma.ventas.findUnique({ where: { id }, select: { montoTotal: true, montoPagadoCredito: true } });
+      if (!venta) return error(res, 'Venta no encontrada', 404);
+      const currentPaid = venta.montoPagadoCredito || 0;
+      newPaidAmount = isTotal ? venta.montoTotal : currentPaid + amount;
+      newStatus = (isTotal || newPaidAmount >= venta.montoTotal) ? 'pagado' : 'abonado';
+    }
 
+    let newPayment;
     await prisma.$transaction(async (tx) => {
       newPayment = await tx.pagosVenta.create({
-        data: {
-          ventaId: id,
-          monto: amount,
-          metodoPagoId,
-          referencia: reference || null
-        }
+        data: { ventaId: id, monto: amount, metodoPagoId, referencia: reference || null }
       });
-
       await tx.ventas.update({
         where: { id },
-        data: {
-          montoPagadoCredito: newPaidAmount,
-          status: newStatus
-        }
+        data: { montoPagadoCredito: newPaidAmount, status: newStatus }
       });
     });
 
@@ -1212,30 +1290,82 @@ exports.registerPayment = async (req, res, next) => {
   }
 };
 
+
 exports.deletePayment = async (req, res, next) => {
   try {
     const saleId = parseInt(req.params.saleId);
     const paymentId = req.params.paymentId;
+    const { currentPayments, saleTotal } = req.body || {};
 
-    const payment = await prisma.pagosVenta.findUnique({ where: { id: paymentId } });
+    // Validate ownership quickly
+    const payment = await prisma.pagosVenta.findUnique({
+      where: { id: paymentId },
+      select: { id: true, ventaId: true, monto: true }
+    });
     if (!payment) return error(res, 'Pago no encontrado', 404);
     if (payment.ventaId !== saleId) return error(res, 'El pago no pertenece a esta venta', 400);
 
-    await prisma.$transaction(async (tx) => {
-      await tx.pagosVenta.delete({ where: { id: paymentId } });
+    let newPaidAmount = 0;
+    let newStatus = 'credito';
 
-      const remainingPayments = await tx.pagosVenta.findMany({ where: { ventaId: saleId } });
-      const totalPaid = remainingPayments.reduce((sum, p) => sum + p.monto, 0);
-      const venta = await tx.ventas.findUnique({ where: { id: saleId } });
-      const newStatus = totalPaid >= venta.montoTotal ? 'pagado' : totalPaid > 0 ? 'abonado' : 'credito';
+    // If client sends current state, compute without extra DB query inside transaction
+    if (Array.isArray(currentPayments) && saleTotal !== undefined) {
+      newPaidAmount = currentPayments
+        .filter(p => p.id !== paymentId)
+        .reduce((sum, p) => sum + p.amount, 0);
+      newStatus = newPaidAmount >= saleTotal ? 'pagado' : newPaidAmount > 0 ? 'abonado' : 'credito';
 
-      await tx.ventas.update({
-        where: { id: saleId },
-        data: { montoPagadoCredito: totalPaid, status: newStatus }
+      await prisma.$transaction([
+        prisma.pagosVenta.delete({ where: { id: paymentId } }),
+        prisma.ventas.update({
+          where: { id: saleId },
+          data: { montoPagadoCredito: newPaidAmount, status: newStatus }
+        })
+      ]);
+    } else {
+      // Fallback path
+      await prisma.$transaction(async (tx) => {
+        await tx.pagosVenta.delete({ where: { id: paymentId } });
+        const remainingPayments = await tx.pagosVenta.findMany({ where: { ventaId: saleId }, select: { monto: true } });
+        newPaidAmount = remainingPayments.reduce((sum, p) => sum + p.monto, 0);
+        const venta = await tx.ventas.findUnique({ where: { id: saleId }, select: { montoTotal: true } });
+        newStatus = newPaidAmount >= venta.montoTotal ? 'pagado' : newPaidAmount > 0 ? 'abonado' : 'credito';
+        await tx.ventas.update({
+          where: { id: saleId },
+          data: { montoPagadoCredito: newPaidAmount, status: newStatus }
+        });
       });
+    }
+
+    success(res, { message: 'Pago eliminado', creditPaidAmount: newPaidAmount, status: newStatus });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+exports.listPayments = async (req, res, next) => {
+  try {
+    const saleId = parseInt(req.params.id);
+    const payments = await prisma.pagosVenta.findMany({
+      where: { ventaId: saleId },
+      select: {
+        id: true,
+        fechaPago: true,
+        monto: true,
+        metodoPago: { select: { nombre: true } }
+      },
+      orderBy: { fechaPago: 'asc' }
     });
 
-    success(res, { message: 'Pago eliminado' });
+    const formatted = payments.map(p => ({
+      id: p.id,
+      date: p.fechaPago,
+      amount: p.monto,
+      method: p.metodoPago?.nombre || null
+    }));
+
+    success(res, formatted);
   } catch (err) {
     next(err);
   }

@@ -1,12 +1,16 @@
-import { useState, useEffect } from "react";
-import { Receipt, ShoppingBag, Wallet, Trash2, FileDown, Loader2 } from "lucide-react";
-import * as api from "../../api";
+import React, { useState, useEffect } from "react";
+import {
+  Receipt, ShoppingBag, Wallet, Trash2,
+  Plane, Hotel, Shield, Package, CheckSquare, Globe,
+  Smartphone, Car, Home, Compass, Star, Utensils,
+  FileCheck, BookOpen, PawPrint
+} from "lucide-react";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
 import { Input, Select } from "../ui/Form";
 import { formatCurrency, formatDate } from "../../utils/formatters";
-import { Sale, Client, User } from "../../types";
+import { Sale, Client, User, PaymentRecord } from "../../types";
 
 interface SaleEditModalProps {
   isOpen: boolean;
@@ -15,11 +19,76 @@ interface SaleEditModalProps {
   clients: Client[];
   user: User | null;
   isAdmin: boolean;
-  onUpdateSale: (id: number, data: any) => void;
-  onAddSale: (data: any) => void;
+  onUpdateSale?: (id: number, data: any) => void;
+  onAddSale?: (data: any) => void;
   onRegisterPayment: (saleId: number, amount: number, method?: string) => Promise<any>;
   onDeletePayment: (saleId: number, paymentId: string) => Promise<void>;
   onDownloadVoucher: (sale: Sale) => void;
+}
+
+// ── Mapa de iconos y colores por tipo de servicio ──────────────────────────
+const SERVICE_CONFIG: Record<string, { icon: React.ReactNode; bg: string; text: string; border: string }> = {
+  tiqueteria:   { icon: <Plane size={13} />,       bg: 'bg-sky-50',      text: 'text-sky-700',      border: 'border-sky-200' },
+  hoteleria:    { icon: <Hotel size={13} />,        bg: 'bg-amber-50',    text: 'text-amber-700',    border: 'border-amber-200' },
+  seguros:      { icon: <Shield size={13} />,       bg: 'bg-green-50',    text: 'text-green-700',    border: 'border-green-200' },
+  planes:       { icon: <Package size={13} />,      bg: 'bg-purple-50',   text: 'text-purple-700',   border: 'border-purple-200' },
+  checkin:      { icon: <CheckSquare size={13} />,  bg: 'bg-teal-50',     text: 'text-teal-700',     border: 'border-teal-200' },
+  migracion:    { icon: <Globe size={13} />,        bg: 'bg-blue-50',     text: 'text-blue-700',     border: 'border-blue-200' },
+  simcard:      { icon: <Smartphone size={13} />,   bg: 'bg-indigo-50',   text: 'text-indigo-700',   border: 'border-indigo-200' },
+  autos:        { icon: <Car size={13} />,          bg: 'bg-orange-50',   text: 'text-orange-700',   border: 'border-orange-200' },
+  fincas:       { icon: <Home size={13} />,         bg: 'bg-lime-50',     text: 'text-lime-700',     border: 'border-lime-200' },
+  tours:        { icon: <Compass size={13} />,      bg: 'bg-cyan-50',     text: 'text-cyan-700',     border: 'border-cyan-200' },
+  eventos:      { icon: <Star size={13} />,         bg: 'bg-yellow-50',   text: 'text-yellow-700',   border: 'border-yellow-200' },
+  restaurantes: { icon: <Utensils size={13} />,     bg: 'bg-rose-50',     text: 'text-rose-700',     border: 'border-rose-200' },
+  visas:        { icon: <FileCheck size={13} />,    bg: 'bg-violet-50',   text: 'text-violet-700',   border: 'border-violet-200' },
+  pasaportes:   { icon: <BookOpen size={13} />,     bg: 'bg-fuchsia-50',  text: 'text-fuchsia-700',  border: 'border-fuchsia-200' },
+  mascotas:     { icon: <PawPrint size={13} />,     bg: 'bg-pink-50',     text: 'text-pink-700',     border: 'border-pink-200' },
+};
+
+function ServicesList({ sale }: { sale: Sale }) {
+  const services = sale.servicesSummary;
+
+  if (services && services.length > 0) {
+    return (
+      <div className="flex flex-wrap gap-2 mt-1">
+        {services.map((s, i) => {
+          const cfg = SERVICE_CONFIG[s.tipo] ?? {
+            icon: <ShoppingBag size={13} />, bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200'
+          };
+          return (
+            <div
+              key={i}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold ${cfg.bg} ${cfg.text} ${cfg.border}`}
+            >
+              <span className="shrink-0">{cfg.icon}</span>
+              <span>{s.label}</span>
+              {s.detail && <span className="font-normal opacity-70">· {s.detail}</span>}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Fallback a observaciones texto
+  if (sale.observations) {
+    return (
+      <div className="bg-white p-3 rounded-lg border border-gray-100 max-h-24 overflow-y-auto custom-scrollbar mt-1">
+        <ul className="space-y-1">
+          {sale.observations.split('\n').filter(l => l.trim()).map((line, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+              <div className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5 shrink-0" />
+              <span>{line}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  return (
+    <p className="text-gray-400 italic text-sm mt-1">Sin servicios registrados</p>
+  );
 }
 
 export default function SaleEditModal({
@@ -29,245 +98,95 @@ export default function SaleEditModal({
   clients,
   user,
   isAdmin,
-  onUpdateSale,
-  onAddSale,
   onRegisterPayment,
   onDeletePayment,
   onDownloadVoucher,
 }: SaleEditModalProps) {
-  const [formData, setFormData] = useState({
-    clientId: "",
-    total: "",
-    paymentMethod: "",
-    status: "credito" as Sale["status"],
-    observations: "",
-    isCredit: false,
-    creditDueDate: "",
-    commissionAgentName: "",
-    commissionAgentAmount: "",
-    commissionAgentRetentionPercentage: "",
-    commissionAgentNetPayment: "",
-    ta: "",
-    supplierCost: "",
-  });
-
-  const [payments, setPayments] = useState<any[]>([]);
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [newPayment, setNewPayment] = useState({
     amount: "",
     method: "Efectivo",
   });
-  const [fullSale, setFullSale] = useState<Sale | null>(null);
-  const [loadingSale, setLoadingSale] = useState(false);
+  const [isSavingPayment] = useState(false); // kept for type safety, unused
 
+  const saleId = editingSale?.id ?? null;
+
+  // Sync payments from pre-loaded sale data whenever the selected sale changes
   useEffect(() => {
-    if (editingSale && isOpen) {
-      setLoadingSale(true);
-      api.getSale(editingSale.id).then(fetched => {
-        setFullSale(fetched);
-        setFormData({
-          clientId: String(fetched.clientId),
-          total: String(fetched.total),
-          paymentMethod: fetched.paymentMethod,
-          status: fetched.status,
-          observations: fetched.observations || "",
-          isCredit: fetched.isCredit || false,
-          creditDueDate: fetched.creditDueDate || "",
-          commissionAgentName: fetched.commissionAgentName || "",
-          commissionAgentAmount: fetched.commissionAgentAmount
-            ? String(fetched.commissionAgentAmount)
-            : "",
-          commissionAgentRetentionPercentage: fetched.commissionAgentRetentionPercentage
-            ? String(fetched.commissionAgentRetentionPercentage)
-            : "",
-          commissionAgentNetPayment: fetched.commissionAgentNetPayment
-            ? String(fetched.commissionAgentNetPayment)
-            : "",
-          ta: fetched.ta ? String(fetched.ta) : "",
-          supplierCost: fetched.supplierCost ? String(fetched.supplierCost) : "",
-        });
-        setPayments(fetched.payments || []);
-      }).catch(() => {
-        setFullSale(editingSale);
-        setFormData({
-          clientId: String(editingSale.clientId),
-          total: String(editingSale.total),
-          paymentMethod: editingSale.paymentMethod,
-          status: editingSale.status,
-          observations: editingSale.observations || "",
-          isCredit: editingSale.isCredit || false,
-          creditDueDate: editingSale.creditDueDate || "",
-          commissionAgentName: editingSale.commissionAgentName || "",
-          commissionAgentAmount: editingSale.commissionAgentAmount
-            ? String(editingSale.commissionAgentAmount)
-            : "",
-          commissionAgentRetentionPercentage: editingSale.commissionAgentRetentionPercentage
-            ? String(editingSale.commissionAgentRetentionPercentage)
-            : "",
-          commissionAgentNetPayment: editingSale.commissionAgentNetPayment
-            ? String(editingSale.commissionAgentNetPayment)
-            : "",
-          ta: editingSale.ta ? String(editingSale.ta) : "",
-          supplierCost: editingSale.supplierCost ? String(editingSale.supplierCost) : "",
-        });
-        setPayments((editingSale as any).payments || []);
-      }).finally(() => setLoadingSale(false));
-    } else if (!editingSale && isOpen) {
-      setFullSale(null);
-      setLoadingSale(false);
-      setFormData({
-        clientId: "",
-        total: "",
-        paymentMethod: "",
-        status: "credito",
-        observations: "",
-        isCredit: false,
-        creditDueDate: "",
-        commissionAgentName: "",
-        commissionAgentAmount: "",
-        commissionAgentRetentionPercentage: "",
-        commissionAgentNetPayment: "",
-        ta: "",
-        supplierCost: "",
-      });
-      setPayments([]);
-    }
-  }, [editingSale, isOpen]);
+    setPayments((editingSale?.payments as PaymentRecord[]) || []);
+  }, [saleId]);
 
-  const totalSaleAmount = Number(formData.total) || 0;
+  if (!isOpen || !editingSale) return null;
+
+  const sale = editingSale;
+  const totalSaleAmount = sale.total || 0;
   const totalPaidAmount = payments.reduce((acc, p) => acc + p.amount, 0);
   const remainingBalance = totalSaleAmount - totalPaidAmount;
 
-  const [isSavingPayment, setIsSavingPayment] = useState(false);
-
-  const handleAddPayment = async () => {
+  const handleAddPayment = () => {
     const amount = Number(newPayment.amount);
-    if (!editingSale || amount <= 0 || amount > remainingBalance) return;
-    setIsSavingPayment(true);
-    try {
-      const result = await onRegisterPayment(editingSale.id, amount, newPayment.method);
-      setPayments([...payments, result.payment]);
-      setNewPayment({ amount: "", method: "Efectivo" });
-    } catch {
-      // error handled by interceptor
-    } finally {
-      setIsSavingPayment(false);
-    }
-  };
+    if (amount <= 0 || amount > remainingBalance) return;
 
-  const handleDeletePayment = async (paymentId: string) => {
-    if (!editingSale) return;
-    try {
-      await onDeletePayment(editingSale.id, paymentId);
-      setPayments(payments.filter((p) => p.id !== paymentId));
-    } catch {
-      // error handled by interceptor
-    }
-  };
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const validate = () => {
-    const newErrors: Record<string, string> = {};
-    if (!editingSale && !formData.clientId) {
-      newErrors.clientId = "Debe seleccionar un cliente.";
-    }
-    if (!formData.total || Number(formData.total) <= 0) {
-      newErrors.total = "El total debe ser mayor a 0.";
-    }
-    if (!formData.paymentMethod) {
-      newErrors.paymentMethod = "Debe seleccionar una forma de pago.";
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = () => {
-    if (!validate()) return;
-
-    const client = clients.find((c) => c.id === Number(formData.clientId));
-    
-    const newStatus =
-      totalPaidAmount >= totalSaleAmount
-        ? "pagado"
-        : totalPaidAmount > 0
-          ? "abonado"
-          : "credito";
-
-    const saleData = {
-      clientId: Number(formData.clientId),
-      clientName: client?.name || (editingSale?.clientName),
-      total: Number(formData.total),
-      paymentMethod: formData.paymentMethod,
-      status: (editingSale ? newStatus : formData.status) as Sale["status"],
-      observations: formData.observations,
-      isCredit: formData.isCredit,
-      creditDueDate: formData.isCredit ? formData.creditDueDate : undefined,
-      commissionAgentName: formData.commissionAgentName,
-      commissionAgentAmount: Number(formData.commissionAgentAmount) || 0,
-      commissionAgentRetentionPercentage: Number(formData.commissionAgentRetentionPercentage) || 0,
-      commissionAgentNetPayment: Number(formData.commissionAgentNetPayment) || 0,
-      ta: Number(formData.ta) || 0,
-      supplierCost: Number(formData.supplierCost) || 0,
+    // Optimistic: add to UI immediately with a temp id
+    const tempId = `temp_${Date.now()}`;
+    const optimisticPayment: PaymentRecord = {
+      id: tempId,
+      date: new Date().toISOString(),
+      amount,
+      method: newPayment.method,
     };
+    setPayments(prev => [...prev, optimisticPayment]);
+    setNewPayment({ amount: "", method: "Efectivo" });
 
-    if (editingSale) {
-      onUpdateSale(editingSale.id, saleData);
-    } else {
-      onAddSale({
-        ...saleData,
-        asesorId: user!.id,
-        asesorName: user!.name,
-        date: new Date().toISOString().split("T")[0],
-      });
-    }
-    onClose();
+    // Fire-and-forget: sync with server in background
+    onRegisterPayment(sale.id, amount, newPayment.method).then(result => {
+      // Replace temp entry with real server data
+      setPayments(prev => prev.map(p => p.id === tempId ? result.payment : p));
+    }).catch(() => {
+      // Rollback on error
+      setPayments(prev => prev.filter(p => p.id !== tempId));
+    });
   };
 
-  if (!isOpen) return null;
+  const handleDeletePayment = (paymentId: string) => {
+    // Optimistic: remove immediately
+    const removed = payments.find(p => p.id === paymentId);
+    setPayments(prev => prev.filter(p => p.id !== paymentId));
+
+    // Fire-and-forget: sync with server
+    onDeletePayment(sale.id, paymentId).catch(() => {
+      // Rollback on error
+      if (removed) setPayments(prev => [...prev, removed].sort((a, b) =>
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+      ));
+    });
+  };
+
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={editingSale ? "Editar Venta" : "Nueva Venta"}
+      title="Gestión de Abonos y Pagos"
       size="lg"
       footer={
-        editingSale ? (
-          <>
-            <Button variant="outline" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSubmit}>Guardar Cambios</Button>
-          </>
-        ) : (
-          <Button variant="outline" onClick={onClose}>
-            Cerrar
-          </Button>
-        )
+        <Button variant="outline" onClick={onClose} className="px-8 border-gray-200 text-gray-500 hover:bg-gray-50">
+          Cerrar
+        </Button>
       }
     >
-      {editingSale ? (
-        loadingSale ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="text-center">
-              <Loader2 size={36} className="animate-spin text-accent mx-auto mb-3" />
-              <p className="text-gray-500 font-medium text-sm">Cargando datos completos de la venta...</p>
-            </div>
-          </div>
-        ) : (
-        <div className="space-y-6">
-          {/* Seccion Resumen Solo Lectura */}
+      <div className="space-y-6">
+          {/* Sección Resumen Solo Lectura */}
           <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-sm">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-200">
               <h4 className="font-bold text-primary flex items-center gap-2">
-                <Receipt size={18} /> Resumen de Venta #{editingSale.id}
+                <Receipt size={18} /> Resumen de Venta #{sale.id}
               </h4>
-              <Badge variant={editingSale.status}>
-                {editingSale.status === "pagado"
+              <Badge variant={sale.status}>
+                {sale.status === "pagado"
                   ? "Finalizado"
-                  : editingSale.status === "abonado"
-                    ? "Completado"
+                  : sale.status === "abonado"
+                    ? "Abonado"
                     : "Crédito"}
               </Badge>
             </div>
@@ -277,7 +196,7 @@ export default function SaleEditModal({
                   Fecha de Emisión
                 </span>
                 <span className="font-semibold text-gray-800">
-                  {formatDate(editingSale.date)}
+                  {formatDate(sale.date)}
                 </span>
               </div>
               <div>
@@ -285,7 +204,7 @@ export default function SaleEditModal({
                   Cliente
                 </span>
                 <span className="font-semibold text-gray-800">
-                  {editingSale.clientName}
+                  {sale.clientName}
                 </span>
               </div>
               <div>
@@ -293,44 +212,24 @@ export default function SaleEditModal({
                   Asesor
                 </span>
                 <span className="font-semibold text-gray-800">
-                  {editingSale.asesorName}
+                  {sale.asesorName}
                 </span>
               </div>
-              <div>
-                <span className="text-gray-500 block text-xs font-medium mb-0.5">
-                  Comisionista
-                </span>
-                <span className="font-semibold text-gray-800">
-                  {editingSale.commissionAgentName || "N/A"}
-                </span>
-              </div>
+              {sale.commissionAgentName && (
+                <div>
+                  <span className="text-gray-500 block text-xs font-medium mb-0.5">
+                    Comisionista
+                  </span>
+                  <span className="font-semibold text-gray-800">
+                    {sale.commissionAgentName}
+                  </span>
+                </div>
+              )}
               <div className="col-span-2 sm:col-span-3 pt-3 mt-1 border-t border-gray-100">
                 <span className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1">
-                  <ShoppingBag size={14} className="text-accent" /> Productos
-                  Vendidos / Observaciones
+                  <ShoppingBag size={14} className="text-accent" /> Servicios incluidos
                 </span>
-                <div className="bg-white p-3 rounded-lg border border-gray-100 max-h-32 overflow-y-auto custom-scrollbar">
-                  {editingSale.observations ? (
-                    <ul className="space-y-1.5">
-                      {editingSale.observations
-                        .split("\n")
-                        .filter((l) => l.trim())
-                        .map((line, i) => (
-                          <li
-                            key={i}
-                            className="flex items-start gap-2 text-sm font-medium text-gray-700"
-                          >
-                            <div className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5 shrink-0"></div>
-                            <span>{line}</span>
-                          </li>
-                        ))}
-                    </ul>
-                  ) : (
-                    <span className="text-gray-400 italic text-sm">
-                      No se detallaron servicios
-                    </span>
-                  )}
-                </div>
+                <ServicesList sale={sale} />
               </div>
             </div>
           </div>
@@ -342,7 +241,7 @@ export default function SaleEditModal({
                 Valor Final
               </p>
               <p className="text-lg font-black text-gray-800">
-                {formatCurrency(editingSale.total)}
+                {formatCurrency(sale.total)}
               </p>
             </div>
             <div>
@@ -350,18 +249,18 @@ export default function SaleEditModal({
                 Pago Proveedores
               </p>
               <p className="text-lg font-black text-rose-600">
-                {formatCurrency(editingSale.supplierCost || 0)}
+                {formatCurrency(sale.supplierCost || 0)}
               </p>
             </div>
             <div>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                Ganancias Obtenidas
+                Ganancias Oficina
               </p>
               <p className="text-lg font-black text-emerald-600">
                 {formatCurrency(
-                  editingSale.total -
-                    (editingSale.supplierCost || 0) -
-                    (editingSale.commissionAgentNetPayment || 0),
+                  sale.total -
+                    (sale.supplierCost || 0) -
+                    (sale.commissionAgentNetPayment || 0),
                 )}
               </p>
             </div>
@@ -415,7 +314,7 @@ export default function SaleEditModal({
             </div>
 
             {/* B. Formulario de Agregar Nuevo Abono */}
-            {remainingBalance > 0 && (
+            {remainingBalance > 0 && sale.status !== "pagado" && (
               <div className="bg-white p-5 rounded-xl border border-blue-100 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                 <h4 className="text-sm font-bold text-gray-800 mb-4">
@@ -468,11 +367,10 @@ export default function SaleEditModal({
                     disabled={
                       !newPayment.amount ||
                       Number(newPayment.amount) <= 0 ||
-                      Number(newPayment.amount) > remainingBalance ||
-                      isSavingPayment
+                      Number(newPayment.amount) > remainingBalance
                     }
                   >
-                    {isSavingPayment ? "Guardando..." : "Registrar Abono"}
+                    Registrar Abono
                   </Button>
                 </div>
                 {Number(newPayment.amount) > remainingBalance && (
@@ -510,16 +408,7 @@ export default function SaleEditModal({
                         </div>
                       </div>
                       <div className="flex gap-2 items-center mt-2 sm:mt-0">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          type="button"
-                          className="text-xs py-1.5 px-2 h-auto"
-                          onClick={() => onDownloadVoucher(editingSale)}
-                        >
-                          <FileDown size={14} className="mr-1" /> PDF
-                        </Button>
-                        {isAdmin && (
+                        {isAdmin && sale.status !== "pagado" && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -573,10 +462,6 @@ export default function SaleEditModal({
             })()}
           </div>
         </div>
-      )
-    ) : (
-      <p className="text-center py-8 text-gray-500">Solo se permite edición de ventas existentes en esta modal.</p>
-    )}
     </Modal>
   );
 }

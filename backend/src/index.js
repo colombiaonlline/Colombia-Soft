@@ -13,7 +13,30 @@ const app = express();
 
 // Seguridad
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-app.use(cors({ origin: env.frontendUrl, credentials: true }));
+
+// Configuración dinámica de CORS para soportar producción y desarrollo local
+const allowedOrigins = [
+  env.frontendUrl,
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174'
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Permitir solicitudes sin origen (como curl, postman o apps de celular)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS. Origen: ' + origin));
+    }
+  },
+  credentials: true
+}));
 
 // Rate limiting
 const limiter = rateLimit({

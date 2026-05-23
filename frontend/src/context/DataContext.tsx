@@ -1,8 +1,19 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react';
 import { AppData, User, Client, Sale, Flight, RolePermissions, normalizeRolePermissions } from '../types';
 import * as api from '../api';
 import { useAuth } from './AuthContext';
 import { getCurrentMonth } from '../utils/formatters';
+import {
+  saveSalesAndClientsCache,
+  loadSalesCache,
+  loadClientsCache,
+  invalidateSalesCache,
+} from '../utils/salesCache';
+import {
+  saveDashboardCache,
+  loadDashboardCache,
+  invalidateDashboardCache,
+} from '../utils/dashboardCache';
 
 const RP_CACHE_KEY = 'itea_role_permissions_cache';
 
@@ -49,7 +60,8 @@ interface DataContextType {
   data: AppData;
   dashboardData: DashboardData | null;
   dashboardLoading: boolean;
-  fetchDashboard: (params?: Record<string, unknown>) => Promise<void>;
+  salesLoading: boolean;
+  fetchDashboard: (params?: Record<string, unknown>, isBackgroundRefresh?: boolean) => Promise<void>;
   refreshData: () => void;
   addUser: (user: Omit<User, 'id'>) => Promise<User>;
   updateUser: (id: number, user: Partial<User>) => Promise<void>;
@@ -94,28 +106,95 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const [data, setData] = useState<AppData>(emptyData);
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [dashboardLoading, setDashboardLoading] = useState(false);
+  const [data, setData] = useState<AppData>(() => {
+    // ── Inicialización optimista desde caché ──────────────────────────────
+    // Si hay datos cacheados válidos, pre-populamos el estado para que la
+    // tabla de ventas se renderice en 0ms antes del primer fetch de red.
+    const cachedSales = loadSalesCache();
+    const cachedClients = loadClientsCache();
+    if (cachedSales || cachedClients) {
+      return {
+        ...emptyData,
+        sales: (cachedSales as Sale[]) || [],
+        clients: (cachedClients as Client[]) || [],
+      };
+    }
+    return emptyData;
+  });
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(() => loadDashboardCache());
+  const [dashboardLoading, setDashboardLoading] = useState<boolean>(() => !loadDashboardCache());
+  // salesLoading = true sólo cuando NO hay caché y se está haciendo el primer fetch
+  const [salesLoading, setSalesLoading] = useState<boolean>(() => {
+    const hasCachedSales = loadSalesCache() !== null;
+    return !hasCachedSales;
+  });
+  const backgroundLoadingRef = useRef(false);
+  const fetchingDashboardRef = useRef(false);
 
-  const fetchDashboard = useCallback(async (params: Record<string, unknown> = {}) => {
-    setDashboardLoading(true);
+  const fetchDashboard = useCallback(async (params: Record<string, unknown> = {}, isBackgroundRefresh = false) => {
+    if (fetchingDashboardRef.current) return;
+    fetchingDashboardRef.current = true;
+    
+    if (!isBackgroundRefresh) {
+      setDashboardLoading(true);
+    }
     try {
       const result = await api.getDashboard(params);
       setDashboardData(result as DashboardData);
+      
+      // Guardar en caché el dashboard consultado
+      saveDashboardCache(result as DashboardData);
     } catch {
       setDashboardData(null);
     } finally {
-      setDashboardLoading(false);
+      fetchingDashboardRef.current = false;
+      if (!isBackgroundRefresh) {
+        setDashboardLoading(false);
+      }
     }
   }, []);
 
+  /**
+   * Carga en CASCADA:
+   * Fase 1 (crítica, bloqueante para la UI de ventas):
+   *   → Cargar sales + clients primero → renderiza tabla inmediatamente
+   *   → Guarda en caché localStorage
+   * Fase 2 (background, no bloqueante):
+   *   → Cargar el resto (users, flights, config, agents, etc.)
+   *   → Merge al estado ya visible, sin interrumpir la UI
+   */
   const loadAll = useCallback(async () => {
+    // Si ya tenemos datos en caché, la tabla ya está visible.
+    // La fase 1 igualmente recarga en background para mantener datos frescos.
+    const hasCachedData = loadSalesCache() !== null;
+
+    if (!hasCachedData) {
+      setSalesLoading(true);
+    }
+
     try {
-      const [usersRes, clientsRes, salesRes, flightsRes, agentsRes, settlementsRes, configAll, asesorPerms, freelancerPerms, salesHistory] = await Promise.all([
-        api.listUsers({ perPage: 100 }).catch(() => ({ data: [] })),
-        api.listClients({ perPage: 100 }).catch(() => ({ data: [] })),
+      // ── FASE 1: Datos críticos (ventas + clientes) ────────────────────
+      const [salesRes, clientsRes] = await Promise.all([
         api.listSales({ perPage: 100 }).catch(() => ({ data: [] })),
+        api.listClients({ perPage: 100 }).catch(() => ({ data: [] })),
+      ]);
+
+      const freshSales = salesRes.data || [];
+      const freshClients = clientsRes.data || [];
+
+      // Guardar en caché para próximas visitas
+      saveSalesAndClientsCache(freshSales, freshClients);
+
+      // Actualizar sólo sales + clients → tabla se renderiza de inmediato
+      setData(prev => ({ ...prev, sales: freshSales, clients: freshClients }));
+      setSalesLoading(false);
+
+      // ── FASE 2: Resto de datos en background ─────────────────────────
+      if (backgroundLoadingRef.current) return; // Evitar cargas duplicadas en background
+      backgroundLoadingRef.current = true;
+
+      const [usersRes, flightsRes, agentsRes, settlementsRes, configAll, asesorPerms, freelancerPerms, salesHistory] = await Promise.all([
+        api.listUsers({ perPage: 100 }).catch(() => ({ data: [] })),
         api.listFlights({ perPage: 100 }).catch(() => ({ data: [] })),
         api.listCommissionAgents({ perPage: 100 }).catch(() => ({ data: [] })),
         api.listSettlements({ perPage: 100 }).catch(() => ({ data: [] })),
@@ -125,10 +204,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
         api.getSalesHistory(new Date().getFullYear()).catch(() => null),
       ]);
 
-      setData({
+      backgroundLoadingRef.current = false;
+
+      const resolvedRolePermissions = (() => {
+        const rp = {
+          asesor: normalizeRolePermissions(asesorPerms || loadCachedRolePermissions()?.asesor || emptyData.config.rolePermissions.asesor),
+          freelancer: normalizeRolePermissions(freelancerPerms || loadCachedRolePermissions()?.freelancer || emptyData.config.rolePermissions.freelancer),
+        };
+        if (asesorPerms || freelancerPerms) {
+          try { localStorage.setItem(RP_CACHE_KEY, JSON.stringify(rp)); } catch {}
+        }
+        return rp;
+      })();
+
+      // Merge completo al estado — sin tocar sales/clients que ya están
+      setData(prev => ({
+        ...prev,
         users: usersRes.data || [],
-        clients: clientsRes.data || [],
-        sales: salesRes.data || [],
         flights: flightsRes.data || [],
         commissionAgents: agentsRes.data || [],
         commissionSettlements: settlementsRes.data || [],
@@ -141,29 +233,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
           airports: configAll?.airports || [],
           baggage: configAll?.baggage || [],
           packages: configAll?.packages || [],
-          rolePermissions: (() => {
-            const rp = {
-              asesor: normalizeRolePermissions(asesorPerms || loadCachedRolePermissions()?.asesor || emptyData.config.rolePermissions.asesor),
-              freelancer: normalizeRolePermissions(freelancerPerms || loadCachedRolePermissions()?.freelancer || emptyData.config.rolePermissions.freelancer),
-            };
-            if (asesorPerms || freelancerPerms) {
-              try { localStorage.setItem(RP_CACHE_KEY, JSON.stringify(rp)); } catch {}
-            }
-            return rp;
-          })(),
+          rolePermissions: resolvedRolePermissions,
         },
         salesHistory: salesHistory || [],
-      });
+      }));
 
-      // Fetch initial dashboard data
+      // Dashboard en background (usando la función que previene duplicados)
       const { start, end } = getCurrentMonth();
       const dashParams: Record<string, unknown> = {};
       if (start) dashParams.dateFrom = new Date(start).toISOString();
       if (end) dashParams.dateTo = new Date(end).toISOString();
-      api.getDashboard(dashParams).then(result => {
-        setDashboardData(result as DashboardData);
-      }).catch(() => {});
+      fetchDashboard(dashParams, true);
     } catch {
+      setSalesLoading(false);
+      backgroundLoadingRef.current = false;
       setData(emptyData);
     }
   }, []);
@@ -226,7 +309,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const addSale = async (sale: Omit<Sale, 'id'>): Promise<Sale> => {
     const created = await api.createSale(sale as any);
-    setData(prev => ({ ...prev, sales: [...prev.sales, created] }));
+    setData(prev => {
+      const updatedSales = [...prev.sales, created];
+      // Invalida caché para que próximas visitas recarguen datos frescos
+      invalidateSalesCache();
+      invalidateDashboardCache();
+      return { ...prev, sales: updatedSales };
+    });
     return created;
   };
 
@@ -241,27 +330,55 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const deleteSale = async (id: number) => {
     await api.deleteSale(id);
-    setData(prev => ({ ...prev, sales: prev.sales.filter(s => s.id !== id) }));
+    setData(prev => {
+      const updatedSales = prev.sales.filter(s => s.id !== id);
+      // Invalida caché al eliminar una venta
+      invalidateSalesCache();
+      invalidateDashboardCache();
+      return { ...prev, sales: updatedSales };
+    });
   };
 
   const registerCreditPayment = async (saleId: number, amount: number, method?: string, isTotal: boolean = false) => {
-    const result = await api.registerPayment(saleId, { amount, method, isTotal });
-    const updated = await api.getSale(saleId);
+    // Find current sale to pass totals — backend can skip a findUnique
+    const sale = data.sales.find(s => s.id === saleId);
+    const result = await api.registerPayment(saleId, {
+      amount,
+      method,
+      isTotal,
+      currentPaidAmount: sale?.creditPaidAmount ?? 0,
+      saleTotal: sale?.total ?? undefined
+    });
     setData(prev => ({
       ...prev,
-      sales: prev.sales.map(s => s.id === saleId ? { ...s, ...updated } : s)
+      sales: prev.sales.map(s => s.id === saleId ? {
+        ...s,
+        creditPaidAmount: result.creditPaidAmount,
+        status: result.status,
+        payments: [...(s.payments || []), result.payment]
+      } : s)
     }));
     return result;
   };
 
   const deleteSalePayment = async (saleId: number, paymentId: string) => {
-    await api.deletePayment(saleId, paymentId);
-    const updated = await api.getSale(saleId);
+    // Pass current payments array so backend can compute new total without a query
+    const sale = data.sales.find(s => s.id === saleId);
+    const result = await api.deletePayment(saleId, paymentId, {
+      currentPayments: sale?.payments || [],
+      saleTotal: sale?.total ?? undefined
+    });
     setData(prev => ({
       ...prev,
-      sales: prev.sales.map(s => s.id === saleId ? { ...s, ...updated } : s)
+      sales: prev.sales.map(s => s.id === saleId ? {
+        ...s,
+        creditPaidAmount: result.creditPaidAmount,
+        status: result.status,
+        payments: (s.payments || []).filter((p: any) => p.id !== paymentId)
+      } : s)
     }));
   };
+
 
   const updateFlight = async (id: string, flightUpdate: Partial<Flight>) => {
     const result = await api.updateCheckin(id, flightUpdate as any);
@@ -375,6 +492,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       data,
       dashboardData,
       dashboardLoading,
+      salesLoading,
       fetchDashboard,
       refreshData,
       addUser,

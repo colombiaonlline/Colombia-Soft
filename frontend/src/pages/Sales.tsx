@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import * as api from "../api";
 import {
   Plus,
   ShoppingBag,
@@ -26,7 +27,7 @@ import StatCard from "../components/ui/StatCard";
 import CreditDashboard from "../components/sales/CreditDashboard";
 
 export default function Sales() {
-  const { data, addSale, updateSale, deleteSale, registerCreditPayment, deleteSalePayment } = useData();
+  const { data, addSale, updateSale, deleteSale, registerCreditPayment, deleteSalePayment, salesLoading } = useData();
   const { user, isAdmin } = useAuth();
   const { canCreate, canEdit } = usePermissions();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,6 +35,7 @@ export default function Sales() {
   const [editingSale, setEditingSale] = useState<Sale | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+  const [salesDetails, setSalesDetails] = useState<Record<number, Sale>>({});
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [activeTab, setActiveTab] = useState<'list' | 'credit'>('list');
@@ -59,6 +61,31 @@ export default function Sales() {
     );
   }, [filteredSales]);
 
+  // Silent prefetch for the first 5 visible sales when list loads
+  useEffect(() => {
+    if (filteredSales && filteredSales.length > 0) {
+      const timer = setTimeout(() => {
+        const toPrefetch = filteredSales.slice(0, 5);
+        toPrefetch.forEach(sale => {
+          if (!salesDetails[sale.id]) {
+            api.getSale(sale.id).then(fetched => {
+              setSalesDetails(prev => ({ ...prev, [sale.id]: fetched }));
+            }).catch(() => null);
+          }
+        });
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [filteredSales]);
+
+  const handlePrefetchDetail = (sale: Sale) => {
+    if (!salesDetails[sale.id]) {
+      api.getSale(sale.id).then(fetched => {
+        setSalesDetails(prev => ({ ...prev, [sale.id]: fetched }));
+      }).catch(() => null);
+    }
+  };
+
   const canEditThis = (sale: Sale): boolean => {
     if (!canEdit("sales")) return false;
     // Solo permitir edición si NO está pagada
@@ -80,6 +107,7 @@ export default function Sales() {
   const handleViewDetail = (sale: Sale) => {
     setSelectedSale(sale);
     setIsDetailOpen(true);
+    handlePrefetchDetail(sale);
   };
 
   const handleDownloadVoucher = (sale: Sale) => {
@@ -167,17 +195,43 @@ export default function Sales() {
             >
               Lista de Ventas {isAdmin ? "(Todas)" : "(Mis Ventas)"}
             </CardHeader>
-            <SalesTable
-              sales={filteredSales}
-              clients={data.clients}
-              users={data.users}
-              onViewDetail={handleViewDetail}
-              onDownloadVoucher={handleDownloadVoucher}
-              onEdit={handleOpenModal}
-              onDelete={(sale) => setDeleteConfirm(sale)}
-              canEditThis={canEditThis}
-              isAdmin={isAdmin}
-            />
+
+            {/* Skeleton de carga — solo se muestra en el primer fetch sin caché */}
+            {salesLoading && filteredSales.length === 0 ? (
+              <div className="p-4 space-y-3 animate-pulse">
+                {[...Array(7)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-4">
+                    <div className="h-8 w-8 rounded-full bg-gray-200" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3 bg-gray-200 rounded w-1/3" style={{ animationDelay: `${i * 60}ms` }} />
+                      <div className="h-2.5 bg-gray-100 rounded w-1/4" />
+                    </div>
+                    <div className="h-3 bg-gray-200 rounded w-16" />
+                    <div className="h-3 bg-gray-200 rounded w-20" />
+                    <div className="h-3 bg-gray-200 rounded w-14" />
+                    <div className="h-6 bg-gray-100 rounded-full w-20" />
+                    <div className="flex gap-1.5">
+                      <div className="h-8 w-8 rounded-lg bg-gray-100" />
+                      <div className="h-8 w-8 rounded-lg bg-gray-100" />
+                      <div className="h-8 w-8 rounded-lg bg-gray-100" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <SalesTable
+                sales={filteredSales}
+                clients={data.clients}
+                users={data.users}
+                onViewDetail={handleViewDetail}
+                onPrefetchDetail={handlePrefetchDetail}
+                onDownloadVoucher={handleDownloadVoucher}
+                onEdit={handleOpenModal}
+                onDelete={(sale) => setDeleteConfirm(sale)}
+                canEditThis={canEditThis}
+                isAdmin={isAdmin}
+              />
+            )}
           </Card>
         </>
       ) : (
@@ -223,7 +277,7 @@ export default function Sales() {
       <SaleDetailModal
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
-        selectedSale={selectedSale}
+        selectedSale={salesDetails[selectedSale?.id || 0] || selectedSale}
         clients={data.clients}
         onViewProductDetails={setDetailedProduct}
       />

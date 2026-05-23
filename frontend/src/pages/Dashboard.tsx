@@ -1,6 +1,6 @@
-import { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Card, CardHeader, CardBody } from "../components/ui/Card";
-import { formatCurrency, getCurrentMonth } from "../utils/formatters";
+import { formatCurrency, getCurrentMonth, formatDate } from "../utils/formatters";
 import {
   PieChart,
   Pie,
@@ -23,7 +23,6 @@ import {
   DollarSign,
   CreditCard,
   Map,
-  Loader2,
 } from "lucide-react";
 import Datepicker from "react-tailwindcss-datepicker";
 import { useData } from "../context/DataContext";
@@ -35,11 +34,18 @@ export default function Dashboard() {
     startDate: new Date(start),
     endDate: new Date(end),
   });
+  const isInitialMount = React.useRef(true);
+
   useEffect(() => {
     const params: Record<string, unknown> = {};
     if (dateRange?.startDate) params.dateFrom = dateRange.startDate.toISOString();
     if (dateRange?.endDate) params.dateTo = dateRange.endDate.toISOString();
-    fetchDashboard(params);
+    
+    // Si es el montaje inicial y ya tenemos datos en caché, hacemos un refresco silencioso
+    const isBackground = isInitialMount.current && dashboardData !== null;
+    fetchDashboard(params, isBackground);
+    
+    isInitialMount.current = false;
   }, [dateRange, fetchDashboard]);
 
   const stats = useMemo(() => {
@@ -114,9 +120,23 @@ export default function Dashboard() {
       </div>
 
       {/* KPIs */}
-      {dashboardLoading ? (
-        <div className="flex items-center justify-center py-20 text-gray-400">
-          <Loader2 className="w-8 h-8 animate-spin" />
+      {dashboardLoading && !dashboardData ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
+          {[...Array(8)].map((_, i) => (
+            <Card key={i} className="border border-gray-200 shadow-sm bg-white rounded-xl h-[120px]">
+              <CardBody className="p-5 flex flex-col justify-between h-full">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="h-3 w-1/3 bg-gray-200 rounded"></div>
+                  <div className="h-8 w-8 bg-gray-100 rounded-xl"></div>
+                </div>
+                <div className="h-6 w-1/2 bg-gray-200 rounded"></div>
+                <div className="mt-4 pt-3 border-t border-gray-50 flex justify-between">
+                  <div className="h-2 w-1/3 bg-gray-100 rounded"></div>
+                  <div className="h-3 w-1/4 bg-gray-100 rounded"></div>
+                </div>
+              </CardBody>
+            </Card>
+          ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -236,7 +256,9 @@ export default function Dashboard() {
           </CardHeader>
           <CardBody>
             <div className="h-64 w-full mt-2">
-              {!dashboardLoading && (
+              {dashboardLoading && !dashboardData ? (
+                <div className="w-full h-full bg-gray-100 rounded-xl animate-pulse" />
+              ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart
                     data={stats.yearlyTrendData}
@@ -270,7 +292,9 @@ export default function Dashboard() {
           <CardHeader>Estado de Cartera</CardHeader>
           <CardBody>
             <div className="relative h-48 flex items-center justify-center mt-2">
-              {!dashboardLoading && (
+              {dashboardLoading && !dashboardData ? (
+                <div className="w-32 h-32 rounded-full border-[16px] border-gray-100 animate-pulse" />
+              ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie data={stats.carteraData} cx="50%" cy="50%" innerRadius={65} outerRadius={85} paddingAngle={4} dataKey="value" stroke="none" cornerRadius={6}>
@@ -282,21 +306,34 @@ export default function Dashboard() {
                   </PieChart>
                 </ResponsiveContainer>
               )}
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Total</span>
-                <span className="text-lg font-black text-primary">{formatCurrency(stats.totalIngresos)}</span>
-              </div>
+              {(!dashboardLoading || dashboardData) && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Total</span>
+                  <span className="text-lg font-black text-primary">{formatCurrency(stats.totalIngresos)}</span>
+                </div>
+              )}
             </div>
             <div className="mt-6 grid grid-cols-3 gap-2">
-              {stats.carteraData.map((item: any, i: number) => (
-                <div key={i} className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className="w-2.5 h-2.5 rounded-full shadow-sm shrink-0" style={{ backgroundColor: CARTERA_COLORS[i] }} />
-                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider truncate">{item.name}</span>
+              {dashboardLoading && !dashboardData ? (
+                <>
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-xl animate-pulse">
+                      <div className="h-2 w-8 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-3 w-10 bg-gray-200 rounded"></div>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                stats.carteraData.map((item: any, i: number) => (
+                  <div key={i} className="flex flex-col items-center justify-center p-2 bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="w-2.5 h-2.5 rounded-full shadow-sm shrink-0" style={{ backgroundColor: CARTERA_COLORS[i] }} />
+                      <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider truncate">{item.name}</span>
+                    </div>
+                    <span className="text-[11px] font-black text-gray-800 truncate w-full text-center">{item.value}%</span>
                   </div>
-                  <span className="text-[11px] font-black text-gray-800 truncate w-full text-center">{item.value}%</span>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardBody>
         </Card>
@@ -317,18 +354,22 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {dashboardLoading ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
-                    <Loader2 className="w-5 h-5 animate-spin inline-block" />
-                  </td>
-                </tr>
+              {dashboardLoading && !dashboardData ? (
+                [...Array(5)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-4 py-4"><div className="h-4 bg-gray-100 rounded w-3/4"></div></td>
+                    <td className="px-4 py-4"><div className="h-4 bg-gray-100 rounded w-1/2"></div></td>
+                    <td className="px-4 py-4"><div className="h-4 bg-gray-100 rounded w-1/3"></div></td>
+                    <td className="px-4 py-4"><div className="h-4 bg-gray-100 rounded w-1/2"></div></td>
+                    <td className="px-4 py-4"><div className="h-6 bg-gray-100 rounded-full w-20"></div></td>
+                  </tr>
+                ))
               ) : (
                 stats.recentSales.map((sale) => (
                   <tr key={sale.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">{sale.clientName}</td>
                     <td className="px-4 py-3">{sale.asesorName}</td>
-                    <td className="px-4 py-3">{sale.date}</td>
+                    <td className="px-4 py-3">{formatDate(sale.date)}</td>
                     <td className="px-4 py-3 font-semibold">
                       {formatCurrency(sale.total)}
                     </td>
