@@ -227,8 +227,8 @@ export function PlanForm({ plan, onChange, data }: PlanFormProps) {
                   value={guest.docType}
                   onChange={(e) => updateGuest(gIdx, { docType: e.target.value })}
                   options={data.config.documentTypes.map((d: any) => ({
-                    value: d.name,
-                    label: d.name,
+                    value: d.abreviatura,
+                    label: d.abreviatura,
                   }))}
                 />
                 <Input

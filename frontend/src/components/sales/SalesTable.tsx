@@ -112,13 +112,20 @@ export default function SalesTable({
               {formatDate(sale.date)}
             </TableCell>
             <TableCell>
-              <Badge variant={sale.status} className="uppercase text-[9px] font-black">
-                {sale.status === "pagado"
-                  ? "Finalizado"
-                  : sale.status === "abonado"
-                    ? "Abonado"
-                    : "En Crédito"}
-              </Badge>
+              <div className="flex flex-col gap-1">
+                <Badge variant={sale.status} className="uppercase text-[9px] font-black">
+                  {sale.status === "pagado"
+                    ? "Finalizado"
+                    : sale.status === "abonado"
+                      ? "Abonado"
+                      : "En Crédito"}
+                </Badge>
+                {sale.status === "credito" && sale.creditDueDate && (
+                  <span className="text-[10px] text-rose-500 font-medium whitespace-nowrap">
+                    Vence: {formatDate(sale.creditDueDate)}
+                  </span>
+                )}
+              </div>
             </TableCell>
             <TableCell>
               <div className="flex items-center justify-end gap-2">

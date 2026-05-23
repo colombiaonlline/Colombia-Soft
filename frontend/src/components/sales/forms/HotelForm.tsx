@@ -11,12 +11,6 @@ interface HotelFormProps {
 }
 
 export function HotelForm({ hotel, onChange, data }: HotelFormProps) {
-  const uniqueCities = Array.from(
-    new Set(
-      data.config.airports?.map((a: any) => a.location.split(",")[0].trim()) || []
-    ),
-  );
-
   const addGuest = () => {
     onChange({ guests: [...hotel.guests, { name: "", docType: "CC", docNumber: "" }] });
   };
@@ -33,12 +27,6 @@ export function HotelForm({ hotel, onChange, data }: HotelFormProps) {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <datalist id="cities-list">
-        {uniqueCities.map((city: any) => (
-          <option key={city} value={city} />
-        ))}
-      </datalist>
-
       <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
         <h4 className="text-xs font-bold text-primary uppercase tracking-widest mb-4 flex items-center gap-2">
           <Building2 size={14} />
@@ -53,11 +41,14 @@ export function HotelForm({ hotel, onChange, data }: HotelFormProps) {
             />
           </FormField>
           <FormField label="Destino">
-            <Input
+            <Combobox
               value={hotel.destination}
-              onChange={(e) => onChange({ destination: e.target.value })}
+              onChange={(val) => onChange({ destination: val })}
+              options={data.config.airports.map((a: any) => ({
+                value: a.location,
+                label: `${a.location} (${a.abbreviation})`,
+              }))}
               placeholder="Ej: Berlín, Alemania"
-              list="cities-list"
             />
           </FormField>
           <FormField label="Proveedor">
@@ -90,11 +81,10 @@ export function HotelForm({ hotel, onChange, data }: HotelFormProps) {
             />
           </FormField>
           <FormField label="Tipo de Hotel">
-            <Select
+            <Combobox
               value={hotel.hotelType || ""}
-              onChange={(e) => onChange({ hotelType: e.target.value })}
+              onChange={(val) => onChange({ hotelType: val })}
               options={[
-                { value: "", label: "Seleccionar tipo..." },
                 { value: "hotel", label: "Hotel Normal" },
                 { value: "resort", label: "Resort / Todo Incluido" },
                 { value: "boutique", label: "Hotel Boutique" },
@@ -102,6 +92,7 @@ export function HotelForm({ hotel, onChange, data }: HotelFormProps) {
                 { value: "hostal", label: "Hostal / Albergue" },
                 { value: "finca", label: "Finca / Casa Rural" },
               ]}
+              placeholder="Seleccionar tipo..."
             />
           </FormField>
         </div>
@@ -127,13 +118,14 @@ export function HotelForm({ hotel, onChange, data }: HotelFormProps) {
                   onChange={(e) => updateGuest(gIdx, { name: e.target.value })}
                   placeholder="Nombre completo"
                 />
-                <Select
+                <Combobox
                   value={guest.docType}
-                  onChange={(e) => updateGuest(gIdx, { docType: e.target.value })}
+                  onChange={(val) => updateGuest(gIdx, { docType: val })}
                   options={data.config.documentTypes.map((d: any) => ({
-                    value: d.name,
-                    label: d.name,
+                    value: d.abreviatura,
+                    label: d.abreviatura,
                   }))}
+                  placeholder="Tipo de documento"
                 />
                 <Input
                   value={guest.docNumber}

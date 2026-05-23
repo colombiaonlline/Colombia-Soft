@@ -1,7 +1,9 @@
 const { error } = require('../utils/apiResponse');
 
 function errorHandler(err, req, res, _next) {
-  console.error('[ERROR]', err);
+  console.error('[ERROR]', err.message || err);
+  if (err.meta) console.error('[ERROR META]', JSON.stringify(err.meta));
+  if (err.stack) console.error('[ERROR STACK]', err.stack);
 
   if (err.code === 'P2002') {
     const target = err.meta?.target?.join(', ') || 'campo';
@@ -12,6 +14,16 @@ function errorHandler(err, req, res, _next) {
     return error(res, 'Registro no encontrado', 404, 'NOT_FOUND');
   }
 
+  if (err.code === 'P2003') {
+    const field = err.meta?.field_name || 'campo';
+    return error(res, `Referencia inválida en campo: ${field}`, 400, 'FOREIGN_KEY_ERROR');
+  }
+
+  if (err.code === 'P2011') {
+    const field = err.meta?.constraint || 'campo';
+    return error(res, `Campo requerido nulo: ${field}`, 400, 'NULL_CONSTRAINT');
+  }
+
   if (err.name === 'ZodError') {
     return error(res, 'Datos inválidos', 400, 'VALIDATION_ERROR');
   }
@@ -20,7 +32,10 @@ function errorHandler(err, req, res, _next) {
     return error(res, 'El archivo es demasiado grande', 413, 'FILE_TOO_LARGE');
   }
 
-  return error(res, 'Error interno del servidor', 500, 'INTERNAL_ERROR');
+  const msg = process.env.NODE_ENV === 'development'
+    ? `Error interno: ${err.message || err}`
+    : 'Error interno del servidor';
+  return error(res, msg, 500, 'INTERNAL_ERROR');
 }
 
 module.exports = errorHandler;

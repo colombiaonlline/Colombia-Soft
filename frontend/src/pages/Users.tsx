@@ -727,7 +727,7 @@ export default function Users() {
                 { value: "", label: "Seleccione" },
                 ...(data.config.documentTypes || []).map((d: any) => ({
                   value: d.abreviatura,
-                  label: `${d.abreviatura} - ${d.nombre}`,
+                  label: d.abreviatura,
                 })),
               ]}
             />

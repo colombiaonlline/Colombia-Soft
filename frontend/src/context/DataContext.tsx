@@ -232,9 +232,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const updateSale = async (id: number, saleUpdate: Partial<Sale>) => {
     await api.updateSale(id, saleUpdate);
+    const updated = await api.getSale(id);
     setData(prev => ({
       ...prev,
-      sales: prev.sales.map(s => s.id === id ? { ...s, ...saleUpdate } : s)
+      sales: prev.sales.map(s => s.id === id ? { ...s, ...updated, ...saleUpdate } : s)
     }));
   };
 
@@ -245,18 +246,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const registerCreditPayment = async (saleId: number, amount: number, method?: string, isTotal: boolean = false) => {
     const result = await api.registerPayment(saleId, { amount, method, isTotal });
+    const updated = await api.getSale(saleId);
     setData(prev => ({
       ...prev,
-      sales: prev.sales.map(s => s.id === saleId ? { ...s, status: result.status, creditPaidAmount: result.creditPaidAmount } : s)
+      sales: prev.sales.map(s => s.id === saleId ? { ...s, ...updated } : s)
     }));
     return result;
   };
 
   const deleteSalePayment = async (saleId: number, paymentId: string) => {
     await api.deletePayment(saleId, paymentId);
+    const updated = await api.getSale(saleId);
     setData(prev => ({
       ...prev,
-      sales: prev.sales.map(s => s.id === saleId ? { ...s, payments: (s.payments || []).filter(p => p.id !== paymentId) } : s)
+      sales: prev.sales.map(s => s.id === saleId ? { ...s, ...updated } : s)
     }));
   };
 

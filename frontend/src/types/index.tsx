@@ -257,8 +257,8 @@ export interface TicketData {
   flightMode: 'one_way' | 'round_trip';
   hasStops: boolean;
   returnHasStops?: boolean;
-  outboundStops?: string[];
-  returnStops?: string[];
+  outboundStops?: FlightLeg[];
+  returnStops?: FlightLeg[];
   legs: FlightLeg[];
   returnLeg?: FlightLeg;
   passengerInfo: {
@@ -605,7 +605,7 @@ export interface ConfigData {
     description: string;
   }[];
   paymentMethods: { id: number; name: string }[];
-  documentTypes: { id: number; nombre: string; abreviatura: string }[];
+  documentTypes: { id: number; name: string; abreviatura: string }[];
   airlines: {
     id: number;
     name: string;

@@ -111,22 +111,21 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
     let calcSupplierCost = 0;
     let calcTa = 0;
 
-    form.tickets.forEach(t => {
-      calcSupplierCost += Number(t.supplierCost) || 0;
-      calcTa += Number(t.ta) || 0;
-    });
-    form.hotels.forEach(h => {
-      calcSupplierCost += Number(h.supplierCost) || 0;
-      calcTa += Number(h.ta) || 0;
-    });
-    form.insurances.forEach(i => {
-      calcSupplierCost += Number(i.supplierCost) || 0;
-      calcTa += Number(i.ta) || 0;
-    });
-    form.plans.forEach(p => {
-      calcSupplierCost += Number(p.supplierCost) || 0;
-      calcTa += Number(p.ta) || 0;
-    });
+    form.tickets.forEach(t => { calcSupplierCost += Number(t.supplierCost) || 0; calcTa += Number(t.ta) || 0; });
+    form.hotels.forEach(h => { calcSupplierCost += Number(h.supplierCost) || 0; calcTa += Number(h.ta) || 0; });
+    form.insurances.forEach(i => { calcSupplierCost += Number(i.supplierCost) || 0; calcTa += Number(i.ta) || 0; });
+    form.plans.forEach(p => { calcSupplierCost += Number(p.supplierCost) || 0; calcTa += Number(p.ta) || 0; });
+    form.checkIns.forEach(c => { calcSupplierCost += Number(c.supplierCost) || 0; calcTa += Number(c.ta) || 0; });
+    form.migrations.forEach(m => { calcSupplierCost += Number(m.supplierCost) || 0; calcTa += Number(m.ta) || 0; });
+    form.simCards.forEach(s => { calcSupplierCost += Number(s.supplierCost) || 0; calcTa += Number(s.ta) || 0; });
+    form.carRentals.forEach(cr => { calcSupplierCost += Number(cr.supplierCost) || 0; calcTa += Number(cr.ta) || 0; });
+    form.fincas.forEach(f => { calcSupplierCost += Number(f.supplierCost) || 0; calcTa += Number(f.ta) || 0; });
+    form.tours.forEach(t => { calcSupplierCost += Number(t.supplierCost) || 0; calcTa += Number(t.ta) || 0; });
+    form.conventions.forEach(c => { calcSupplierCost += Number(c.supplierCost) || 0; calcTa += Number(c.ta) || 0; });
+    form.restaurants.forEach(r => { calcSupplierCost += Number(r.supplierCost) || 0; calcTa += Number(r.ta) || 0; });
+    form.visas.forEach(v => { calcSupplierCost += Number(v.supplierCost) || 0; calcTa += Number(v.ta) || 0; });
+    form.passports.forEach(p => { calcSupplierCost += Number(p.supplierCost) || 0; calcTa += Number(p.ta) || 0; });
+    form.petServices.forEach(ps => { calcSupplierCost += Number(ps.supplierCost) || 0; calcTa += Number(ps.ta) || 0; });
 
     const calcTotal = calcSupplierCost + calcTa;
 
@@ -142,7 +141,11 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
         total: calcTotal.toString()
       }));
     }
-  }, [form.tickets, form.hotels, form.insurances, form.plans]);
+  }, [
+    form.tickets, form.hotels, form.insurances, form.plans, form.checkIns,
+    form.migrations, form.simCards, form.carRentals, form.fincas, form.tours,
+    form.conventions, form.restaurants, form.visas, form.passports, form.petServices
+  ]);
 
   /* ---- helpers --------------------------------------------------- */
   const set = <K extends keyof WizardFormData>(
@@ -497,6 +500,39 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
       .filter(Boolean)
       .join("\n---\n");
 
+    const mappedTickets = form.tickets.map(t => {
+      // 1. Accumulate outbound legs (initial leg + outbound stops/scales)
+      let finalLegs = [...t.legs];
+      if (t.hasStops && t.outboundStops && t.outboundStops.length > 0) {
+        const validOutboundStops = t.outboundStops.filter(s => s.origin || s.destination || s.flightNumber || s.seat || s.date);
+        finalLegs = [...finalLegs, ...validOutboundStops];
+      }
+
+      // 2. Accumulate return legs (initial return leg + return stops/scales)
+      let finalReturnLeg = t.returnLeg;
+      if (t.flightMode === 'round_trip' && t.returnLeg) {
+        if (t.returnHasStops && t.returnStops && t.returnStops.length > 0) {
+          const validReturnStops = t.returnStops.filter(s => s.origin || s.destination || s.flightNumber || s.seat || s.date);
+          if (validReturnStops.length > 0) {
+            // Append the primary returnLeg and all returnStops except the last one to finalLegs
+            finalLegs.push(t.returnLeg);
+            for (let i = 0; i < validReturnStops.length - 1; i++) {
+              finalLegs.push(validReturnStops[i]);
+            }
+            // The last returnStop becomes the final returnLeg
+            finalReturnLeg = validReturnStops[validReturnStops.length - 1];
+          }
+        }
+      }
+
+      return {
+        ...t,
+        legs: finalLegs,
+        returnLeg: finalReturnLeg,
+        seatNumber: finalLegs[0]?.seat || ""
+      };
+    });
+
     const saleData: Omit<Sale, "id"> = {
       clientId: client.id,
       clientName: client.name,
@@ -508,7 +544,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
       status: form.status as Sale["status"],
       observations: fullObservations,
       products: form.selectedProducts,
-      ticketData: form.tickets.length > 0 ? form.tickets : undefined,
+      ticketData: mappedTickets.length > 0 ? mappedTickets : undefined,
       hotelData: form.hotels.length > 0 ? form.hotels : undefined,
       insuranceData: form.insurances.length > 0 ? form.insurances : undefined,
       planData: form.plans.length > 0 ? form.plans : undefined,
@@ -535,21 +571,27 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
       supplierCost: Number(form.supplierCost) || 0,
     };
 
-    addSale(saleData as any);
-    localStorage.removeItem("itea_new_sale_draft");
+    try {
+      await addSale(saleData as any);
+      localStorage.removeItem("itea_new_sale_draft");
 
-    const hasVouchersToSend = [
-      ...form.checkIns, ...form.migrations, ...form.simCards, ...form.carRentals,
-      ...form.fincas, ...form.tours, ...form.conventions, ...form.restaurants,
-      ...form.visas, ...form.passports, ...form.petServices
-    ].some(item => item.sendVoucher);
+      const hasVouchersToSend = [
+        ...form.checkIns, ...form.migrations, ...form.simCards, ...form.carRentals,
+        ...form.fincas, ...form.tours, ...form.conventions, ...form.restaurants,
+        ...form.visas, ...form.passports, ...form.petServices
+      ].some(item => item.sendVoucher);
 
-    if (hasVouchersToSend) {
-      onSuccess("Venta registrada y vouchers enviados al cliente");
-    } else {
-      onSuccess("Venta registrada exitosamente");
+      if (hasVouchersToSend) {
+        onSuccess("Venta registrada y vouchers enviados al cliente");
+      } else {
+        onSuccess("Venta registrada exitosamente");
+      }
+      onClose();
+    } catch (err: any) {
+      console.error("Error al registrar venta:", err);
+      const errMsg = err?.response?.data?.error?.message || "Ocurrió un error interno en el servidor al registrar la venta. Por favor, asegúrese de reiniciar el servidor backend local para cargar los nuevos módulos de base de datos.";
+      alert(`Error al registrar venta: ${errMsg}`);
     }
-    onClose();
   };
 
   const handleCancel = () => {

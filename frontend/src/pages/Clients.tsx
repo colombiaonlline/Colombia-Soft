@@ -567,7 +567,7 @@ export default function Clients() {
                     setFormData({ ...formData, docType: e.target.value });
                     if (errors.docType) setErrors(prev => ({ ...prev, docType: '' }));
                   }}
-                  options={[{ value: '', label: 'Seleccionar...' }, ...data.config.documentTypes.map(d => ({ value: d.abreviatura, label: `${d.abreviatura} - ${d.nombre}` }))]}
+                  options={[{ value: '', label: 'Seleccionar...' }, ...data.config.documentTypes.map(d => ({ value: d.abreviatura, label: d.abreviatura }))]}
                   error={errors.docType}
                 />
               </FormField>

@@ -69,43 +69,392 @@ exports.list = async (req, res, next) => {
   }
 };
 
+/* ------------------------------------------------------------------ */
+/*  Product includes & transform handlers (used by getById)           */
+/* ------------------------------------------------------------------ */
+
+const PRODUCT_INCLUDES = {
+  tiqueteria: {
+    prodTiqueteria: {
+      include: {
+        tramosVuelo: { include: { aeropuertoOrigen: true, aeropuertoDestino: true } },
+        aerolinea: true
+      }
+    }
+  },
+  hoteleria: { prodHoteleria: true },
+  seguros: { prodSeguros: true },
+  planes: { prodPlanes: { include: { paquete: true } } },
+  checkin: { prodCheckins: true },
+  migracion: { prodMigracion: true },
+  simcard: { prodSimcards: true },
+  autos: { prodAutos: true },
+  fincas: { prodFincas: true },
+  tours: { prodTours: true },
+  eventos: { prodEventos: true },
+  restaurantes: { prodRestaurantes: true },
+  visas: { prodVisas: true },
+  pasaportes: { prodPasaportes: true },
+  mascotas: { prodMascotas: true }
+};
+
+function mapPassengers(detalle) {
+  return (detalle.pasajerosDetalle || []).map(p => ({
+    id: p.id,
+    personaId: p.personaId,
+    esTitular: p.esTitular,
+    asiento: p.asiento,
+    nombreCompleto: p.persona ? `${p.persona.nombres} ${p.persona.apellidos}` : null,
+    tipoDocumento: p.persona?.tipoDocumentoId,
+    nroDocumento: p.persona?.documento
+  }));
+}
+
+function mapLegs(legs) {
+  return (legs || []).map(l => ({
+    origin: l.aeropuertoOrigen?.codigoIata || null,
+    destination: l.aeropuertoDestino?.codigoIata || null,
+    flightNumber: l.nroVueloTramo,
+    seat: l.asiento || null,
+    date: l.salida?.toISOString() || null
+  }));
+}
+
+const PRODUCT_TRANSFORMS = {
+  tiqueteria(d, passengers, target) {
+    const t = d.prodTiqueteria;
+    target.push({
+      id: t.id,
+      airline: String(t.aerolineaId || ''),
+      airlineName: t.aerolinea?.nombre || null,
+      reservationNumber: t.nroReserva,
+      flightNumber: t.nroVuelo,
+      ticketNumber: t.nroTiquete,
+      flightMode: t.modoVuelo,
+      checkinStatus: t.checkinStatus,
+      legs: mapLegs(t.tramosVuelo),
+      passengerInfo: passengers.length > 0
+        ? { name: passengers[0].nombreCompleto, docType: passengers[0].tipoDocumento, docNumber: passengers[0].nroDocumento }
+        : null
+    });
+  },
+  hoteleria(d, passengers, target) {
+    const h = d.prodHoteleria;
+    target.push({
+      id: h.id,
+      hotelName: h.hotelNombre,
+      hotelType: h.tipoHotel,
+      destination: h.destino,
+      reservationNumber: h.nroReserva,
+      startDate: h.fechaEntrada?.toISOString().split('T')[0] || null,
+      endDate: h.fechaSalida?.toISOString().split('T')[0] || null,
+      observations: h.observaciones,
+      guests: passengers.map(p => ({ name: p.nombreCompleto, docType: String(p.tipoDocumento || ''), docNumber: p.nroDocumento || '' }))
+    });
+  },
+  seguros(d, passengers, target) {
+    const s = d.prodSeguros;
+    target.push({
+      id: s.id,
+      insuranceType: s.tipoSeguro,
+      coverageAmount: s.coberturaUsd,
+      coverageDays: s.diasCobertura,
+      contactName: s.contactoEmergencia,
+      contactNumber: s.telefonoEmergencia,
+      address: s.direccionAsegurado,
+      members: passengers.map(p => ({ name: p.nombreCompleto, docType: String(p.tipoDocumento || ''), docNumber: p.nroDocumento || '' }))
+    });
+  },
+  planes(d, passengers, target) {
+    const p = d.prodPlanes;
+    target.push({
+      id: p.id,
+      planName: p.nombrePlan,
+      packageId: p.paqueteId,
+      packageName: p.paquete?.nombre || null,
+      airline: String(p.aerolineaId || ''),
+      reservationNumber: p.nroReserva,
+      ticketNumber: p.nroTiquete,
+      startDate: p.fechaViajeInicio?.toISOString().split('T')[0] || null,
+      endDate: p.fechaViajeFin?.toISOString().split('T')[0] || null,
+      flightDepartureDate: p.fechaSalidaVuelo?.toISOString() || null,
+      flightReturnDate: p.fechaRegresoVuelo?.toISOString() || null,
+      adultsCount: p.adultosCount,
+      childrenCount: p.menoresCount,
+      confirmationNumber: p.numeroConfirmacion,
+      observations: p.observaciones,
+      guests: passengers.map(p => ({ name: p.nombreCompleto, docType: String(p.tipoDocumento || ''), docNumber: p.nroDocumento || '' }))
+    });
+  },
+  checkin(d, passengers, target) {
+    const c = d.prodCheckins;
+    target.push({
+      id: c.id,
+      flightOrReservation: c.nroVueloReserva,
+      travelDate: c.fechaViaje?.toISOString() || null,
+      seat: c.asiento,
+      baggage: c.maletasContadas,
+      phone: c.telefonoContacto,
+      specialNeeds: c.necesidadesEspeciales,
+      needsWheelchair: c.usaSillaRuedas
+    });
+  },
+  migracion(d, passengers, target) {
+    const m = d.prodMigracion;
+    target.push({
+      id: m.id,
+      requestedDocType: m.tipoTramiteMigratorio,
+      nationality: m.nacionalidad,
+      passportNumber: m.pasaporteNro,
+      passportExpiry: m.pasaporteVence?.toISOString() || null,
+      destinationCountry: m.paisDestino
+    });
+  },
+  simcard(d, passengers, target) {
+    const s = d.prodSimcards;
+    target.push({
+      id: s.id,
+      destinationCountry: s.paisDestino,
+      arrivalDate: s.fechaLlegada?.toISOString() || null,
+      tripDuration: s.duracionViaje,
+      dataPlan: s.planDatos,
+      simType: s.tipoSim,
+      deliveryMethod: s.metodoEntrega
+    });
+  },
+  autos(d, passengers, target) {
+    const a = d.prodAutos;
+    target.push({
+      id: a.id,
+      mainDriver: a.conductorNombre,
+      licenseNumber: a.licenciaNro,
+      pickupDate: a.fechaRecogida?.toISOString() || null,
+      returnDate: a.fechaDevolucion?.toISOString() || null,
+      pickupLocation: a.lugarRecogida,
+      vehicleCategory: a.categoriaAuto,
+      additionalDrivers: a.conductoresAdicionales,
+      insuranceType: a.tipoSeguro,
+      guaranteeCreditCard: a.tarjetaGarantiaInfo
+    });
+  },
+  fincas(d, passengers, target) {
+    const f = d.prodFincas;
+    target.push({
+      id: f.id,
+      responsibleName: f.responsableNombre,
+      docNumber: f.documentoResponsable,
+      checkInDate: f.fechaEntrada?.toISOString().split('T')[0] || null,
+      checkOutDate: f.fechaSalida?.toISOString().split('T')[0] || null,
+      adultsCount: f.adultosCount,
+      childrenCount: f.ninosCount,
+      hasPets: f.tieneMascotas,
+      petType: f.tipoMascota,
+      additionalServices: f.serviciosExtra?.split(', ') || []
+    });
+  },
+  tours(d, passengers, target) {
+    const t = d.prodTours;
+    target.push({
+      id: t.id,
+      selectedTour: t.tourNombre,
+      preferredDate: t.fechaPreferida?.toISOString() || null,
+      adultsCount: t.adultosCount,
+      childrenCount: t.menoresCount,
+      childrenAges: t.edadesMenores,
+      guideLanguage: t.idiomaGuia,
+      needsTransport: t.requiereTransporte,
+      pickupPoint: t.puntoEncuentro,
+      medicalConditions: t.condicionesMedicas,
+      phone: t.telefonoContacto
+    });
+  },
+  eventos(d, passengers, target) {
+    const e = d.prodEventos;
+    target.push({
+      id: e.id,
+      organization: e.organizacion,
+      contactName: e.nombreContacto,
+      email: e.emailContacto,
+      startDate: e.fechaInicio?.toISOString() || null,
+      endDate: e.fechaFin?.toISOString() || null,
+      estimatedAttendance: e.asistenciaEstimada,
+      requiredSpace: e.espacioRequerido,
+      eventType: e.tipoEvento,
+      avEquipment: e.equiposAv?.split(', ') || [],
+      hasCatering: e.requiereCatering,
+      cateringNotes: e.notasCatering
+    });
+  },
+  restaurantes(d, passengers, target) {
+    const r = d.prodRestaurantes;
+    target.push({
+      id: r.id,
+      reservationName: r.nombreReserva,
+      dateTime: r.fechaHoraReserva?.toISOString() || null,
+      peopleCount: r.personasCount,
+      tablePreference: r.preferenciaMesa,
+      menuType: r.tipoMenu,
+      dietaryRestrictions: r.restriccionesDieta?.split(', ') || [],
+      specialOccasion: r.ocasionEspecial,
+      phone: r.telefonoContacto
+    });
+  },
+  visas(d, passengers, target) {
+    const v = d.prodVisas;
+    target.push({
+      id: v.id,
+      fullName: v.nombreCompleto,
+      birthDate: v.fechaNacimiento?.toISOString() || null,
+      nationality: v.nacionalidad,
+      passportNumber: v.nroPasaporte,
+      passportExpiration: v.vencimientoPasaporte?.toISOString() || null,
+      countryApplying: v.paisAplicacion,
+      visaType: v.tipoVisa,
+      estimatedTravelDate: v.fechaEstimadaViaje?.toISOString() || null,
+      email: v.emailContacto
+    });
+  },
+  pasaportes(d, passengers, target) {
+    const p = d.prodPasaportes;
+    target.push({
+      id: p.id,
+      fullName: p.nombreCompleto,
+      idNumber: p.nroDocumento,
+      birthDate: p.fechaNacimiento?.toISOString() || null,
+      residenceCity: p.ciudadResidencia,
+      processType: p.tipoTramite,
+      estimatedTravelDate: p.fechaEstimadaViaje?.toISOString() || null,
+      phone: p.telefonoContacto
+    });
+  },
+  mascotas(d, passengers, target) {
+    const m = d.prodMascotas;
+    target.push({
+      id: m.id,
+      ownerName: null,
+      petName: m.mascotaNombre,
+      species: m.especie,
+      breed: m.raza,
+      weight: m.pesoKg,
+      size: m.tamanoMascota,
+      travelType: m.transporteTipo,
+      travelDate: m.fechaViaje?.toISOString() || null,
+      destinationCountry: m.paisDestino,
+      medicalConditions: m.condicionesMedicas,
+      phone: m.telefonoContacto
+    });
+  }
+};
+
+/* ------------------------------------------------------------------ */
+/*  getById — optimized with selective includes                        */
+/* ------------------------------------------------------------------ */
+
 exports.getById = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id);
-    const venta = await prisma.ventas.findUnique({
-      where: { id },
-      include: {
-        cliente: { include: { persona: true } },
-        usuario: { include: { persona: true } },
-        comisionista: { include: { persona: true } },
-        metodoPagoPrincipal: true,
-        pagosVenta: { include: { metodoPago: true } },
-        detalleVentas: {
-          include: {
-            pasajerosDetalle: { include: { persona: true } },
-            prodTiqueteria: { include: { tramosVuelo: true, aerolinea: true } },
-            prodHoteleria: true,
-            prodSeguros: true,
-            prodPlanes: { include: { paquete: true } },
-            prodCheckins: true,
-            prodMigracion: true,
-            prodSimcards: true,
-            prodAutos: true,
-            prodFincas: true,
-            prodTours: true,
-            prodEventos: true,
-            prodRestaurantes: true,
-            prodVisas: true,
-            prodPasaportes: true,
-            prodMascotas: true,
-            proveedor: true
-          }
+
+    // 1. Ejecutar en paralelo la consulta de cabecera de la venta y los detalles base
+    const [venta, detalleVentasBase] = await Promise.all([
+      prisma.ventas.findUnique({
+        where: { id },
+        include: {
+          cliente: { include: { persona: true } },
+          usuario: { include: { persona: true } },
+          comisionista: { include: { persona: true } },
+          metodoPagoPrincipal: true,
+          pagosVenta: { include: { metodoPago: true } }
         }
-      }
-    });
+      }),
+      prisma.detalleVenta.findMany({
+        where: { ventaId: id },
+        include: {
+          pasajerosDetalle: { include: { persona: true } },
+          proveedor: true
+        }
+      })
+    ]);
 
     if (!venta) return error(res, 'Venta no encontrada', 404);
-    success(res, venta);
+
+    // 2. Consultar en paralelo únicamente los detalles específicos de productos presentes
+    const detalleVentas = await Promise.all(
+      detalleVentasBase.map(async (d) => {
+        const tipo = d.categoria;
+        if (PRODUCT_INCLUDES[tipo]) {
+          const relationKey = Object.keys(PRODUCT_INCLUDES[tipo])[0]; // ej: 'prodTiqueteria'
+          const includeConfig = PRODUCT_INCLUDES[tipo][relationKey];
+          
+          const queryOptions = {
+            where: { detalleVentaId: d.id }
+          };
+          if (includeConfig && typeof includeConfig === 'object' && includeConfig.include) {
+            queryOptions.include = includeConfig.include;
+          }
+          
+          const productData = await prisma[relationKey].findUnique(queryOptions);
+          return {
+            ...d,
+            [relationKey]: productData
+          };
+        }
+        return d;
+      })
+    );
+
+    const resultMap = {};
+    for (const d of detalleVentas) {
+      const passengers = mapPassengers(d);
+      const handler = PRODUCT_TRANSFORMS[d.categoria];
+      if (handler) {
+        handler(d, passengers, (resultMap[d.categoria] = resultMap[d.categoria] || []));
+      }
+    }
+
+    success(res, {
+      id: venta.id,
+      clientId: venta.clienteId,
+      clientName: `${venta.cliente.persona.nombres} ${venta.cliente.persona.apellidos}`,
+      asesorId: venta.usuarioId,
+      asesorName: `${venta.usuario.persona.nombres} ${venta.usuario.persona.apellidos}`,
+      date: venta.creadoAt,
+      total: venta.montoTotal,
+      paymentMethod: venta.metodoPagoPrincipal?.nombre || null,
+      status: venta.status,
+      observations: venta.observaciones,
+      isCredit: venta.esCredito,
+      creditDueDate: venta.fechaVenceCredito,
+      creditPaidAmount: venta.montoPagadoCredito,
+      commissionAgentId: venta.comisionistaId,
+      commissionAgentName: venta.comisionista ? `${venta.comisionista.persona.nombres} ${venta.comisionista.persona.apellidos}` : null,
+      commissionAgentAmount: venta.montoComisionBruto,
+      commissionAgentRetentionPercentage: venta.porcentajeRetencionComision,
+      commissionAgentNetPayment: venta.montoComisionNeto,
+      supplierCost: venta.costoProveedorTotal,
+      ta: venta.taTotal,
+      isSettled: venta.comisionLiquidada,
+      payments: venta.pagosVenta.map(p => ({
+        id: p.id,
+        date: p.fechaPago,
+        amount: p.monto,
+        method: p.metodoPago?.nombre || null
+      })),
+      ticketData: resultMap.tiqueteria,
+      hotelData: resultMap.hoteleria,
+      insuranceData: resultMap.seguros,
+      planData: resultMap.planes,
+      checkInData: resultMap.checkin,
+      migrationData: resultMap.migracion,
+      simCardData: resultMap.simcard,
+      carRentalData: resultMap.autos,
+      fincaData: resultMap.fincas,
+      tourData: resultMap.tours,
+      conventionData: resultMap.eventos,
+      restaurantData: resultMap.restaurantes,
+      visaData: resultMap.visas,
+      passportData: resultMap.pasaportes,
+      petServiceData: resultMap.mascotas
+    });
   } catch (err) {
     next(err);
   }
@@ -115,14 +464,14 @@ const PRODUCT_HANDLERS = {
   ticketData: {
     category: 'tiqueteria', table: 'prodTiqueteria',
     nombreServicio: 'Tiquetería',
-    transform: (d, detalleId) => ({
+    transform: async (d, detalleId, tx) => ({
       detalleVentaId: detalleId,
-      aerolineaId: d.airline ? parseInt(d.airline) : null,
+      aerolineaId: await resolveAirlineId(tx, d.airline),
       nroReserva: d.reservationNumber || null,
       nroVuelo: d.flightNumber || null,
       nroTiquete: d.ticketNumber || null,
       modoVuelo: d.flightMode || 'one_way',
-      planEquipajeId: d.baggagePlan ? parseInt(d.baggagePlan) : null,
+      planEquipajeId: await resolveBaggagePlanId(tx, d.baggagePlan),
       checkinStatus: 'pendiente'
     })
   },
@@ -156,11 +505,11 @@ const PRODUCT_HANDLERS = {
   planData: {
     category: 'planes', table: 'prodPlanes',
     nombreServicio: 'Planes',
-    transform: (d, detalleId) => ({
+    transform: async (d, detalleId, tx) => ({
       detalleVentaId: detalleId,
-      paqueteId: d.packageId ? parseInt(d.packageId) : null,
+      paqueteId: d.packageId ? (parseInt(d.packageId) || null) : null,
       nombrePlan: d.planName || null,
-      aerolineaId: d.airline ? parseInt(d.airline) : null,
+      aerolineaId: await resolveAirlineId(tx, d.airline),
       nroReserva: d.reservationNumber || null,
       nroTiquete: d.ticketNumber || null,
       fechaViajeInicio: d.startDate ? new Date(d.startDate) : null,
@@ -346,47 +695,163 @@ async function resolvePaymentMethodId(prisma, paymentMethod) {
   if (!paymentMethod) return null;
   const id = parseInt(paymentMethod);
   if (!isNaN(id)) return id;
+  // Try metodosPago first (by name)
   const method = await prisma.metodosPago.findFirst({ where: { nombre: paymentMethod } });
-  return method?.id || null;
+  if (method) return method.id;
+  // Try tarjetasAgencia (by name) — return associated metodoPago id
+  const card = await prisma.tarjetasAgencia.findFirst({
+    where: { nombre: paymentMethod },
+    include: { metodoPago: true }
+  });
+  if (card?.metodoPago?.id) return card.metodoPago.id;
+  return null;
 }
 
-async function createProductItems(tx, ventaId, data) {
+async function resolveAirlineId(prisma, airline) {
+  if (!airline) return null;
+  const id = parseInt(airline);
+  if (!isNaN(id)) return id;
+  const match = await prisma.aerolineas.findFirst({ where: { nombre: airline } });
+  return match?.id || null;
+}
+
+async function resolveSupplierId(prisma, supplier) {
+  if (!supplier) return null;
+  const id = parseInt(supplier);
+  if (!isNaN(id)) return id;
+  const match = await prisma.proveedores.findFirst({ where: { nombre: supplier } });
+  return match?.id || null;
+}
+
+async function resolveBaggagePlanId(prisma, baggagePlan) {
+  if (!baggagePlan) return null;
+  const id = parseInt(baggagePlan);
+  if (!isNaN(id)) return id;
+  
+  const parts = baggagePlan.split(' - ');
+  if (parts.length >= 2) {
+    const airlineName = parts[0];
+    const fareType = parts.slice(1).join(' - ');
+    const match = await prisma.politicasEquipaje.findFirst({
+      where: {
+        AND: [
+          { aerolinea: { nombre: airlineName } },
+          { tipoTarifa: fareType }
+        ]
+      }
+    });
+    if (match) return match.id;
+  }
+  
+  const match = await prisma.politicasEquipaje.findFirst({ where: { tipoTarifa: baggagePlan } });
+  return match?.id || null;
+}
+
+async function createProductItems(tx, ventaId, clienteId, data) {
+  const cliente = await tx.clientes.findUnique({
+    where: { id: clienteId },
+    select: { personaId: true }
+  });
+  const personaId = cliente?.personaId;
+
   for (const [field, handler] of Object.entries(PRODUCT_HANDLERS)) {
     const items = Array.isArray(data[field]) ? data[field] : [];
     for (const item of items) {
       if (!item || Object.keys(item).length === 0) continue;
-      const detalle = await tx.detalleVenta.create({
-        data: {
-          ventaId,
-          categoria: handler.category,
-          nombreServicio: handler.nombreServicio,
-          subtotal: (item.supplierCost || 0) + (item.ta || 0),
-          costoProveedor: item.supplierCost || 0,
-          ta: item.ta || 0,
-          proveedorId: item.supplier ? parseInt(item.supplier) : null,
-          metodoPagoProveedorId: item.supplierPaymentMethod ? parseInt(item.supplierPaymentMethod) : null,
-          origen: item.legs?.[0]?.origin || item.pickupLocation || null,
-          destino: item.destination || item.destinationCountry || item.legs?.[0]?.destination || null,
-          fechaInicioViaje: item.startDate ? new Date(item.startDate) : item.departureDate ? new Date(item.departureDate) : item.pickupDate ? new Date(item.pickupDate) : null,
-          fechaFinViaje: item.endDate ? new Date(item.endDate) : item.arrivalDate ? new Date(item.arrivalDate) : item.returnDate ? new Date(item.returnDate) : null,
-          observaciones: item.observations || null
+
+      try {
+        const resolvedSupplierId = await resolveSupplierId(tx, item.supplier);
+        const resolvedSupplierPaymentMethodId = await resolvePaymentMethodId(tx, item.supplierPaymentMethod);
+
+        const detalle = await tx.detalleVenta.create({
+          data: {
+            ventaId,
+            categoria: handler.category,
+            nombreServicio: handler.nombreServicio,
+            subtotal: (item.supplierCost || 0) + (item.ta || 0),
+            costoProveedor: item.supplierCost || 0,
+            ta: item.ta || 0,
+            proveedorId: resolvedSupplierId,
+            metodoPagoProveedorId: resolvedSupplierPaymentMethodId,
+            origen: item.legs?.[0]?.origin || item.pickupLocation || null,
+            destino: item.destination || item.destinationCountry || item.legs?.[0]?.destination || null,
+            fechaInicioViaje: item.startDate ? new Date(item.startDate) : item.departureDate ? new Date(item.departureDate) : item.pickupDate ? new Date(item.pickupDate) : null,
+            fechaFinViaje: item.endDate ? new Date(item.endDate) : item.arrivalDate ? new Date(item.arrivalDate) : item.returnDate ? new Date(item.returnDate) : null,
+            observaciones: item.observations || null
+          }
+        });
+
+        const productData = await handler.transform(item, detalle.id, tx);
+        const product = await tx[handler.table].create({ data: productData });
+
+        if (personaId && (item.passengerInfo || item.guests)) {
+          const passengers = item.passengerInfo ? [item.passengerInfo] : (item.guests || []);
+          for (const p of passengers) {
+            await tx.pasajerosDetalle.create({
+              data: {
+                detalleVentaId: detalle.id,
+                personaId,
+                esTitular: true,
+                asiento: item.seatNumber || null
+              }
+            });
+          }
         }
-      });
 
-      const productData = handler.transform(item, detalle.id);
-      await tx[handler.table].create({ data: productData });
-
-      if (item.passengerInfo || item.guests) {
-        const passengers = item.passengerInfo ? [item.passengerInfo] : (item.guests || []);
-        for (const p of passengers) {
-          await tx.pasajerosDetalle.create({
-            data: {
-              detalleVentaId: detalle.id,
-              esTitular: true,
-              asiento: item.seatNumber || null
+        if (handler.table === 'prodTiqueteria' && item.legs && item.legs.length > 0) {
+          for (let i = 0; i < item.legs.length; i++) {
+            const leg = item.legs[i];
+            if (!leg.origin && !leg.destination) continue;
+            const originAirport = leg.origin
+              ? await tx.aeropuertos.findFirst({ where: { codigoIata: leg.origin } })
+              : null;
+            const destAirport = leg.destination
+              ? await tx.aeropuertos.findFirst({ where: { codigoIata: leg.destination } })
+              : null;
+            if (!originAirport || !destAirport) {
+              console.warn(`[WARN] tramosVuelo leg ${i}: aeropuerto no encontrado (origin=${leg.origin}, dest=${leg.destination}) - saltando`);
+              continue;
             }
-          });
+            await tx.tramosVuelo.create({
+              data: {
+                prodTiqueteriaId: product.id,
+                aeropuertoOrigenId: originAirport.id,
+                aeropuertoDestinoId: destAirport.id,
+                salida: leg.date ? new Date(leg.date) : new Date(),
+                llegada: leg.date ? new Date(leg.date) : new Date(),
+                nroVueloTramo: leg.flightNumber || null,
+                asiento: leg.seat || null,
+                orden: i + 1
+              }
+            });
+          }
+
+          if (item.returnLeg && item.returnLeg.origin && item.returnLeg.destination) {
+            const rLeg = item.returnLeg;
+            const rOrigin = await tx.aeropuertos.findFirst({ where: { codigoIata: rLeg.origin } });
+            const rDest = await tx.aeropuertos.findFirst({ where: { codigoIata: rLeg.destination } });
+            if (rOrigin && rDest) {
+              await tx.tramosVuelo.create({
+                data: {
+                  prodTiqueteriaId: product.id,
+                  aeropuertoOrigenId: rOrigin.id,
+                  aeropuertoDestinoId: rDest.id,
+                  salida: rLeg.date ? new Date(rLeg.date) : new Date(),
+                  llegada: rLeg.date ? new Date(rLeg.date) : new Date(),
+                  nroVueloTramo: rLeg.flightNumber || null,
+                  asiento: rLeg.seat || null,
+                  orden: (item.legs?.length || 0) + 1
+                }
+              });
+            } else {
+              console.warn(`[WARN] returnLeg: aeropuerto no encontrado (origin=${rLeg.origin}, dest=${rLeg.destination}) - saltando`);
+            }
+          }
         }
+
+      } catch (itemErr) {
+        console.error(`[ERROR] createProductItems field=${field}:`, itemErr.message, itemErr.meta || '');
+        throw itemErr;
       }
     }
   }
@@ -395,6 +860,14 @@ async function createProductItems(tx, ventaId, data) {
 exports.create = async (req, res, next) => {
   try {
     const data = req.body;
+    console.log('[CREATE VENTA] Received data keys:', Object.keys(data));
+    console.log('[CREATE VENTA] clientId:', data.clientId, 'paymentMethod:', data.paymentMethod);
+    if (data.ticketData) {
+      console.log('[CREATE VENTA] ticketData count:', data.ticketData.length);
+      data.ticketData.forEach((t, i) => {
+        console.log(`[CREATE VENTA] ticket[${i}] flightMode=${t.flightMode} legs=${JSON.stringify(t.legs)} returnLeg=${JSON.stringify(t.returnLeg)}`);
+      });
+    }
 
     const metodoPagoId = await resolvePaymentMethodId(prisma, data.paymentMethod);
 
@@ -432,12 +905,59 @@ exports.create = async (req, res, next) => {
         }
       }
 
-      await createProductItems(tx, venta.id, data);
+      await createProductItems(tx, venta.id, venta.clienteId, data);
 
-      return venta;
+      return venta.id;
     });
 
-    success(res, { id: result.id, ...data }, null, 201);
+    const created = await prisma.ventas.findUnique({
+      where: { id: result },
+      include: {
+        cliente: { select: { persona: { select: { nombres: true, apellidos: true } } } },
+        usuario: { select: { persona: { select: { nombres: true, apellidos: true } } } },
+        comisionista: { select: { persona: { select: { nombres: true, apellidos: true } } } },
+        metodoPagoPrincipal: true
+      }
+    });
+
+    success(res, {
+      id: created.id,
+      clientId: created.clienteId,
+      clientName: `${created.cliente.persona.nombres} ${created.cliente.persona.apellidos}`,
+      asesorId: created.usuarioId,
+      asesorName: `${created.usuario.persona.nombres} ${created.usuario.persona.apellidos}`,
+      date: created.creadoAt,
+      total: created.montoTotal,
+      paymentMethod: created.metodoPagoPrincipal?.nombre || null,
+      status: created.status,
+      observations: created.observaciones,
+      isCredit: created.esCredito,
+      creditDueDate: created.fechaVenceCredito,
+      creditPaidAmount: created.montoPagadoCredito,
+      commissionAgentId: created.comisionistaId,
+      commissionAgentName: created.comisionista ? `${created.comisionista.persona.nombres} ${created.comisionista.persona.apellidos}` : null,
+      commissionAgentAmount: created.montoComisionBruto,
+      commissionAgentRetentionPercentage: created.porcentajeRetencionComision,
+      commissionAgentNetPayment: created.montoComisionNeto,
+      supplierCost: created.costoProveedorTotal,
+      ta: created.taTotal,
+      isSettled: created.comisionLiquidada,
+      ticketData: data.ticketData,
+      hotelData: data.hotelData,
+      insuranceData: data.insuranceData,
+      planData: data.planData,
+      checkInData: data.checkInData,
+      migrationData: data.migrationData,
+      simCardData: data.simCardData,
+      carRentalData: data.carRentalData,
+      fincaData: data.fincaData,
+      tourData: data.tourData,
+      conventionData: data.conventionData,
+      restaurantData: data.restaurantData,
+      visaData: data.visaData,
+      passportData: data.passportData,
+      petServiceData: data.petServiceData
+    }, null, 201);
   } catch (err) {
     next(err);
   }
@@ -454,11 +974,16 @@ exports.update = async (req, res, next) => {
     const updateData = {};
     if (data.total !== undefined) updateData.montoTotal = data.total;
     if (data.supplierCost !== undefined) updateData.costoProveedorTotal = data.supplierCost;
+    if (data.ta !== undefined) updateData.taTotal = data.ta;
     if (data.status) updateData.status = data.status;
     if (data.observations !== undefined) updateData.observaciones = data.observations;
     if (data.isCredit !== undefined) updateData.esCredito = data.isCredit;
     if (data.creditDueDate) updateData.fechaVenceCredito = new Date(data.creditDueDate);
     if (data.paymentMethod) updateData.metodoPagoPrincipalId = await resolvePaymentMethodId(prisma, data.paymentMethod);
+    if (data.commissionAgentId !== undefined) updateData.comisionistaId = data.commissionAgentId || null;
+    if (data.commissionAgentAmount !== undefined) updateData.montoComisionBruto = data.commissionAgentAmount;
+    if (data.commissionAgentRetentionPercentage !== undefined) updateData.porcentajeRetencionComision = data.commissionAgentRetentionPercentage;
+    if (data.commissionAgentNetPayment !== undefined) updateData.montoComisionNeto = data.commissionAgentNetPayment;
 
     await prisma.$transaction(async (tx) => {
       await tx.ventas.update({ where: { id }, data: updateData });
@@ -495,6 +1020,127 @@ exports.update = async (req, res, next) => {
           where: { id },
           data: { montoPagadoCredito: totalPaid, status: newStatus }
         });
+      }
+
+      const productFields = ['ticketData', 'hotelData', 'insuranceData', 'planData',
+        'checkInData', 'migrationData', 'simCardData', 'carRentalData',
+        'fincaData', 'tourData', 'conventionData', 'restaurantData',
+        'visaData', 'passportData', 'petServiceData'];
+
+      for (const field of productFields) {
+        if (data[field] === undefined) continue;
+        const handler = PRODUCT_HANDLERS[field];
+        if (!handler) continue;
+
+        const incoming = Array.isArray(data[field]) ? data[field] : [];
+
+        const existingDetails = await tx.detalleVenta.findMany({
+          where: { ventaId: id, categoria: handler.category },
+          select: { id: true }
+        });
+
+        for (const item of incoming) {
+          if (item.id) {
+            const existing = await tx[handler.table].findUnique({ where: { id: item.id } });
+            if (existing) continue;
+          }
+          const resolvedSupplierId = await resolveSupplierId(tx, item.supplier);
+          const resolvedSupplierPaymentMethodId = await resolvePaymentMethodId(tx, item.supplierPaymentMethod);
+
+          const detalle = await tx.detalleVenta.create({
+            data: {
+              ventaId: id,
+              categoria: handler.category,
+              nombreServicio: handler.nombreServicio,
+              subtotal: (item.supplierCost || 0) + (item.ta || 0),
+              costoProveedor: item.supplierCost || 0,
+              ta: item.ta || 0,
+              proveedorId: resolvedSupplierId,
+              metodoPagoProveedorId: resolvedSupplierPaymentMethodId,
+              origen: item.legs?.[0]?.origin || item.pickupLocation || null,
+              destino: item.destination || item.destinationCountry || item.legs?.[0]?.destination || null,
+              fechaInicioViaje: item.startDate ? new Date(item.startDate) : item.departureDate ? new Date(item.departureDate) : item.pickupDate ? new Date(item.pickupDate) : null,
+              fechaFinViaje: item.endDate ? new Date(item.endDate) : item.arrivalDate ? new Date(item.arrivalDate) : item.returnDate ? new Date(item.returnDate) : null,
+              observaciones: item.observations || null
+            }
+          });
+          const productData = await handler.transform(item, detalle.id, tx);
+          const product = await tx[handler.table].create({ data: productData });
+
+          if (item.passengerInfo || item.guests) {
+            const cliente = await tx.clientes.findUnique({
+              where: { id: venta.clienteId },
+              select: { personaId: true }
+            });
+            const pid = cliente?.personaId;
+            if (pid) {
+              const passengers = item.passengerInfo ? [item.passengerInfo] : (item.guests || []);
+              for (const p of passengers) {
+                await tx.pasajerosDetalle.create({
+                  data: {
+                    detalleVentaId: detalle.id,
+                    personaId: pid,
+                    esTitular: true,
+                    asiento: item.seatNumber || null
+                  }
+                });
+              }
+            }
+          }
+
+          if (handler.table === 'prodTiqueteria' && item.legs && item.legs.length > 0) {
+            for (let i = 0; i < item.legs.length; i++) {
+              const leg = item.legs[i];
+              const originAirport = leg.origin ? await tx.aeropuertos.findFirst({ where: { codigoIata: leg.origin } }) : null;
+              const destAirport = leg.destination ? await tx.aeropuertos.findFirst({ where: { codigoIata: leg.destination } }) : null;
+              if (!originAirport || !destAirport) continue;
+              await tx.tramosVuelo.create({
+                data: {
+                  prodTiqueteriaId: product.id,
+                  aeropuertoOrigenId: originAirport.id,
+                  aeropuertoDestinoId: destAirport.id,
+                  salida: leg.date ? new Date(leg.date) : new Date(),
+                  llegada: leg.date ? new Date(leg.date) : new Date(),
+                  nroVueloTramo: leg.flightNumber || null,
+                  orden: i + 1
+                }
+              });
+            }
+          }
+
+          if (handler.table === 'prodTiqueteria' && item.returnLeg && item.returnLeg.origin && item.returnLeg.destination) {
+            const leg = item.returnLeg;
+            const originAirport = await tx.aeropuertos.findFirst({ where: { codigoIata: leg.origin } });
+            const destAirport = await tx.aeropuertos.findFirst({ where: { codigoIata: leg.destination } });
+            if (originAirport && destAirport) {
+              await tx.tramosVuelo.create({
+                data: {
+                  prodTiqueteriaId: product.id,
+                  aeropuertoOrigenId: originAirport.id,
+                  aeropuertoDestinoId: destAirport.id,
+                  salida: leg.date ? new Date(leg.date) : new Date(),
+                  llegada: leg.date ? new Date(leg.date) : new Date(),
+                  nroVueloTramo: leg.flightNumber || null,
+                  orden: (item.legs?.length || 0) + 1
+                }
+              });
+            }
+          }
+        }
+
+        if (incoming.length === 0 && existingDetails.length > 0) {
+          for (const d of existingDetails) {
+            await tx.pasajerosDetalle.deleteMany({ where: { detalleVentaId: d.id } });
+            const product = await tx[handler.table].findFirst({ where: { detalleVentaId: d.id } });
+            if (product) {
+              if (handler.table === 'prodTiqueteria') {
+                await tx.tramosVuelo.deleteMany({ where: { prodTiqueteriaId: product.id } });
+              }
+              await tx[handler.table].delete({ where: { id: product.id } });
+            }
+            await tx.detalleVenta.delete({ where: { id: d.id } });
+          }
+        }
       }
     });
 

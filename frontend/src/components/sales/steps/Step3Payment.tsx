@@ -81,7 +81,6 @@ export function Step3Payment({ form, set, data, errors }: any) {
               value={form.status}
               onChange={(val) => {
                 set("status", val);
-                // Auto-set isCredit internally based on selection
                 set("isCredit", val === "credito");
               }}
               options={[

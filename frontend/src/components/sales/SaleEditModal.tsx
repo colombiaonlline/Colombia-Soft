@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Receipt, ShoppingBag, Wallet, Trash2, FileDown } from "lucide-react";
+import { Receipt, ShoppingBag, Wallet, Trash2, FileDown, Loader2 } from "lucide-react";
+import * as api from "../../api";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
@@ -55,32 +56,64 @@ export default function SaleEditModal({
     amount: "",
     method: "Efectivo",
   });
+  const [fullSale, setFullSale] = useState<Sale | null>(null);
+  const [loadingSale, setLoadingSale] = useState(false);
 
   useEffect(() => {
     if (editingSale && isOpen) {
-      setFormData({
-        clientId: String(editingSale.clientId),
-        total: String(editingSale.total),
-        paymentMethod: editingSale.paymentMethod,
-        status: editingSale.status,
-        observations: editingSale.observations || "",
-        isCredit: editingSale.isCredit || false,
-        creditDueDate: editingSale.creditDueDate || "",
-        commissionAgentName: editingSale.commissionAgentName || "",
-        commissionAgentAmount: editingSale.commissionAgentAmount
-          ? String(editingSale.commissionAgentAmount)
-          : "",
-        commissionAgentRetentionPercentage: editingSale.commissionAgentRetentionPercentage
-          ? String(editingSale.commissionAgentRetentionPercentage)
-          : "",
-        commissionAgentNetPayment: editingSale.commissionAgentNetPayment
-          ? String(editingSale.commissionAgentNetPayment)
-          : "",
-        ta: editingSale.ta ? String(editingSale.ta) : "",
-        supplierCost: editingSale.supplierCost ? String(editingSale.supplierCost) : "",
-      });
-      setPayments((editingSale as any).payments || []);
+      setLoadingSale(true);
+      api.getSale(editingSale.id).then(fetched => {
+        setFullSale(fetched);
+        setFormData({
+          clientId: String(fetched.clientId),
+          total: String(fetched.total),
+          paymentMethod: fetched.paymentMethod,
+          status: fetched.status,
+          observations: fetched.observations || "",
+          isCredit: fetched.isCredit || false,
+          creditDueDate: fetched.creditDueDate || "",
+          commissionAgentName: fetched.commissionAgentName || "",
+          commissionAgentAmount: fetched.commissionAgentAmount
+            ? String(fetched.commissionAgentAmount)
+            : "",
+          commissionAgentRetentionPercentage: fetched.commissionAgentRetentionPercentage
+            ? String(fetched.commissionAgentRetentionPercentage)
+            : "",
+          commissionAgentNetPayment: fetched.commissionAgentNetPayment
+            ? String(fetched.commissionAgentNetPayment)
+            : "",
+          ta: fetched.ta ? String(fetched.ta) : "",
+          supplierCost: fetched.supplierCost ? String(fetched.supplierCost) : "",
+        });
+        setPayments(fetched.payments || []);
+      }).catch(() => {
+        setFullSale(editingSale);
+        setFormData({
+          clientId: String(editingSale.clientId),
+          total: String(editingSale.total),
+          paymentMethod: editingSale.paymentMethod,
+          status: editingSale.status,
+          observations: editingSale.observations || "",
+          isCredit: editingSale.isCredit || false,
+          creditDueDate: editingSale.creditDueDate || "",
+          commissionAgentName: editingSale.commissionAgentName || "",
+          commissionAgentAmount: editingSale.commissionAgentAmount
+            ? String(editingSale.commissionAgentAmount)
+            : "",
+          commissionAgentRetentionPercentage: editingSale.commissionAgentRetentionPercentage
+            ? String(editingSale.commissionAgentRetentionPercentage)
+            : "",
+          commissionAgentNetPayment: editingSale.commissionAgentNetPayment
+            ? String(editingSale.commissionAgentNetPayment)
+            : "",
+          ta: editingSale.ta ? String(editingSale.ta) : "",
+          supplierCost: editingSale.supplierCost ? String(editingSale.supplierCost) : "",
+        });
+        setPayments((editingSale as any).payments || []);
+      }).finally(() => setLoadingSale(false));
     } else if (!editingSale && isOpen) {
+      setFullSale(null);
+      setLoadingSale(false);
       setFormData({
         clientId: "",
         total: "",
@@ -200,15 +233,29 @@ export default function SaleEditModal({
       title={editingSale ? "Editar Venta" : "Nueva Venta"}
       size="lg"
       footer={
-        <>
+        editingSale ? (
+          <>
+            <Button variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSubmit}>Guardar Cambios</Button>
+          </>
+        ) : (
           <Button variant="outline" onClick={onClose}>
-            Cancelar
+            Cerrar
           </Button>
-          <Button onClick={handleSubmit}>Guardar Cambios</Button>
-        </>
+        )
       }
     >
       {editingSale ? (
+        loadingSale ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center">
+              <Loader2 size={36} className="animate-spin text-accent mx-auto mb-3" />
+              <p className="text-gray-500 font-medium text-sm">Cargando datos completos de la venta...</p>
+            </div>
+          </div>
+        ) : (
         <div className="space-y-6">
           {/* Seccion Resumen Solo Lectura */}
           <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-sm">
@@ -526,9 +573,10 @@ export default function SaleEditModal({
             })()}
           </div>
         </div>
-      ) : (
-        <p className="text-center py-8 text-gray-500">Solo se permite edición de ventas existentes en esta modal.</p>
-      )}
+      )
+    ) : (
+      <p className="text-center py-8 text-gray-500">Solo se permite edición de ventas existentes en esta modal.</p>
+    )}
     </Modal>
   );
 }

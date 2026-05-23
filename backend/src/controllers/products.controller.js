@@ -47,14 +47,54 @@ const productHandler = (category, tableName, transformData) => ({
         const transformed = transformData ? transformData(data, detalle.id) : { detalleVentaId: detalle.id, ...data };
         const product = await tx[tableName].create({ data: transformed });
 
-        if (data.passengers && data.passengers.length > 0) {
-          for (const p of data.passengers) {
-            await tx.pasajerosDetalle.create({
+        const passengers = data.passengers?.length
+          ? data.passengers
+          : data.passengerInfo
+            ? [data.passengerInfo]
+            : data.guests?.length
+              ? data.guests
+              : null;
+
+        if (passengers && passengers.length > 0) {
+          const cliente = await tx.clientes.findUnique({
+            where: { id: venta.clienteId },
+            select: { personaId: true }
+          });
+          const defaultPersonaId = cliente?.personaId;
+          if (defaultPersonaId) {
+            for (const p of passengers) {
+              const pid = p.personaId ? parseInt(p.personaId) : defaultPersonaId;
+              if (!pid) continue;
+              await tx.pasajerosDetalle.create({
+                data: {
+                  detalleVentaId: detalle.id,
+                  personaId: pid,
+                  esTitular: p.esTitular ?? true,
+                  asiento: p.asiento || p.seat || null
+                }
+              });
+            }
+          }
+        }
+
+        if (tableName === 'prodTiqueteria') {
+          const allLegs = [...(data.legs || [])];
+          if (data.returnLeg) allLegs.push(data.returnLeg);
+          for (let i = 0; i < allLegs.length; i++) {
+            const leg = allLegs[i];
+            if (!leg.origin || !leg.destination) continue;
+            const originAirport = await tx.aeropuertos.findFirst({ where: { codigoIata: leg.origin } });
+            const destAirport = await tx.aeropuertos.findFirst({ where: { codigoIata: leg.destination } });
+            if (!originAirport || !destAirport) continue;
+            await tx.tramosVuelo.create({
               data: {
-                detalleVentaId: detalle.id,
-                personaId: parseInt(p.personaId) || null,
-                esTitular: p.esTitular || false,
-                asiento: p.asiento || null
+                prodTiqueteriaId: product.id,
+                aeropuertoOrigenId: originAirport.id,
+                aeropuertoDestinoId: destAirport.id,
+                salida: leg.date ? new Date(leg.date) : new Date(),
+                llegada: leg.date ? new Date(leg.date) : new Date(),
+                nroVueloTramo: leg.flightNumber || null,
+                orden: i + 1
               }
             });
           }

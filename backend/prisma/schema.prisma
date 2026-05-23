@@ -337,6 +337,9 @@ model Ventas {
   liquidacionVentas LiquidacionVentas[]
 
   @@map("ventas")
+  @@index([clienteId])
+  @@index([usuarioId])
+  @@index([comisionistaId])
 }
 
 model PagosVenta {
@@ -350,6 +353,7 @@ model PagosVenta {
   fechaPago    DateTime    @default(now()) @map("fecha_pago")
 
   @@map("pagos_venta")
+  @@index([ventaId])
 }
 
 // =========================================================
@@ -395,6 +399,9 @@ model DetalleVenta {
   prodMascotas       ProdMascotas?
 
   @@map("detalle_venta")
+  @@index([ventaId])
+  @@index([proveedorId])
+  @@index([metodoPagoProveedorId])
 }
 
 model PasajerosDetalle {
@@ -408,6 +415,8 @@ model PasajerosDetalle {
   nota            String?
 
   @@map("pasajeros_detalle")
+  @@index([detalleVentaId])
+  @@index([personaId])
 }
 
 // =========================================================
@@ -577,9 +586,13 @@ model TramosVuelo {
   salida             DateTime
   llegada            DateTime
   nroVueloTramo      String?        @map("nro_vuelo_tramo")
+  asiento            String?
   orden              Int            @default(1)
 
   @@map("tramos_vuelo")
+  @@index([prodTiqueteriaId])
+  @@index([aeropuertoOrigenId])
+  @@index([aeropuertoDestinoId])
 }
 
 model ProdHoteleria {

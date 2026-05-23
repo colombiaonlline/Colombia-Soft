@@ -69,12 +69,22 @@ export function TicketForm({
   /* ─── Stops ─────────────────────────────────────────────────── */
   const addStop = (type: "outbound" | "return") => {
     const key = type === "outbound" ? "outboundStops" : "returnStops";
-    onChange({ [key]: [...(ticket[key] || []), ""] });
+    const currentStops = ticket[key] || [];
+    onChange({
+      [key]: [
+        ...currentStops,
+        { origin: "", destination: "", flightNumber: "", seat: "", date: "" },
+      ],
+    });
   };
-  const updateStop = (type: "outbound" | "return", idx: number, val: string) => {
+  const updateStop = (
+    type: "outbound" | "return",
+    idx: number,
+    updates: Partial<FlightLeg>
+  ) => {
     const key = type === "outbound" ? "outboundStops" : "returnStops";
     const next = [...(ticket[key] || [])];
-    next[idx] = val;
+    next[idx] = { ...next[idx], ...updates };
     onChange({ [key]: next });
   };
   const removeStop = (type: "outbound" | "return", idx: number) => {
@@ -112,7 +122,7 @@ export function TicketForm({
     };
     const c = colorMap[color];
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
           <span className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${c.title}`}>
             <MapPin size={11} />
@@ -126,23 +136,79 @@ export function TicketForm({
             <PlusCircle size={10} /> Añadir Escala
           </button>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="space-y-4">
           {(stops || []).map((stop, sIdx) => (
-            <div key={sIdx} className="relative group">
-              <Input
-                value={stop}
-                onChange={(e) => updateStop(type, sIdx, e.target.value)}
-                placeholder={`Escala #${sIdx + 1}`}
-                className="text-xs pr-8"
-                list="cities-list-ticket"
-              />
+            <div
+              key={sIdx}
+              className={`p-4 rounded-xl border relative group transition-all duration-200 ${
+                color === "primary"
+                  ? "bg-primary/5/10 border-primary/20 hover:border-primary/40 bg-white"
+                  : "bg-blue-50/30 border-blue-100 hover:border-blue-300 bg-white"
+              }`}
+            >
+              <div className="absolute -top-2.5 left-3 bg-white px-2 py-0.5 rounded-full border border-gray-150 shadow-sm flex items-center gap-1">
+                <span className={`text-[9px] font-extrabold uppercase tracking-wide ${color === "primary" ? "text-primary" : "text-blue-600"}`}>
+                  Escala #{sIdx + 1}
+                </span>
+              </div>
+              
               <button
                 type="button"
                 onClick={() => removeStop(type, sIdx)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute -top-2.5 right-3 bg-red-50 text-red-500 border border-red-100 rounded-full p-1 hover:bg-red-100 transition-colors shadow-sm"
+                title="Eliminar Escala"
               >
                 <Trash2 size={11} />
               </button>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 pt-1">
+                <FormField label="Origen">
+                  <Combobox
+                    value={stop.origin || ""}
+                    onChange={(val) => updateStop(type, sIdx, { origin: val })}
+                    options={airportOptions}
+                    placeholder="BOG"
+                    className="text-xs"
+                  />
+                </FormField>
+                
+                <FormField label="Destino">
+                  <Combobox
+                    value={stop.destination || ""}
+                    onChange={(val) => updateStop(type, sIdx, { destination: val })}
+                    options={airportOptions}
+                    placeholder="MDE"
+                    className="text-xs"
+                  />
+                </FormField>
+                
+                <FormField label="N° Vuelo">
+                  <Input
+                    value={stop.flightNumber || ""}
+                    onChange={(e) => updateStop(type, sIdx, { flightNumber: e.target.value })}
+                    placeholder="AV93"
+                    className="text-xs"
+                  />
+                </FormField>
+                
+                <FormField label="Asiento">
+                  <Input
+                    value={stop.seat || ""}
+                    onChange={(e) => updateStop(type, sIdx, { seat: e.target.value })}
+                    placeholder="12A"
+                    className="text-xs"
+                  />
+                </FormField>
+                
+                <FormField label="Fecha y Hora">
+                  <Input
+                    type="datetime-local"
+                    value={stop.date || ""}
+                    onChange={(e) => updateStop(type, sIdx, { date: e.target.value })}
+                    className="text-xs"
+                  />
+                </FormField>
+              </div>
             </div>
           ))}
           {(stops || []).length === 0 && (
@@ -421,14 +487,9 @@ export function TicketForm({
           <FormField label="Fecha de Nacimiento">
             <Input type="date" value={ticket.passengerInfo.birthDate} disabled className="bg-gray-100 cursor-not-allowed" />
           </FormField>
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="N° de Tiquete">
-              <Input value={ticket.ticketNumber} onChange={(e) => onChange({ ticketNumber: e.target.value })} />
-            </FormField>
-            <FormField label="N° de Asiento">
-              <Input value={ticket.seatNumber} onChange={(e) => onChange({ seatNumber: e.target.value })} />
-            </FormField>
-          </div>
+          <FormField label="N° de Tiquete">
+            <Input value={ticket.ticketNumber} onChange={(e) => onChange({ ticketNumber: e.target.value })} />
+          </FormField>
         </div>
       </div>
 

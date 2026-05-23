@@ -58,31 +58,30 @@ export function Step1Client({ form, set, data, errors }: any) {
           </FormField>
 
           <FormField label="Comisionista / Referido">
-            <Select
-              value={form.commissionAgentId || ""}
-              onChange={(e) => {
-                const agentId = e.target.value;
-                if (agentId === "") {
+            <Combobox
+              value={form.commissionAgentName || ""}
+              onChange={(val) => {
+                if (!val) {
                   set("commissionAgentId", "");
                   set("commissionAgentName", "");
                   set("commissionAgentAmount", "0");
                   set("commissionAgentRetentionPercentage", "0");
                   set("commissionAgentNetPayment", "0");
                 } else {
-                  const agent = (data.commissionAgents || []).find((a: any) => a.id.toString() === agentId);
+                  const agent = (data.commissionAgents || []).find((a: any) => a.name === val);
                   if (agent) {
-                    set("commissionAgentId", agentId);
+                    set("commissionAgentId", String(agent.id));
                     set("commissionAgentName", agent.name);
+                  } else {
+                    set("commissionAgentName", val);
                   }
                 }
               }}
-              options={[
-                { value: "", label: "Venta Directa (Sin Comisionista)" },
-                ...(data.commissionAgents || []).map((a: any) => ({
-                  value: a.id.toString(),
-                  label: a.name,
-                })),
-              ]}
+              options={(data.commissionAgents || []).map((a: any) => ({
+                value: a.name,
+                label: a.name,
+              }))}
+              placeholder="Venta Directa (Sin Comisionista)"
             />
           </FormField>
         </div>

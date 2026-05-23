@@ -88,8 +88,8 @@ export function InsuranceForm({ insurance, onChange, data }: InsuranceFormProps)
                   value={member.docType}
                   onChange={(e) => updateMember(mIdx, { docType: e.target.value })}
                   options={data.config.documentTypes.map((d: any) => ({
-                    value: d.name,
-                    label: d.name,
+                    value: d.abreviatura,
+                    label: d.abreviatura,
                   }))}
                 />
                 <Input
