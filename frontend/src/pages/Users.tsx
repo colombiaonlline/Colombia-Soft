@@ -34,6 +34,7 @@ import {
 } from "../types";
 import StatCard from "../components/ui/StatCard";
 import PermissionsGrid from "../components/users/PermissionsGrid";
+import Avatar from "../components/ui/Avatar";
 
 import AvatarPicker, { AVATARS } from "../components/ui/AvatarPicker";
 
@@ -494,11 +495,7 @@ export default function Users() {
                 <TableCell>{user.id}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    <img
-                      src={user.avatar}
-                      className="w-8 h-8 rounded-full border border-gray-200"
-                      alt={user.name}
-                    />
+                    <Avatar src={user.avatar} name={user.name} />
                     <div className="flex flex-col">
                       <span className="font-medium text-primary leading-tight">
                         {user.name}

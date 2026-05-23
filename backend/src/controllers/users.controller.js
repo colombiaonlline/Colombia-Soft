@@ -52,7 +52,11 @@ exports.list = async (req, res, next) => {
       createdAt: u.creadoAt,
       customPermissions: u.permisosUsuario.length > 0 ? u.permisosUsuario.reduce((acc, pu) => {
         if (!acc[pu.permiso.modulo]) acc[pu.permiso.modulo] = {};
-        acc[pu.permiso.modulo][pu.permiso.accion] = true;
+        const val = pu.valor || 'true';
+        const isScopedView = pu.permiso.accion === 'view' && ['dashboard','sales','clients'].includes(pu.permiso.modulo);
+        acc[pu.permiso.modulo][pu.permiso.accion] = isScopedView
+          ? (val === 'own' || val === 'all' ? val : 'all')
+          : (val === 'true' || val === true);
         return acc;
       }, {}) : undefined
     }));
@@ -91,7 +95,11 @@ exports.getById = async (req, res, next) => {
       createdAt: usuario.creadoAt,
       customPermissions: usuario.permisosUsuario.length > 0 ? usuario.permisosUsuario.reduce((acc, pu) => {
         if (!acc[pu.permiso.modulo]) acc[pu.permiso.modulo] = {};
-        acc[pu.permiso.modulo][pu.permiso.accion] = true;
+        const val = pu.valor || 'true';
+        const isScopedView = pu.permiso.accion === 'view' && ['dashboard','sales','clients'].includes(pu.permiso.modulo);
+        acc[pu.permiso.modulo][pu.permiso.accion] = isScopedView
+          ? (val === 'own' || val === 'all' ? val : 'all')
+          : (val === 'true' || val === true);
         return acc;
       }, {}) : undefined
     });
@@ -259,15 +267,21 @@ exports.updatePermissions = async (req, res, next) => {
 
     for (const [modulo, accs] of Object.entries(permissions)) {
       for (const [accion, value] of Object.entries(accs)) {
-        if (value === true || value === 'all' || value === 'own') {
-          const permiso = await prisma.permisos.findFirst({
-            where: { modulo, accion }
+        // Skip disabled permissions to keep DB clean
+        if (value === false || value === 'none') continue;
+
+        const encoded = value === 'all' || value === 'own' ? value
+          : value === true ? 'true'
+          : value === false ? 'false'
+          : String(value);
+
+        const permiso = await prisma.permisos.findFirst({
+          where: { modulo, accion }
+        });
+        if (permiso) {
+          await prisma.permisosUsuario.create({
+            data: { usuarioId: id, permisoId: permiso.id, permitido: true, valor: encoded }
           });
-          if (permiso) {
-            await prisma.permisosUsuario.create({
-              data: { usuarioId: id, permisoId: permiso.id, permitido: true }
-            });
-          }
         }
       }
     }

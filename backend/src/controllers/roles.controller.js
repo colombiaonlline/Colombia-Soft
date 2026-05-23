@@ -10,26 +10,45 @@ const MODULE_ACTIONS = {
   config: ['view', 'edit'],
 };
 
-const ROLE_PERMISSIONS_MAP = {
+const SCOPED_VIEW_MODULES = ['dashboard', 'sales', 'clients'];
+
+const DEFAULT_ROLE_VALUES = {
   asesor: {
     dashboard: { view: 'own' },
-    sales: { view: 'own', create: true, edit: true, delete: false },
-    clients: { view: 'own', create: true, edit: false },
-    itineraries: { view: true, edit: false },
-    users: { view: false, create: false, edit: false, delete: false },
-    config: { view: false, edit: false },
+    sales: { view: 'own', create: 'true', edit: 'true', delete: 'false' },
+    clients: { view: 'own', create: 'true', edit: 'false' },
+    itineraries: { view: 'true', edit: 'false' },
+    users: { view: 'false', create: 'false', edit: 'false', delete: 'false' },
+    config: { view: 'false', edit: 'false' },
   },
   freelancer: {
     dashboard: { view: 'own' },
-    sales: { view: 'own', create: true, edit: true, delete: false },
-    clients: { view: 'own', create: true, edit: false },
-    itineraries: { view: true, edit: false },
-    users: { view: false, create: false, edit: false, delete: false },
-    config: { view: false, edit: false },
+    sales: { view: 'own', create: 'true', edit: 'true', delete: 'false' },
+    clients: { view: 'own', create: 'true', edit: 'false' },
+    itineraries: { view: 'true', edit: 'false' },
+    users: { view: 'false', create: 'false', edit: 'false', delete: 'false' },
+    config: { view: 'false', edit: 'false' },
   },
 };
 
-const SCOPED_VIEW_MODULES = ['dashboard', 'sales', 'clients'];
+function parseValor(accion, modulo, valor) {
+  if (accion === 'view' && SCOPED_VIEW_MODULES.includes(modulo)) {
+    // scope value: 'all', 'own', or 'none'
+    if (valor === 'all' || valor === 'own') return valor;
+    if (valor === 'true') return 'all';
+    return 'none';
+  }
+  // boolean value
+  return valor === 'true' || valor === true;
+}
+
+function encodeValor(value) {
+  // Convert frontend value to stored string
+  if (value === 'all' || value === 'own' || value === 'none') return value;
+  if (value === true) return 'true';
+  if (value === false) return 'false';
+  return String(value);
+}
 
 exports.getPermissions = async (req, res, next) => {
   try {
@@ -44,22 +63,28 @@ exports.getPermissions = async (req, res, next) => {
       include: { permiso: true }
     });
 
-    const grouped = permisos.reduce((acc, pr) => {
-      const m = pr.permiso.modulo;
-      const a = pr.permiso.accion;
-      if (!acc[m]) acc[m] = {};
-      acc[m][a] = (a === 'view' && SCOPED_VIEW_MODULES.includes(m)) ? 'all' : true;
-      return acc;
-    }, {});
-
-    // Ensure all 6 modules exist (fill missing with empty object)
+    // Start with default empty structure
     const MODULES = ['dashboard', 'sales', 'clients', 'itineraries', 'users', 'config'];
+    const defaults = DEFAULT_ROLE_VALUES[role] || DEFAULT_ROLE_VALUES.asesor;
+    const grouped = {};
+
     for (const mod of MODULES) {
-      if (!grouped[mod]) grouped[mod] = {};
+      grouped[mod] = {};
       const actions = MODULE_ACTIONS[mod] || [];
       for (const act of actions) {
-        if (grouped[mod][act] === undefined) grouped[mod][act] = (act === 'view' && SCOPED_VIEW_MODULES.includes(mod)) ? 'none' : false;
+        // Default: from DEFAULT_ROLE_VALUES
+        const defVal = defaults[mod]?.[act];
+        grouped[mod][act] = parseValor(act, mod, defVal ?? 'false');
       }
+    }
+
+    // Override with values stored in DB
+    for (const pr of permisos) {
+      const m = pr.permiso.modulo;
+      const a = pr.permiso.accion;
+      const v = pr.valor || 'true';
+      if (!grouped[m]) grouped[m] = {};
+      grouped[m][a] = parseValor(a, m, v);
     }
 
     success(res, grouped);
@@ -80,15 +105,18 @@ exports.updatePermissions = async (req, res, next) => {
 
     for (const [modulo, accs] of Object.entries(permissions)) {
       for (const [accion, value] of Object.entries(accs)) {
-        if (value === true || value === 'all' || value === 'own') {
-          const permiso = await prisma.permisos.findFirst({
-            where: { modulo, accion }
+        const encoded = encodeValor(value);
+        // Save all permissions, not just enabled ones (so we can restore disabled state too)
+        // But only save enabled/scoped ones to keep DB clean
+        if (value === false || value === 'none') continue;
+
+        const permiso = await prisma.permisos.findFirst({
+          where: { modulo, accion }
+        });
+        if (permiso) {
+          await prisma.permisosRol.create({
+            data: { rolId: rol.id, permisoId: permiso.id, valor: encoded }
           });
-          if (permiso) {
-            await prisma.permisosRol.create({
-              data: { rolId: rol.id, permisoId: permiso.id }
-            });
-          }
         }
       }
     }

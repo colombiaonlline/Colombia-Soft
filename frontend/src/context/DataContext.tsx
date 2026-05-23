@@ -4,6 +4,19 @@ import * as api from '../api';
 import { useAuth } from './AuthContext';
 import { getCurrentMonth } from '../utils/formatters';
 
+const RP_CACHE_KEY = 'itea_role_permissions_cache';
+
+function loadCachedRolePermissions(): { asesor: RolePermissions; freelancer: RolePermissions } | null {
+  try {
+    const raw = localStorage.getItem(RP_CACHE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.asesor && parsed?.freelancer) return parsed;
+    }
+  } catch {}
+  return null;
+}
+
 type ConfigSection = 'cards' | 'paymentMethods' | 'documentTypes' | 'airlines' | 'suppliers' | 'airports' | 'baggage' | 'packages';
 
 interface RecentSale {
@@ -128,10 +141,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
           airports: configAll?.airports || [],
           baggage: configAll?.baggage || [],
           packages: configAll?.packages || [],
-          rolePermissions: {
-            asesor: normalizeRolePermissions(asesorPerms || emptyData.config.rolePermissions.asesor),
-            freelancer: normalizeRolePermissions(freelancerPerms || emptyData.config.rolePermissions.freelancer),
-          },
+          rolePermissions: (() => {
+            const rp = {
+              asesor: normalizeRolePermissions(asesorPerms || loadCachedRolePermissions()?.asesor || emptyData.config.rolePermissions.asesor),
+              freelancer: normalizeRolePermissions(freelancerPerms || loadCachedRolePermissions()?.freelancer || emptyData.config.rolePermissions.freelancer),
+            };
+            if (asesorPerms || freelancerPerms) {
+              try { localStorage.setItem(RP_CACHE_KEY, JSON.stringify(rp)); } catch {}
+            }
+            return rp;
+          })(),
         },
         salesHistory: salesHistory || [],
       });
@@ -163,10 +182,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const updateUser = async (id: number, userUpdate: Partial<User>) => {
-    await api.updateUser(id, userUpdate);
+    const updated = await api.updateUser(id, userUpdate);
     setData(prev => ({
       ...prev,
-      users: prev.users.map(u => u.id === id ? { ...u, ...userUpdate } : u)
+      users: prev.users.map(u => u.id === id ? { ...u, ...updated } : u)
     }));
   };
 
@@ -330,16 +349,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const updateRolePermissions = async (role: 'asesor' | 'freelancer', permissions: RolePermissions) => {
     const normalized = normalizeRolePermissions(permissions);
     await api.updateRolePermissions(role, normalized as any);
-    setData(prev => ({
-      ...prev,
-      config: {
-        ...prev.config,
-        rolePermissions: {
-          ...prev.config.rolePermissions,
-          [role]: normalized
+    setData(prev => {
+      const next = {
+        ...prev,
+        config: {
+          ...prev.config,
+          rolePermissions: {
+            ...prev.config.rolePermissions,
+            [role]: normalized
+          }
         }
-      }
-    }));
+      };
+      try {
+        localStorage.setItem(RP_CACHE_KEY, JSON.stringify(next.config.rolePermissions));
+      } catch {}
+      return next;
+    });
   };
 
   return (

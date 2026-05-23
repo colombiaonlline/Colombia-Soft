@@ -136,6 +136,7 @@ model PermisosRol {
   id         Int     @id @default(autoincrement())
   rolId      Int     @map("rol_id")
   permisoId  Int     @map("permiso_id")
+  valor      String  @default("true") @map("valor")
 
   rol        Roles   @relation(fields: [rolId], references: [id])
   permiso    Permisos @relation(fields: [permisoId], references: [id])
@@ -238,6 +239,7 @@ model PermisosUsuario {
   permisoId  Int      @map("permiso_id")
   permiso    Permisos @relation(fields: [permisoId], references: [id])
   permitido  Boolean  @default(true)
+  valor      String   @default("true") @map("valor")
 
   @@unique([usuarioId, permisoId])
   @@map("permisos_usuario")
