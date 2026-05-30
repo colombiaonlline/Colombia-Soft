@@ -11,6 +11,8 @@ import {
   FileText,
   Loader2,
   Ban,
+  Search,
+  X,
 } from "lucide-react";
 import { Card, CardHeader } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
@@ -51,10 +53,38 @@ export default function Sales() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [voucherSale, setVoucherSale] = useState<Sale | null>(null);
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pagado' | 'credito' | 'abonado' | 'anulado'>('all');
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
   const filteredSales = useMemo(() => {
     const list = isAdmin ? data.sales : data.sales.filter((s) => s.asesorId === user?.id);
-    return [...list].sort((a, b) => b.id - a.id);
-  }, [data.sales, isAdmin, user?.id]);
+    return list.filter((sale) => {
+      // 1. Text Search Filter (client name, status, asesor, commissionAgent, id)
+      const query = searchTerm.toLowerCase().trim();
+      const matchesText = !query || 
+        sale.clientName.toLowerCase().includes(query) ||
+        sale.status.toLowerCase().includes(query) ||
+        sale.asesorName.toLowerCase().includes(query) ||
+        (sale.commissionAgentName || "").toLowerCase().includes(query) ||
+        String(sale.id).includes(query);
+
+      // 2. Status Select Filter
+      const matchesStatus = statusFilter === 'all' || sale.status === statusFilter;
+
+      // 3. Date Range Filter
+      let matchesDate = true;
+      if (startDate) {
+        matchesDate = matchesDate && new Date(sale.date) >= new Date(startDate);
+      }
+      if (endDate) {
+        matchesDate = matchesDate && new Date(sale.date) <= new Date(endDate + "T23:59:59");
+      }
+
+      return matchesText && matchesStatus && matchesDate;
+    }).sort((a, b) => b.id - a.id);
+  }, [data.sales, isAdmin, user?.id, searchTerm, statusFilter, startDate, endDate]);
 
   // Lazy Load Fetch
   useEffect(() => {
@@ -206,12 +236,64 @@ export default function Sales() {
           <Card className="animate-fade-in">
             <CardHeader
               actions={
-                canCreate("sales") ? (
-                  <Button onClick={handleOpenNewSale}>
-                    <Plus size={18} />
-                    Nueva Venta
-                  </Button>
-                ) : undefined
+                <div className="flex gap-3 items-center flex-wrap">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input 
+                      placeholder="Buscar por cliente, asesor, comisionista..." 
+                      className="text-sm border border-gray-border rounded-lg pl-10 pr-9 py-2 bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/20 w-72"
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                    />
+                    {searchTerm && (
+                      <button onClick={() => setSearchTerm('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded">
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                  <select
+                    value={statusFilter}
+                    onChange={e => setStatusFilter(e.target.value as any)}
+                    className="text-sm border border-gray-border rounded-lg px-3 py-2 bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="all">Todos los estados</option>
+                    <option value="pagado">Finalizado</option>
+                    <option value="abonado">Abonado</option>
+                    <option value="credito">En Crédito</option>
+                    <option value="anulado">Anulado</option>
+                  </select>
+                  <div className="flex items-center gap-1.5 border border-gray-border rounded-lg px-2 py-1 bg-white text-xs text-gray-500">
+                    <span className="font-semibold text-gray-400">Desde:</span>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={e => setStartDate(e.target.value)}
+                      className="bg-transparent focus:outline-none text-gray-600"
+                    />
+                    <span className="font-semibold text-gray-400 ml-1">Hasta:</span>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={e => setEndDate(e.target.value)}
+                      className="bg-transparent focus:outline-none text-gray-600"
+                    />
+                    {(startDate || endDate) && (
+                      <button 
+                        onClick={() => { setStartDate(""); setEndDate(""); }}
+                        className="text-red-400 hover:text-red-600 ml-1 p-0.5 rounded bg-red-50"
+                        title="Limpiar fechas"
+                      >
+                        <X size={12} />
+                      </button>
+                    )}
+                  </div>
+                  {canCreate("sales") && (
+                    <Button onClick={handleOpenNewSale}>
+                      <Plus size={18} />
+                      Nueva Venta
+                    </Button>
+                  )}
+                </div>
               }
             >
               Lista de Ventas {isAdmin ? "(Todas)" : "(Mis Ventas)"}

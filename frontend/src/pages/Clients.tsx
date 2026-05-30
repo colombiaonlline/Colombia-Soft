@@ -12,7 +12,7 @@ import ClientDetailModal from '../components/clients/ClientDetailModal';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { usePermissions } from '../context/PermissionsContext';
-import { formatDate } from '../utils/formatters';
+import { formatDate, capitalizeName } from '../utils/formatters';
 import { Client } from '../types';
 
 import AvatarPicker, { AVATARS } from '../components/ui/AvatarPicker';
@@ -140,7 +140,9 @@ export default function Clients() {
     try {
       const clientData = {
         ...formData,
-        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        firstName: capitalizeName(formData.firstName),
+        lastName: capitalizeName(formData.lastName),
+        name: `${capitalizeName(formData.firstName)} ${capitalizeName(formData.lastName)}`.trim(),
       };
 
       if (editingClient) {

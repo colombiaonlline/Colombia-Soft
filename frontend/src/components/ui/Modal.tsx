@@ -1,4 +1,5 @@
 import { ReactNode, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { Button } from "./Button";
 
@@ -39,14 +40,14 @@ export function Modal({
     xl: "max-w-4xl",
   }[size];
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div
         className="fixed inset-0 bg-primary/40 backdrop-blur-sm transition-opacity duration-300"
         onClick={onClose}
       />
       <div
-        className={`relative z-50 w-full ${maxWidth} bg-white rounded-xl shadow-2xl overflow-hidden animate-scale-in`}
+        className={`relative z-[101] w-full ${maxWidth} bg-white rounded-xl shadow-2xl overflow-hidden animate-scale-in`}
       >
         {/* Header con color primary */}
         <div className="bg-primary px-6 py-4 flex items-center justify-between">
@@ -73,6 +74,7 @@ export function Modal({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

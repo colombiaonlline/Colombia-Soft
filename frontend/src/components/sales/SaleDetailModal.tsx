@@ -58,7 +58,23 @@ interface SaleDetailModalProps {
 
 const isAlreadyFull = (sale: Sale | null): boolean => {
   if (!sale) return false;
-  return sale.ticketData !== undefined || sale.hotelData !== undefined || sale.planData !== undefined;
+  return (
+    sale.ticketData !== undefined ||
+    sale.hotelData !== undefined ||
+    sale.insuranceData !== undefined ||
+    sale.planData !== undefined ||
+    sale.checkInData !== undefined ||
+    sale.migrationData !== undefined ||
+    sale.simCardData !== undefined ||
+    sale.carRentalData !== undefined ||
+    sale.fincaData !== undefined ||
+    sale.tourData !== undefined ||
+    sale.conventionData !== undefined ||
+    sale.restaurantData !== undefined ||
+    sale.visaData !== undefined ||
+    sale.passportData !== undefined ||
+    sale.petServiceData !== undefined
+  );
 };
 
 export default function SaleDetailModal({

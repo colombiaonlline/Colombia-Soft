@@ -8,7 +8,7 @@ import {
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
-import { Input, Select } from "../ui/Form";
+import { Input, Select, Combobox, FormField, CurrencyInput } from "../ui/Form";
 import { formatCurrency, formatDate } from "../../utils/formatters";
 import { Sale, Client, User, PaymentRecord } from "../../types";
 
@@ -98,6 +98,7 @@ export default function SaleEditModal({
   clients,
   user,
   isAdmin,
+  onUpdateSale,
   onRegisterPayment,
   onDeletePayment,
   onDownloadVoucher,
@@ -107,21 +108,53 @@ export default function SaleEditModal({
     amount: "",
     method: "Efectivo",
   });
-  const [isSavingPayment] = useState(false); // kept for type safety, unused
+  const [localStatus, setLocalStatus] = useState<string>("");
+  const [localCreditDueDate, setLocalCreditDueDate] = useState<string>("");
+  const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   const saleId = editingSale?.id ?? null;
 
-  // Sync payments from pre-loaded sale data whenever the selected sale changes
+  // Sync payments, status and credit limits from pre-loaded sale data
   useEffect(() => {
-    setPayments((editingSale?.payments as PaymentRecord[]) || []);
-  }, [saleId]);
+    if (editingSale) {
+      setPayments((editingSale.payments as PaymentRecord[]) || []);
+      setLocalStatus(editingSale.status);
+      setLocalCreditDueDate(
+        editingSale.creditDueDate
+          ? new Date(editingSale.creditDueDate).toISOString().split("T")[0]
+          : ""
+      );
+      setLocalErrors({});
+    }
+  }, [editingSale]);
+
+  const totalSaleAmount = editingSale?.total || 0;
+  const totalPaidAmount = payments.reduce((acc, p) => acc + p.amount, 0);
+  const remainingBalance = totalSaleAmount - totalPaidAmount;
+
+  // Automatically force 'Finalizada' (pagado) state when sale total is covered by payments
+  useEffect(() => {
+    if (totalSaleAmount === 0) return;
+
+    if (totalPaidAmount >= totalSaleAmount) {
+      if (localStatus !== "pagado") {
+        setLocalStatus("pagado");
+      }
+    } else if (totalPaidAmount === 0) {
+      if (localStatus !== "credito") {
+        setLocalStatus("credito");
+      }
+    } else {
+      if (localStatus !== "abonado" && localStatus !== "credito") {
+        setLocalStatus("abonado");
+      }
+    }
+  }, [totalPaidAmount, totalSaleAmount, localStatus]);
 
   if (!isOpen || !editingSale) return null;
 
   const sale = editingSale;
-  const totalSaleAmount = sale.total || 0;
-  const totalPaidAmount = payments.reduce((acc, p) => acc + p.amount, 0);
-  const remainingBalance = totalSaleAmount - totalPaidAmount;
 
   const handleAddPayment = () => {
     const amount = Number(newPayment.amount);
@@ -162,6 +195,37 @@ export default function SaleEditModal({
     });
   };
 
+  const getStatusOptions = () => {
+    if (totalSaleAmount > 0 && totalPaidAmount >= totalSaleAmount) {
+      return [{ value: "pagado", label: "Completada" }];
+    }
+    if (totalPaidAmount > 0 && totalPaidAmount < totalSaleAmount) {
+      return [
+        { value: "credito", label: "Crédito" },
+        { value: "abonado", label: "Abonada" },
+      ];
+    }
+    return [{ value: "credito", label: "Crédito" }];
+  };
+
+  const handleUpdate = async () => {
+    if (payments.length === 0) return; // Do not allow update with 0 payments
+    setIsSaving(true);
+    try {
+      if (onUpdateSale) {
+        await onUpdateSale(sale.id, {
+          status: localStatus,
+          isCredit: localStatus === "credito" || localStatus === "abonado"
+        });
+      }
+      onClose();
+    } catch (err) {
+      console.error("Error al actualizar abonos:", err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
 
   return (
     <Modal
@@ -170,9 +234,23 @@ export default function SaleEditModal({
       title="Gestión de Abonos y Pagos"
       size="lg"
       footer={
-        <Button variant="outline" onClick={onClose} className="px-8 border-gray-200 text-gray-500 hover:bg-gray-50">
-          Cerrar
-        </Button>
+        <>
+           <Button 
+            variant="outline" 
+            onClick={onClose} 
+            className="px-8 border-gray-200 text-gray-500 hover:bg-gray-50 font-medium"
+            disabled={isSaving}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleUpdate} 
+            className="px-8 font-medium bg-[#0b396b] hover:bg-[#072445] disabled:bg-slate-400 disabled:hover:bg-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={isSaving || payments.length === 0}
+          >
+            {isSaving ? "Actualizando..." : "Actualizar"}
+          </Button>
+        </>
       }
     >
       <div className="space-y-6">
@@ -274,6 +352,7 @@ export default function SaleEditModal({
             </div>
           </div>
 
+
           <div className="mt-2 border-t border-gray-200 pt-6 space-y-6">
             <h3 className="text-lg font-black text-primary flex items-center gap-2">
               <Wallet className="text-accent" size={20} />
@@ -323,19 +402,17 @@ export default function SaleEditModal({
                 <div className="flex flex-col sm:flex-row items-end gap-3">
                   <div className="flex-1 w-full">
                     <label className="text-xs font-bold text-gray-600 mb-1 block">
-                      Monto a abonar
+                      Monto
                     </label>
-                    <Input
-                      type="number"
+                    <CurrencyInput
                       value={newPayment.amount}
-                      max={remainingBalance}
-                      onChange={(e) =>
+                      onChange={(val) =>
                         setNewPayment({
                           ...newPayment,
-                          amount: e.target.value,
+                          amount: val,
                         })
                       }
-                      placeholder="Ej: 500000"
+                      placeholder="Ej: 500.000"
                     />
                   </div>
                   <div className="flex-1 w-full">
@@ -430,6 +507,21 @@ export default function SaleEditModal({
                 )}
               </div>
             </div>
+            {/* CONFIGURACIÓN DEL ESTADO editable (Al final de la modal) */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm mb-4">
+              <FormField label="Estado de la Venta *" error={localErrors.status}>
+                <Combobox
+                  value={localStatus}
+                  onChange={(val) => {
+                    setLocalStatus(val);
+                  }}
+                  placeholder="Selecciona un estado..."
+                  options={getStatusOptions()}
+                  error={localErrors.status}
+                />
+              </FormField>
+            </div>
+
             {/* Barra de progreso de pago */}
             {(() => {
               const progress =

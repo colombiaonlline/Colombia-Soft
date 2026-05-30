@@ -41,6 +41,7 @@ import Avatar from "../components/ui/Avatar";
 import SortIcon from "../components/ui/SortIcon";
 
 import AvatarPicker, { AVATARS } from "../components/ui/AvatarPicker";
+import { capitalizeName } from "../utils/formatters";
 
 const ROLE_LABELS: Record<string, string> = {
   admin: "Administrador",
@@ -256,16 +257,22 @@ export default function Users() {
     setErrors({});
     setIsSaving(true);
     try {
+      const sanitizedData = {
+        ...formData,
+        firstName: capitalizeName(formData.firstName),
+        lastName: capitalizeName(formData.lastName),
+      };
+
       if (editingUser) {
         await updateUser(editingUser.id, {
-          ...formData,
-          name: `${formData.firstName} ${formData.lastName}`.trim(),
+          ...sanitizedData,
+          name: `${capitalizeName(formData.firstName)} ${capitalizeName(formData.lastName)}`.trim(),
         });
         setSuccessMessage("Usuario actualizado exitosamente");
       } else {
         await addUser({
-          ...formData,
-          name: `${formData.firstName} ${formData.lastName}`.trim(),
+          ...sanitizedData,
+          name: `${capitalizeName(formData.firstName)} ${capitalizeName(formData.lastName)}`.trim(),
         } as any);
         setSuccessMessage("Nuevo usuario registrado correctamente");
         setShowConfetti(true);

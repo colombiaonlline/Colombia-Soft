@@ -54,6 +54,8 @@ interface DashboardData {
   carteraStatus: { name: string; value: number; color: string }[];
   monthlyTrend: { month: number; currentYear: number; previousYear: number }[];
   categoryBreakdown: Record<string, { count: number; revenue: number }>;
+  creditMayoristas?: number;
+  creditTa?: number;
 }
 
 interface DataContextType {

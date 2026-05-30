@@ -32,15 +32,17 @@ exports.dashboard = async (req, res, next) => {
     const aggregatesSql = `
       SELECT
         COUNT(*)::int as "totalOperations",
-        COALESCE(SUM(CASE WHEN status IN ('pagado', 'abonado') THEN monto_total ELSE 0 END), 0) as "totalRevenue",
-        COALESCE(SUM(CASE WHEN status = 'credito' THEN (monto_total - COALESCE(monto_pagado_credito, 0)) ELSE 0 END), 0) as "pendingBalance",
-        COUNT(CASE WHEN status = 'credito' THEN 1 END)::int as "pendingCount",
-        COALESCE(SUM(costo_proveedor_total), 0) as "suppliersTotal",
+        COALESCE(SUM(CASE WHEN status = 'pagado' THEN ta_total WHEN status = 'abonado' AND monto_total > 0 THEN (ta_total * (COALESCE(monto_pagado_credito, 0) / monto_total)) ELSE 0 END), 0) as "totalRevenue",
+        COALESCE(SUM(CASE WHEN status IN ('credito', 'abonado') THEN (monto_total - COALESCE(monto_pagado_credito, 0)) ELSE 0 END), 0) as "pendingBalance",
+        COUNT(CASE WHEN status IN ('credito', 'abonado') THEN 1 END)::int as "pendingCount",
+        COALESCE(SUM(CASE WHEN status = 'pagado' THEN costo_proveedor_total WHEN status = 'abonado' AND monto_total > 0 THEN (costo_proveedor_total * (COALESCE(monto_pagado_credito, 0) / monto_total)) ELSE 0 END), 0) as "suppliersTotal",
         COALESCE(SUM(CASE WHEN status = 'pagado' THEN monto_total ELSE 0 END), 0) as "paids",
         COALESCE(SUM(CASE WHEN status = 'credito' THEN monto_total ELSE 0 END), 0) as "credits",
         COALESCE(SUM(CASE WHEN status = 'abonado' THEN monto_total ELSE 0 END), 0) as "partPaids",
         COALESCE(SUM(CASE WHEN EXTRACT(YEAR FROM creado_at) = ${currentYear} THEN monto_total ELSE 0 END), 0) as "currentYearSales",
-        COALESCE(SUM(CASE WHEN EXTRACT(YEAR FROM creado_at) = ${currentYear - 1} THEN monto_total ELSE 0 END), 0) as "prevYearSales"
+        COALESCE(SUM(CASE WHEN EXTRACT(YEAR FROM creado_at) = ${currentYear - 1} THEN monto_total ELSE 0 END), 0) as "prevYearSales",
+        COALESCE(SUM(CASE WHEN status IN ('credito', 'abonado') AND monto_total > 0 THEN (costo_proveedor_total * ((monto_total - COALESCE(monto_pagado_credito, 0)) / monto_total)) ELSE 0 END), 0) as "creditMayoristas",
+        COALESCE(SUM(CASE WHEN status IN ('credito', 'abonado') AND monto_total > 0 THEN (ta_total * ((monto_total - COALESCE(monto_pagado_credito, 0)) / monto_total)) ELSE 0 END), 0) as "creditTa"
       FROM ventas
       WHERE deleted_at IS NULL ${dateCondition} ${userCondition}
     `;
@@ -48,6 +50,11 @@ exports.dashboard = async (req, res, next) => {
     let clientsWhere = { deletedAt: null };
     if (req.permissionScope === 'own') {
       clientsWhere.creadoPorId = req.user.id;
+    }
+    if (dateFrom || dateTo) {
+      clientsWhere.fechaRegistro = {};
+      if (dateFrom) clientsWhere.fechaRegistro.gte = new Date(dateFrom);
+      if (dateTo) clientsWhere.fechaRegistro.lte = new Date(dateTo);
     }
 
     // Run all DB queries in parallel
@@ -104,6 +111,8 @@ exports.dashboard = async (req, res, next) => {
     const partPaids = Number(agg.partPaids) || 0;
     const currentYearSales = Number(agg.currentYearSales) || 0;
     const prevYearSales = Number(agg.prevYearSales) || 0;
+    const creditMayoristas = Number(agg.creditMayoristas) || 0;
+    const creditTa = Number(agg.creditTa) || 0;
 
     const categoryMap = {
       tiqueteria: 'Tiquetes', hoteleria: 'Hoteles', planes: 'Planes',
@@ -186,6 +195,8 @@ exports.dashboard = async (req, res, next) => {
         status: v.status,
       })),
       supplierCount,
+      creditMayoristas: Math.round(creditMayoristas),
+      creditTa: Math.round(creditTa),
     });
   } catch (err) {
     next(err);

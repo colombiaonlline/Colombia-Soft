@@ -30,6 +30,13 @@ export const PRODUCT_IMAGES: Record<string, string> = {
   planes: imgPlanes,
 };
 
+export interface PaymentData {
+  amount: number;
+  methodId: string;
+  methodName: string;
+  reference: string;
+}
+
 export interface WizardFormData {
   clientId: string;
   commissionAgentId: string;
@@ -43,6 +50,7 @@ export interface WizardFormData {
   selectedProducts: SaleProductId[];
   observations: string;
   paymentMethod: string;
+  payments?: PaymentData[];
   total: string;
   ta: string;
   supplierCost: string;
@@ -368,6 +376,7 @@ export const INITIAL_FORM: WizardFormData = {
   selectedProducts: [],
   observations: "",
   paymentMethod: "",
+  payments: [],
   total: "",
   ta: "",
   supplierCost: "",

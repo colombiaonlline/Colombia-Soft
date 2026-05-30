@@ -15,6 +15,8 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { usePermissions } from "../../context/PermissionsContext";
 import { getInitials } from "../../utils/formatters";
+import { Modal } from "../ui/Modal";
+import { Button } from "../ui/Button";
 
 interface SidebarProps {
   isMobileOpen?: boolean;
@@ -25,7 +27,15 @@ export function Sidebar({ isMobileOpen = false, onClose }: SidebarProps) {
   const { user, logout, isAdmin } = useAuth();
   const { canView } = usePermissions();
   const [isHovered, setIsHovered] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const isExpanded = isHovered || isMobileOpen;
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    logout();
+  };
 
   const mainLinks = [
     { to: "/", icon: LayoutDashboard, label: "Dashboard", permission: 'dashboard' as const },
@@ -170,7 +180,7 @@ export function Sidebar({ isMobileOpen = false, onClose }: SidebarProps) {
           </div>
         </div>
         <button
-          onClick={logout}
+          onClick={() => setIsConfirmOpen(true)}
           className={`flex items-center transition-all duration-300 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-xl group ${
             isExpanded ? "px-4 py-3 gap-3 w-full" : "px-0 py-3 w-12 mx-auto justify-center"
           }`}
@@ -184,6 +194,32 @@ export function Sidebar({ isMobileOpen = false, onClose }: SidebarProps) {
           </span>
         </button>
       </div>
+
+      <Modal
+        isOpen={isConfirmOpen}
+        onClose={() => !isLoggingOut && setIsConfirmOpen(false)}
+        title="Confirmar Cierre de Sesión"
+        size="sm"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setIsConfirmOpen(false)} disabled={isLoggingOut}>
+              Cancelar
+            </Button>
+            <Button variant="danger" onClick={handleLogout} disabled={isLoggingOut}>
+              {isLoggingOut ? "Cerrando sesión..." : "Cerrar Sesión"}
+            </Button>
+          </>
+        }
+      >
+        <div className="flex flex-col items-center text-center py-4">
+          <div className="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center mb-4">
+            <LogOut size={32} />
+          </div>
+          <p className="text-gray-700">
+            ¿Estás seguro de que deseas <strong>cerrar sesión</strong>?
+          </p>
+        </div>
+      </Modal>
     </aside>
   );
 }

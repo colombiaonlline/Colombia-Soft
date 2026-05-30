@@ -55,3 +55,12 @@ export function getCurrentMonth(): { start: string; end: string } {
     end: formatLocal(end)
   };
 }
+
+export function capitalizeName(str: string): string {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}

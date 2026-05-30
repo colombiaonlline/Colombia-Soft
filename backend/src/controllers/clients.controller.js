@@ -175,7 +175,8 @@ exports.create = async (req, res, next) => {
       birthDate: data.birthDate,
       avatar: persona.avatarUrl,
       status: 'active',
-      registrationDate: cliente.fechaRegistro
+      registrationDate: cliente.fechaRegistro,
+      createdBy: cliente.creadoPorId
     }, null, 201);
   } catch (err) {
     next(err);

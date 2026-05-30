@@ -26,6 +26,9 @@ import {
 } from "lucide-react";
 import Datepicker from "react-tailwindcss-datepicker";
 import { useData } from "../context/DataContext";
+import { Modal } from "../components/ui/Modal";
+import { Button } from "../components/ui/Button";
+import { AlertCircle } from "lucide-react";
 
 export default function Dashboard() {
   const { dashboardData, dashboardLoading, fetchDashboard } = useData();
@@ -34,6 +37,7 @@ export default function Dashboard() {
     startDate: new Date(start),
     endDate: new Date(end),
   });
+  const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
   const isInitialMount = React.useRef(true);
 
   useEffect(() => {
@@ -83,6 +87,8 @@ export default function Dashboard() {
       planesCount: d?.categoryBreakdown?.planes?.count ?? 0,
       planesIngresos: d?.categoryBreakdown?.planes?.revenue ?? 0,
       supplierCount: d?.supplierCount ?? 0,
+      creditMayoristas: d?.creditMayoristas ?? 0,
+      creditTa: d?.creditTa ?? 0,
       yearlyTrendData: MONTH_NAMES.map((monthName, index) => {
         const monthNum = index + 1;
         const apiMonth = d?.monthlyTrend?.find((m) => m.month === monthNum);
@@ -167,6 +173,7 @@ export default function Dashboard() {
               icon: <CreditCard size={24} />,
               gradient: "from-orange-500 to-amber-400",
               lightBg: "bg-orange-50 text-orange-600",
+              onClick: () => setIsCreditModalOpen(true),
             },
             {
               label: "MAYORISTAS",
@@ -224,7 +231,10 @@ export default function Dashboard() {
           ].map((kpi, i) => (
             <div
               key={i}
-              className="relative group bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+              onClick={kpi.onClick}
+              className={`relative group bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden ${
+                kpi.onClick ? "cursor-pointer hover:border-orange-200" : ""
+              }`}
             >
               <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${kpi.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
               <div className="p-6">
@@ -399,6 +409,109 @@ export default function Dashboard() {
           </table>
         </div>
       </div>
+
+      {/* ===== MODAL DETALLE CRÉDITO / CARTERA ===== */}
+      <Modal
+        isOpen={isCreditModalOpen}
+        onClose={() => setIsCreditModalOpen(false)}
+        title="Desglose de Cartera en Crédito"
+        size="md"
+      >
+        <div className="space-y-6 py-2">
+          {/* Tarjeta de Encabezado con Balance */}
+          <div className="relative p-6 bg-gradient-to-br from-orange-500 to-amber-600 rounded-3xl text-white shadow-xl shadow-orange-100 overflow-hidden">
+            <div className="absolute -right-6 -bottom-6 opacity-10 transform rotate-12 pointer-events-none">
+              <CreditCard size={140} />
+            </div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-90 mb-1">
+              Cuentas por Cobrar Totales
+            </p>
+            <h3 className="text-3xl font-black mb-1">
+              {formatCurrency(stats.totalPendiente)}
+            </h3>
+            <p className="text-xs opacity-80 font-medium">
+              Suma del balance pendiente de cobro de {stats.PendienteCount} cuentas activas en Crédito y Abonado.
+            </p>
+          </div>
+
+          {/* Grid de Desglose */}
+          <div className="grid grid-cols-1 gap-4">
+            {/* Mayoristas */}
+            <div className="p-5 bg-rose-50/50 border border-rose-100 rounded-2xl flex items-start gap-4 hover:shadow-md transition-shadow">
+              <div className="p-3 bg-rose-500 text-white rounded-xl shadow-md shadow-rose-200">
+                <Briefcase size={20} />
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] font-extrabold text-rose-500 uppercase tracking-widest mb-1">
+                  Deuda con Mayoristas (Proveedores)
+                </p>
+                <h4 className="text-xl font-black text-gray-800 mb-1">
+                  {formatCurrency(stats.creditMayoristas)}
+                </h4>
+                <p className="text-xs text-gray-500 font-medium">
+                  Costo neto de servicios turísticos adquiridos con operadores mayoristas pendientes de pago.
+                </p>
+              </div>
+            </div>
+
+            {/* TA Crédito */}
+            <div className="p-5 bg-emerald-50/50 border border-emerald-100 rounded-2xl flex items-start gap-4 hover:shadow-md transition-shadow">
+              <div className="p-3 bg-emerald-500 text-white rounded-xl shadow-md shadow-emerald-200">
+                <DollarSign size={20} />
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] font-extrabold text-emerald-600 uppercase tracking-widest mb-1">
+                  Crédito de T.A. (Comisión de la Agencia)
+                </p>
+                <h4 className="text-xl font-black text-gray-800 mb-1">
+                  {formatCurrency(stats.creditTa)}
+                </h4>
+                <p className="text-xs text-gray-500 font-medium">
+                  T.A. de la agencia pendiente de recaudar. Corresponde a la ganancia de la oficina.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Gráfico/Progreso Segmentado */}
+          {stats.creditMayoristas + stats.creditTa > 0 && (
+            <div className="space-y-2 pt-2">
+              <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                <span>Mayoristas ({Math.round((stats.creditMayoristas / (stats.creditMayoristas + stats.creditTa)) * 100)}%)</span>
+                <span>TA ({Math.round((stats.creditTa / (stats.creditMayoristas + stats.creditTa)) * 100)}%)</span>
+              </div>
+              <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden flex shadow-inner">
+                <div 
+                  className="bg-rose-500 transition-all duration-1000 ease-out" 
+                  style={{ width: `${(stats.creditMayoristas / (stats.creditMayoristas + stats.creditTa)) * 100}%` }} 
+                />
+                <div 
+                  className="bg-emerald-500 transition-all duration-1000 ease-out" 
+                  style={{ width: `${(stats.creditTa / (stats.creditMayoristas + stats.creditTa)) * 100}%` }} 
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Alerta/Nota informativa */}
+          <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-start gap-3 text-xs text-gray-500">
+            <AlertCircle size={16} className="text-gray-400 shrink-0 mt-0.5" />
+            <p className="leading-relaxed">
+              Las cuentas en <strong>Crédito</strong> y <strong>Abonado</strong> se sincronizan automáticamente con las finanzas del sistema. El balance se actualiza en tiempo real al registrar abonos de pago.
+            </p>
+          </div>
+
+          {/* Botón de cerrar */}
+          <div className="pt-2">
+            <Button
+              onClick={() => setIsCreditModalOpen(false)}
+              className="w-full h-12 bg-gray-800 hover:bg-gray-900 text-white rounded-xl font-bold shadow-md"
+            >
+              Entendido
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

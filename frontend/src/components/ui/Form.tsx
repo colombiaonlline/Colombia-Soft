@@ -57,7 +57,10 @@ export function CurrencyInput({ className = '', error, value, onChange, placehol
   }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value.replace(/\D/g, '');
+    let rawValue = e.target.value.replace(/\D/g, '');
+    if (rawValue.length > 8) {
+      rawValue = rawValue.slice(0, 8);
+    }
     if (onChange) {
       onChange(rawValue);
     }

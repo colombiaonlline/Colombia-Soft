@@ -138,11 +138,24 @@ export default function ProductDetailsModal({ product, onClose }: ProductDetails
                     </span>
                   </div>
                   {outboundLegs.map((leg: any, lIdx: number) => (
-                    <div key={lIdx} className="grid grid-cols-4 gap-2 text-xs mb-1 pb-1 last:border-0 last:pb-0 border-b border-gray-150">
+                    <div key={lIdx} className="grid grid-cols-1 sm:grid-cols-5 gap-2 text-xs mb-2 pb-2 last:border-0 last:pb-0 border-b border-gray-150 items-center">
                       <div className="font-semibold text-gray-800">{leg.origin || "-"} <span className="text-gray-400 mx-1">→</span> {leg.destination || "-"}</div>
-                      <div className="text-gray-600">{leg.date ? formatDate(leg.date) : "-"}</div>
-                      <div className="text-gray-600">Vuelo: <span className="font-medium text-gray-800">{leg.flightNumber || "-"}</span></div>
-                      <div className="text-gray-600">Asiento: <span className="font-medium text-gray-800">{leg.seat || "-"}</span></div>
+                      <div className="text-gray-600">
+                        <span className="font-bold text-[10px] text-gray-400 block uppercase mb-0.5">Salida</span>
+                        {leg.date ? `${formatDate(leg.date)} ${new Date(leg.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : "-"}
+                      </div>
+                      <div className="text-gray-600">
+                        <span className="font-bold text-[10px] text-gray-400 block uppercase mb-0.5">Llegada</span>
+                        {leg.arrivalDate ? `${formatDate(leg.arrivalDate)} ${new Date(leg.arrivalDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : "-"}
+                      </div>
+                      <div className="text-gray-600">
+                        <span className="font-bold text-[10px] text-gray-400 block uppercase mb-0.5">Vuelo</span>
+                        <span className="font-medium text-gray-800">{leg.flightNumber || "-"}</span>
+                      </div>
+                      <div className="text-gray-600">
+                        <span className="font-bold text-[10px] text-gray-400 block uppercase mb-0.5">Asiento</span>
+                        <span className="font-medium text-gray-800">{leg.seat || "-"}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -161,11 +174,24 @@ export default function ProductDetailsModal({ product, onClose }: ProductDetails
                     </span>
                   </div>
                   {returnLegs.map((leg: any, lIdx: number) => (
-                    <div key={lIdx} className="grid grid-cols-4 gap-2 text-xs mb-1 pb-1 last:border-0 last:pb-0 border-b border-blue-50">
+                    <div key={lIdx} className="grid grid-cols-1 sm:grid-cols-5 gap-2 text-xs mb-2 pb-2 last:border-0 last:pb-0 border-b border-blue-50 items-center">
                       <div className="font-semibold text-blue-800">{leg.origin || "-"} <span className="text-gray-400 mx-1">→</span> {leg.destination || "-"}</div>
-                      <div className="text-gray-600">{leg.date ? formatDate(leg.date) : "-"}</div>
-                      <div className="text-gray-600">Vuelo: <span className="font-medium text-blue-800">{leg.flightNumber || "-"}</span></div>
-                      <div className="text-gray-600">Asiento: <span className="font-medium text-blue-800">{leg.seat || "-"}</span></div>
+                      <div className="text-gray-600">
+                        <span className="font-bold text-[10px] text-gray-400 block uppercase mb-0.5">Salida</span>
+                        {leg.date ? `${formatDate(leg.date)} ${new Date(leg.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : "-"}
+                      </div>
+                      <div className="text-gray-600">
+                        <span className="font-bold text-[10px] text-gray-400 block uppercase mb-0.5">Llegada</span>
+                        {leg.arrivalDate ? `${formatDate(leg.arrivalDate)} ${new Date(leg.arrivalDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : "-"}
+                      </div>
+                      <div className="text-gray-600">
+                        <span className="font-bold text-[10px] text-gray-400 block uppercase mb-0.5">Vuelo</span>
+                        <span className="font-medium text-blue-800">{leg.flightNumber || "-"}</span>
+                      </div>
+                      <div className="text-gray-600">
+                        <span className="font-bold text-[10px] text-gray-400 block uppercase mb-0.5">Asiento</span>
+                        <span className="font-medium text-blue-800">{leg.seat || "-"}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -202,10 +228,17 @@ export default function ProductDetailsModal({ product, onClose }: ProductDetails
             </h4>
             {renderGrid([
               { label: "Plan", value: ins.planName || ins.insuranceType },
-              { label: "Cobertura", value: ins.coverageAmount ? `$${ins.coverageAmount}` : ins.coverageAmount },
+              { label: "Cobertura", value: ins.coverageAmount ? `$${Number(ins.coverageAmount).toLocaleString("es-CO")}` : ins.coverageAmount },
               { label: "Días", value: ins.coverageDays },
-              { label: "Contacto", value: ins.contactName },
-            ])}
+              { label: "Fecha Inicio", value: ins.startDate ? formatDate(ins.startDate) : "-" },
+              { label: "Fecha Fin", value: ins.endDate ? formatDate(ins.endDate) : "-" },
+              { label: "Contacto Emergencia", value: ins.contactName },
+              { label: "Teléfono Emergencia", value: ins.contactNumber },
+              { label: "Dirección Asegurado", value: ins.address },
+            ].filter(item => {
+              const val = item.value;
+              return val !== undefined && val !== null && val !== "" && val !== 0 && val !== "0" && val !== "-";
+            }))}
             {renderPassengers(ins.members || ins.passengers)}
           </div>
         ));

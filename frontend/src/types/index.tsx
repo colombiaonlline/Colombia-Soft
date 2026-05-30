@@ -184,6 +184,7 @@ export interface FlightLeg {
   seat: string;
   date: string;
   time?: string;
+  arrivalDate?: string;
 }
 
 export interface GuestInfo {

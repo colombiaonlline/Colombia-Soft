@@ -55,6 +55,13 @@ export function TicketForm({
     label: `${a.abbreviation} - ${a.name} (${a.location})`,
   }));
 
+  // Obtener fecha y hora actual en la zona horaria local para la validación de min
+  const minDateTime = (() => {
+    const now = new Date();
+    const tzOffset = now.getTimezoneOffset() * 60000;
+    return new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
+  })();
+
   /* ─── Legs ─────────────────────────────────────────────────── */
   const updateLeg = (idx: number, updates: Partial<FlightLeg>) => {
     const next = [...ticket.legs];
@@ -62,7 +69,7 @@ export function TicketForm({
     onChange({ legs: next });
   };
   const addLeg = () =>
-    onChange({ legs: [...ticket.legs, { origin: "", destination: "", flightNumber: "", seat: "", date: "" }] });
+    onChange({ legs: [...ticket.legs, { origin: "", destination: "", flightNumber: "", seat: "", date: "", arrivalDate: "" }] });
   const removeLeg = (idx: number) =>
     onChange({ legs: ticket.legs.filter((_, i) => i !== idx) });
 
@@ -73,7 +80,7 @@ export function TicketForm({
     onChange({
       [key]: [
         ...currentStops,
-        { origin: "", destination: "", flightNumber: "", seat: "", date: "" },
+        { origin: "", destination: "", flightNumber: "", seat: "", date: "", arrivalDate: "" },
       ],
     });
   };
@@ -161,53 +168,73 @@ export function TicketForm({
                 <Trash2 size={11} />
               </button>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 pt-1">
-                <FormField label="Origen">
-                  <Combobox
-                    value={stop.origin || ""}
-                    onChange={(val) => updateStop(type, sIdx, { origin: val })}
-                    options={airportOptions}
-                    placeholder="BOG"
-                    className="text-xs"
-                  />
-                </FormField>
+              <div className="space-y-3 pt-1">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <FormField label="Origen">
+                    <Combobox
+                      value={stop.origin || ""}
+                      onChange={(val) => updateStop(type, sIdx, { origin: val })}
+                      options={airportOptions}
+                      placeholder="BOG"
+                      className="text-xs"
+                    />
+                  </FormField>
+                  
+                  <FormField label="Destino">
+                    <Combobox
+                      value={stop.destination || ""}
+                      onChange={(val) => updateStop(type, sIdx, { destination: val })}
+                      options={airportOptions}
+                      placeholder="MDE"
+                      className="text-xs"
+                    />
+                  </FormField>
+                  
+                  <FormField label="N° Vuelo">
+                    <Input
+                      required
+                      value={stop.flightNumber || ""}
+                      onChange={(e) => {
+                        const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+                        updateStop(type, sIdx, { flightNumber: cleaned });
+                      }}
+                      placeholder="AV93"
+                      className="text-xs"
+                    />
+                  </FormField>
+                  
+                  <FormField label="Asiento">
+                    <Input
+                      value={stop.seat || ""}
+                      onChange={(e) => {
+                        const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+                        updateStop(type, sIdx, { seat: cleaned });
+                      }}
+                      placeholder="12A"
+                      className="text-xs"
+                    />
+                  </FormField>
+                </div>
                 
-                <FormField label="Destino">
-                  <Combobox
-                    value={stop.destination || ""}
-                    onChange={(val) => updateStop(type, sIdx, { destination: val })}
-                    options={airportOptions}
-                    placeholder="MDE"
-                    className="text-xs"
-                  />
-                </FormField>
-                
-                <FormField label="N° Vuelo">
-                  <Input
-                    value={stop.flightNumber || ""}
-                    onChange={(e) => updateStop(type, sIdx, { flightNumber: e.target.value })}
-                    placeholder="AV93"
-                    className="text-xs"
-                  />
-                </FormField>
-                
-                <FormField label="Asiento">
-                  <Input
-                    value={stop.seat || ""}
-                    onChange={(e) => updateStop(type, sIdx, { seat: e.target.value })}
-                    placeholder="12A"
-                    className="text-xs"
-                  />
-                </FormField>
-                
-                <FormField label="Fecha y Hora">
-                  <Input
-                    type="datetime-local" required min={new Date().toISOString().slice(0, 16)}
-                    value={stop.date || ""}
-                    onChange={(e) => updateStop(type, sIdx, { date: e.target.value })}
-                    className="text-xs"
-                  />
-                </FormField>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <FormField label="Salida">
+                    <Input
+                      type="datetime-local" required min={minDateTime}
+                      value={stop.date || ""}
+                      onChange={(e) => updateStop(type, sIdx, { date: e.target.value })}
+                      className="text-xs"
+                    />
+                  </FormField>
+                  
+                  <FormField label="Llegada">
+                    <Input
+                      type="datetime-local" required min={minDateTime}
+                      value={stop.arrivalDate || ""}
+                      onChange={(e) => updateStop(type, sIdx, { arrivalDate: e.target.value })}
+                      className="text-xs"
+                    />
+                  </FormField>
+                </div>
               </div>
             </div>
           ))}
@@ -251,8 +278,13 @@ export function TicketForm({
           </FormField>
           <FormField label="Número de Reserva">
             <Input
+              required
+              maxLength={6}
               value={ticket.reservationNumber}
-              onChange={(e) => onChange({ reservationNumber: e.target.value })}
+              onChange={(e) => {
+                const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+                onChange({ reservationNumber: cleaned });
+              }}
               placeholder="6 caracteres"
             />
           </FormField>
@@ -348,22 +380,46 @@ export function TicketForm({
                   <Trash2 size={11} />
                 </button>
               )}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                <FormField label="Origen">
-                  <Combobox value={leg.origin} onChange={(val) => updateLeg(lIdx, { origin: val })} options={airportOptions} placeholder="BOG" className="text-xs" />
-                </FormField>
-                <FormField label="Destino">
-                  <Combobox value={leg.destination} onChange={(val) => updateLeg(lIdx, { destination: val })} options={airportOptions} placeholder="MDE" className="text-xs" />
-                </FormField>
-                <FormField label="N° Vuelo">
-                  <Input value={leg.flightNumber} onChange={(e) => updateLeg(lIdx, { flightNumber: e.target.value })} placeholder="AV93" className="text-xs" />
-                </FormField>
-                <FormField label="Asiento">
-                  <Input value={leg.seat} onChange={(e) => updateLeg(lIdx, { seat: e.target.value })} placeholder="12A" className="text-xs" />
-                </FormField>
-                <FormField label="Fecha y Hora">
-                  <Input type="datetime-local" required min={new Date().toISOString().slice(0, 16)} value={leg.date} onChange={(e) => updateLeg(lIdx, { date: e.target.value })} className="text-xs" />
-                </FormField>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <FormField label="Origen">
+                    <Combobox value={leg.origin} onChange={(val) => updateLeg(lIdx, { origin: val })} options={airportOptions} placeholder="BOG" className="text-xs" />
+                  </FormField>
+                  <FormField label="Destino">
+                    <Combobox value={leg.destination} onChange={(val) => updateLeg(lIdx, { destination: val })} options={airportOptions} placeholder="MDE" className="text-xs" />
+                  </FormField>
+                  <FormField label="N° Vuelo">
+                    <Input
+                      required
+                      value={leg.flightNumber}
+                      onChange={(e) => {
+                        const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+                        updateLeg(lIdx, { flightNumber: cleaned });
+                      }}
+                      placeholder="AV93"
+                      className="text-xs"
+                    />
+                  </FormField>
+                  <FormField label="Asiento">
+                    <Input
+                      value={leg.seat}
+                      onChange={(e) => {
+                        const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+                        updateLeg(lIdx, { seat: cleaned });
+                      }}
+                      placeholder="12A"
+                      className="text-xs"
+                    />
+                  </FormField>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <FormField label="Salida">
+                    <Input type="datetime-local" required min={minDateTime} value={leg.date} onChange={(e) => updateLeg(lIdx, { date: e.target.value })} className="text-xs" />
+                  </FormField>
+                  <FormField label="Llegada">
+                    <Input type="datetime-local" required min={minDateTime} value={leg.arrivalDate || ""} onChange={(e) => updateLeg(lIdx, { arrivalDate: e.target.value })} className="text-xs" />
+                  </FormField>
+                </div>
               </div>
             </div>
           ))}
@@ -413,49 +469,68 @@ export function TicketForm({
               <h5 className="text-[10px] font-bold text-blue-700 uppercase tracking-widest flex items-center gap-2">
                 <Plane size={11} className="rotate-180" /> Trayecto de Regreso
               </h5>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                <FormField label="Origen Vuelta">
-                  <Combobox
-                    value={ticket.returnLeg?.origin || ""}
-                    onChange={(val) => onChange({ returnLeg: { ...ticket.returnLeg!, origin: val } })}
-                    options={airportOptions}
-                    placeholder="MDE"
-                    className="text-xs"
-                  />
-                </FormField>
-                <FormField label="Destino Vuelta">
-                  <Combobox
-                    value={ticket.returnLeg?.destination || ""}
-                    onChange={(val) => onChange({ returnLeg: { ...ticket.returnLeg!, destination: val } })}
-                    options={airportOptions}
-                    placeholder="BOG"
-                    className="text-xs"
-                  />
-                </FormField>
-                <FormField label="N° Vuelo Vuelta">
-                  <Input
-                    value={ticket.returnLeg?.flightNumber || ""}
-                    onChange={(e) => onChange({ returnLeg: { ...ticket.returnLeg!, flightNumber: e.target.value } })}
-                    placeholder="AV94"
-                    className="text-xs"
-                  />
-                </FormField>
-                <FormField label="Asiento Vuelta">
-                  <Input
-                    value={ticket.returnLeg?.seat || ""}
-                    onChange={(e) => onChange({ returnLeg: { ...ticket.returnLeg!, seat: e.target.value } })}
-                    placeholder="14C"
-                    className="text-xs"
-                  />
-                </FormField>
-                <FormField label="Fecha y Hora Vuelta">
-                  <Input
-                    type="datetime-local" required min={new Date().toISOString().slice(0, 16)}
-                    value={ticket.returnLeg?.date || ""}
-                    onChange={(e) => onChange({ returnLeg: { ...ticket.returnLeg!, date: e.target.value } })}
-                    className="text-xs"
-                  />
-                </FormField>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <FormField label="Origen Vuelta">
+                    <Combobox
+                      value={ticket.returnLeg?.origin || ""}
+                      onChange={(val) => onChange({ returnLeg: { ...ticket.returnLeg!, origin: val } })}
+                      options={airportOptions}
+                      placeholder="MDE"
+                      className="text-xs"
+                    />
+                  </FormField>
+                  <FormField label="Destino Vuelta">
+                    <Combobox
+                      value={ticket.returnLeg?.destination || ""}
+                      onChange={(val) => onChange({ returnLeg: { ...ticket.returnLeg!, destination: val } })}
+                      options={airportOptions}
+                      placeholder="BOG"
+                      className="text-xs"
+                    />
+                  </FormField>
+                  <FormField label="N° Vuelo Vuelta">
+                    <Input
+                      required
+                      value={ticket.returnLeg?.flightNumber || ""}
+                      onChange={(e) => {
+                        const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+                        onChange({ returnLeg: { ...ticket.returnLeg!, flightNumber: cleaned } });
+                      }}
+                      placeholder="AV94"
+                      className="text-xs"
+                    />
+                  </FormField>
+                  <FormField label="Asiento Vuelta">
+                    <Input
+                      value={ticket.returnLeg?.seat || ""}
+                      onChange={(e) => {
+                        const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+                        onChange({ returnLeg: { ...ticket.returnLeg!, seat: cleaned } });
+                      }}
+                      placeholder="14C"
+                      className="text-xs"
+                    />
+                  </FormField>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <FormField label="Salida Vuelta">
+                    <Input
+                      type="datetime-local" required min={minDateTime}
+                      value={ticket.returnLeg?.date || ""}
+                      onChange={(e) => onChange({ returnLeg: { ...ticket.returnLeg!, date: e.target.value } })}
+                      className="text-xs"
+                    />
+                  </FormField>
+                  <FormField label="Llegada Vuelta">
+                    <Input
+                      type="datetime-local" required min={minDateTime}
+                      value={ticket.returnLeg?.arrivalDate || ""}
+                      onChange={(e) => onChange({ returnLeg: { ...ticket.returnLeg!, arrivalDate: e.target.value } })}
+                      className="text-xs"
+                    />
+                  </FormField>
+                </div>
               </div>
 
               {/* Escalas de Vuelta: solo visibles si returnHasStops = true */}
@@ -488,7 +563,16 @@ export function TicketForm({
             <Input type="date" required value={ticket.passengerInfo.birthDate} disabled className="bg-gray-100 cursor-not-allowed" />
           </FormField>
           <FormField label="N° de Tiquete">
-            <Input value={ticket.ticketNumber} onChange={(e) => onChange({ ticketNumber: e.target.value })} />
+            <Input
+              required
+              maxLength={13}
+              value={ticket.ticketNumber}
+              onChange={(e) => {
+                const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "");
+                onChange({ ticketNumber: cleaned });
+              }}
+              placeholder="Máx 13 caracteres (sin especiales)"
+            />
           </FormField>
         </div>
       </div>
@@ -501,12 +585,14 @@ export function TicketForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField label="Valor Pagado al Proveedor">
             <CurrencyInput
+              required
               value={ticket.supplierCost === 0 ? "" : ticket.supplierCost}
               onChange={(val) => onChange({ supplierCost: val === "" ? 0 : Number(val) })}
             />
           </FormField>
           <FormField label="Valor TA">
             <CurrencyInput
+              required
               value={ticket.ta === 0 ? "" : ticket.ta}
               onChange={(val) => onChange({ ta: val === "" ? 0 : Number(val) })}
             />

@@ -23,7 +23,7 @@ import { Modal } from "../components/ui/Modal";
 import { FormField, Input, Select } from "../components/ui/Form";
 import { useData } from "../context/DataContext";
 import { usePermissions } from "../context/PermissionsContext";
-import { formatCurrency } from "../utils/formatters";
+import { formatCurrency, capitalizeName } from "../utils/formatters";
 import StatCard from "../components/ui/StatCard";
 
 export default function CommissionAgents() {
@@ -113,11 +113,16 @@ export default function CommissionAgents() {
 
     setIsSaving(true);
     try {
+      const sanitizedData = {
+        ...formData,
+        name: capitalizeName(formData.name),
+      };
+
       if (editingAgent) {
-        await updateCommissionAgent(editingAgent.id, formData);
+        await updateCommissionAgent(editingAgent.id, sanitizedData);
         notifySuccess("Aliado actualizado correctamente");
       } else {
-        await addCommissionAgent(formData);
+        await addCommissionAgent(sanitizedData);
         notifySuccess("Aliado registrado correctamente");
       }
       setIsModalOpen(false);

@@ -10,6 +10,7 @@ import {
   Trash2,
   ChevronDown,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useData } from "../../context/DataContext";
@@ -95,6 +96,62 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const triggerError = (msg: string) => {
+    setErrorMessage(msg);
+    setShowError(true);
+    setTimeout(() => setShowError(false), 4000);
+  };
+
+  // Saber si el formulario de tiquetería está completamente vacío (sin tocar)
+  const isTicketFormEmpty = (() => {
+    if (activeForm === "tiqueteria" && activeIdx !== null) {
+      const ticket = form.tickets[activeIdx];
+      if (!ticket) return true;
+      
+      const hasAirline = !!ticket.airline?.trim();
+      const hasSupplier = !!ticket.supplier?.trim();
+      const hasResNumber = !!ticket.reservationNumber?.trim();
+      const hasTicketNumber = !!ticket.ticketNumber?.trim();
+      const hasCost = ticket.supplierCost > 0;
+      const hasTa = ticket.ta > 0;
+      
+      // Comprobar si hay tramos con texto
+      let hasLegsContent = false;
+      if (ticket.legs && ticket.legs.length > 0) {
+        hasLegsContent = ticket.legs.some(leg => 
+          !!leg.origin?.trim() || !!leg.destination?.trim() || !!leg.flightNumber?.trim() || !!leg.seat?.trim() || !!leg.date?.trim() || !!leg.arrivalDate?.trim()
+        );
+      }
+      
+      // Comprobar escalas
+      let hasStopsContent = false;
+      if (ticket.outboundStops && ticket.outboundStops.length > 0) {
+        hasStopsContent = ticket.outboundStops.some(stop =>
+          !!stop.origin?.trim() || !!stop.destination?.trim() || !!stop.flightNumber?.trim() || !!stop.seat?.trim() || !!stop.date?.trim() || !!stop.arrivalDate?.trim()
+        );
+      }
+      
+      // Comprobar regreso
+      let hasReturnContent = false;
+      if (ticket.returnLeg) {
+        const ret = ticket.returnLeg;
+        hasReturnContent = !!ret.origin?.trim() || !!ret.destination?.trim() || !!ret.flightNumber?.trim() || !!ret.seat?.trim() || !!ret.date?.trim() || !!ret.arrivalDate?.trim();
+      }
+      
+      let hasReturnStopsContent = false;
+      if (ticket.returnStops && ticket.returnStops.length > 0) {
+        hasReturnStopsContent = ticket.returnStops.some(stop =>
+          !!stop.origin?.trim() || !!stop.destination?.trim() || !!stop.flightNumber?.trim() || !!stop.seat?.trim() || !!stop.date?.trim() || !!stop.arrivalDate?.trim()
+        );
+      }
+
+      return !(hasAirline || hasSupplier || hasResNumber || hasTicketNumber || hasCost || hasTa || hasLegsContent || hasStopsContent || hasReturnContent || hasReturnStopsContent);
+    }
+    return false;
+  })();
 
   const actions = {
     showOtherProducts,
@@ -172,7 +229,37 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
   const set = <K extends keyof WizardFormData>(
     key: K,
     value: WizardFormData[K],
-  ) => setForm((prev) => ({ ...prev, [key]: value }));
+  ) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    
+    // Clear or update validation errors in real time
+    if (key === "creditDueDate") {
+      const dateStr = value as string;
+      if (dateStr) {
+        const selectedDate = new Date(dateStr);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        selectedDate.setHours(0, 0, 0, 0);
+        if (selectedDate < today) {
+          setErrors((prev) => ({ ...prev, creditDueDate: "La fecha de vencimiento no puede ser anterior al día de hoy" }));
+        } else {
+          setErrors((prev) => {
+            const next = { ...prev };
+            delete next.creditDueDate;
+            return next;
+          });
+        }
+      } else {
+        setErrors((prev) => ({ ...prev, creditDueDate: "La fecha de vencimiento es obligatoria" }));
+      }
+    } else if (errors[key as string]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[key as string];
+        return next;
+      });
+    }
+  };
 
   const toggleProduct = (id: SaleProductId) => {
     setForm((prev) => {
@@ -191,17 +278,99 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
       if (!form.clientId) errs.clientId = "El cliente es obligatorio";
     }
     if (s === 2) {
-      if (form.selectedProducts.length === 0)
+      if (form.selectedProducts.length === 0) {
         errs.products = "Debes seleccionar al menos un producto";
+      } else if (form.selectedProducts.includes("tiqueteria")) {
+        if (!form.tickets || form.tickets.length === 0) {
+          errs.products = "Debes configurar al menos un tiquete";
+        } else {
+          for (let i = 0; i < form.tickets.length; i++) {
+            const ticket = form.tickets[i];
+            const isStrictlyValid = (() => {
+              if (!ticket) return false;
+              if (!ticket.airline?.trim()) return false;
+              if (!ticket.supplier?.trim()) return false;
+              if (!ticket.reservationNumber || ticket.reservationNumber.length !== 6) return false;
+              if (!ticket.ticketNumber?.trim() || ticket.ticketNumber.length === 0 || ticket.ticketNumber.length > 13) return false;
+              
+              // Tramos de ida
+              if (!ticket.legs || ticket.legs.length === 0) return false;
+              for (const leg of ticket.legs) {
+                if (!leg.origin?.trim() || !leg.destination?.trim() || !leg.flightNumber?.trim() || !leg.date?.trim() || !leg.arrivalDate?.trim()) {
+                  return false;
+                }
+              }
+              
+              // Escalas de ida
+              if (ticket.hasStops) {
+                if (!ticket.outboundStops || ticket.outboundStops.length === 0) return false;
+                for (const stop of ticket.outboundStops) {
+                  if (!stop.origin?.trim() || !stop.destination?.trim() || !stop.flightNumber?.trim() || !stop.date?.trim() || !stop.arrivalDate?.trim()) {
+                    return false;
+                  }
+                }
+              }
+              
+              // Vuelo de Vuelta
+              if (ticket.flightMode === "round_trip") {
+                if (!ticket.returnLeg) return false;
+                const ret = ticket.returnLeg;
+                if (!ret.origin?.trim() || !ret.destination?.trim() || !ret.flightNumber?.trim() || !ret.date?.trim() || !ret.arrivalDate?.trim()) {
+                  return false;
+                }
+                
+                // Escalas de Vuelta
+                if (ticket.returnHasStops) {
+                  if (!ticket.returnStops || ticket.returnStops.length === 0) return false;
+                  for (const stop of ticket.returnStops) {
+                    if (!stop.origin?.trim() || !stop.destination?.trim() || !stop.flightNumber?.trim() || !stop.date?.trim() || !stop.arrivalDate?.trim()) {
+                      return false;
+                    }
+                  }
+                }
+              }
+              
+              // Campos financieros
+              if (ticket.supplierCost <= 0) return false;
+              if (ticket.ta < 0) return false;
+              return true;
+            })();
+
+            if (!isStrictlyValid) {
+              triggerError(`El servicio de Tiquetería #${i + 1} tiene campos requeridos vacíos o inválidos. Por favor, edítalo y complétalos para continuar.`);
+              errs.tiqueteriaValidation = "invalid";
+              break;
+            }
+          }
+        }
+      }
     }
     if (s === 3) {
       if (!form.total || Number(form.total) <= 0) errs.total = "El valor total debe ser mayor a $0";
-      if (!form.paymentMethod)
+      
+      const hasPayments = form.payments && form.payments.length > 0;
+      if (form.status !== "credito" && !form.paymentMethod && !hasPayments) {
         errs.paymentMethod = "La forma de pago es obligatoria";
-      if (!form.status)
+      }
+      
+      if (!form.status) {
         errs.status = "El estado de la venta es obligatorio";
-      if (form.isCredit && !form.creditDueDate)
-        errs.creditDueDate = "La fecha de vencimiento es obligatoria";
+      }
+      
+      const isCreditState = form.status === "credito" || form.status === "abonado";
+      if (isCreditState) {
+        if (!form.creditDueDate) {
+          errs.creditDueDate = "La fecha de vencimiento es obligatoria";
+        } else {
+          const selectedDate = new Date(form.creditDueDate);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          selectedDate.setHours(0, 0, 0, 0);
+          if (selectedDate < today) {
+            errs.creditDueDate = "La fecha de vencimiento no puede ser anterior al día de hoy";
+          }
+        }
+      }
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -292,7 +461,8 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
           <Button 
             type="submit"
             size="sm" 
-            className="bg-primary hover:bg-primary/90 text-white"
+            className="bg-primary hover:bg-primary/90 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
+            disabled={activeForm === "tiqueteria" ? isTicketFormEmpty : false}
           >
             Listo
           </Button>
@@ -555,15 +725,29 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
       };
     });
 
-    const saleData: Omit<Sale, "id"> = {
+    const calculatedPaymentMethod = form.payments && form.payments.length > 0
+      ? (form.payments.length === 1 ? form.payments[0].methodName : "Mixto")
+      : form.paymentMethod;
+
+    let finalStatus = form.status;
+    if (form.status === "credito" && form.payments && form.payments.length > 0) {
+      finalStatus = "abonado";
+    }
+
+    const saleData: any = {
       clientId: client.id,
       clientName: client.name,
       asesorId: Number(form.asesorId) || user!.id,
       asesorName: form.asesorName || user!.name,
       date: new Date().toISOString().split("T")[0],
       total: Number(form.total),
-      paymentMethod: form.paymentMethod,
-      status: form.status as Sale["status"],
+      paymentMethod: calculatedPaymentMethod,
+      payments: form.payments?.map(p => ({
+        amount: Number(p.amount),
+        method: p.methodId,
+        reference: p.reference
+      })),
+      status: finalStatus as Sale["status"],
       observations: fullObservations,
       products: form.selectedProducts,
       ticketData: mappedTickets.length > 0 ? mappedTickets : undefined,
@@ -625,6 +809,18 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
 
   return (
     <div className="flex flex-col h-full relative overflow-hidden">
+      {/* Toast Error Notification */}
+      {showError && (
+        <div className="fixed top-24 right-6 z-[200] bg-rose-50 border border-rose-200 text-rose-700 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-in-right">
+          <div className="bg-rose-500 text-white rounded-full p-1 flex-shrink-0">
+            <AlertCircle size={18} />
+          </div>
+          <div>
+            <p className="font-bold text-sm">Error de Validación</p>
+            <p className="text-xs opacity-90">{errorMessage}</p>
+          </div>
+        </div>
+      )}
       {activeForm ? renderActiveForm() : (
         <>
           {/* Header / Stepper */}
@@ -685,6 +881,8 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
             </Button>
             <Button
               onClick={closeActiveForm}
+              disabled={activeForm === "tiqueteria" ? isTicketFormEmpty : false}
+              className="disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
               Confirmar y Continuar
             </Button>
@@ -710,7 +908,11 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
               </Button>
 
               {step < 3 ? (
-                <Button onClick={goNext} className="px-10 group">
+                <Button
+                  onClick={goNext}
+                  disabled={step === 2 && form.selectedProducts.length === 0}
+                  className="px-10 group disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
                   Siguiente
                   <ArrowRight
                     size={18}
