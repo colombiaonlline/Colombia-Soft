@@ -112,9 +112,7 @@ function FlightBlock({ ticket, idx, airportMap }: { ticket: TicketData; idx: num
         </div>
       </div>
       
-      <div className="v-flight-bottom-line">
-        Estado: <strong>{(ticket as any).status || 'EMITIDO'}</strong> | N° Tiquete: <strong>{ticket.ticketNumber || '—'}</strong>
-      </div>
+     
     </div>
   );
 }
@@ -175,7 +173,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
             <span className="v-tb-value">{sale.clientName}</span>
           </div>
           <div className="v-tb-item">
-            <span className="v-tb-label">MODALIDAD</span>
+            <span className="v-tb-label">FORMA DE PAGO</span>
             <span className="v-tb-value">{sale.paymentMethod || '—'}</span>
           </div>
           <div className="v-tb-item">
@@ -188,7 +186,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
               #{sale.id} - {sale.status === 'credito' ? (
                 <span className="v-badge-credito">CRÉDITO</span>
               ) : (
-                <span className="v-status-badge" style={{ color: statusStyle.bg }}>
+                <span className="v-status-badge" style={{ color: sale.status === 'pagado' ? '#4ade80' : sale.status === 'abonado' ? '#fbbf24' : sale.status === 'anulado' ? '#f87171' : '#ffffff' }}>
                   {sale.status}
                 </span>
               )}
@@ -559,9 +557,8 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
         <div className="v-payment">
           <div className="v-payment-col">
             <h4>Información de Pago</h4>
-            <div className="v-payment-row"><label>Agencia:</label><span>iTea Travel Agency</span></div>
-            <div className="v-payment-row"><label>Modalidad:</label><span>{sale.paymentMethod || '—'}</span></div>
-            <div className="v-payment-row"><label>Atendido por:</label><span>{sale.asesorName}</span></div>
+            <div className="v-payment-row"><label>Agencia:</label><span>iTea</span></div>
+            <div className="v-payment-row"><label>Forma de Pago:</label><span>{sale.paymentMethod || '—'}</span></div>
             <div className="v-endorsements">⚠ LOS SERVICIOS ESTÁN SUJETOS A LAS POLÍTICAS DE CADA PROVEEDOR</div>
           </div>
           <div className="v-payment-col">

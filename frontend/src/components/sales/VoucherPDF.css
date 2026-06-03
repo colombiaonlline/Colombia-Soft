@@ -30,7 +30,7 @@
 
 /* ── HEADER ── */
 .itea-voucher .v-header {
-  background: linear-gradient(135deg, #032650 0%, #0b396b 60%, #021a36 100%);
+  background: #ffffff;
   padding: 20px 32px;
   display: flex;
   align-items: center;
@@ -53,18 +53,18 @@
 
 .itea-voucher .v-header-right {
   text-align: right;
-  color: rgba(255,255,255,0.85);
+  color: #475569;
   font-size: 11px;
   line-height: 1.8;
 }
 
 .itea-voucher .v-header-right strong {
-  color: #ffffff;
+  color: #032650;
 }
 
 /* ── TOP BAR (Passenger & Order) ── */
 .itea-voucher .v-top-bar {
-  background: #ffffff;
+  background: linear-gradient(135deg, #032650 0%, #0b396b 60%, #021a36 100%);
   padding: 12px 32px;
   display: flex;
   gap: 40px;
@@ -81,7 +81,7 @@
   font-size: 8.5px;
   font-weight: 700;
   text-transform: uppercase;
-  color: #f5832a; /* Orange like the image */
+  color: #07818e;
   letter-spacing: 1px;
   display: block;
   margin-bottom: 3px;
@@ -90,7 +90,7 @@
 .itea-voucher .v-tb-value {
   font-size: 13px;
   font-weight: 800;
-  color: #032650;
+  color: #ffffff;
 }
 
 .itea-voucher .v-tb-order {
@@ -100,7 +100,7 @@
 
 .itea-voucher .v-badge-credito {
   display: inline;
-  color: #f5832a; /* Orange for CRÉDITO */
+  color: #f5832a;
   font-weight: 900;
   font-size: 11px;
   text-transform: uppercase;
