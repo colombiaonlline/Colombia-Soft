@@ -82,22 +82,19 @@ exports.dashboard = async (req, res, next) => {
 
     // Calcular monthly trend para el usuario actual o global
     let monthlyTrend = [];
-    if (req.permissionScope === 'own') {
-      const trendSql = `
-        SELECT 
-          EXTRACT(YEAR FROM creado_at)::int as year,
-          EXTRACT(MONTH FROM creado_at)::int as month,
-          COALESCE(SUM(monto_total), 0) as total
-        FROM ventas
-        WHERE deleted_at IS NULL AND usuario_id = ${req.user.id}
-          AND EXTRACT(YEAR FROM creado_at) IN (${currentYear}, ${currentYear - 1})
-        GROUP BY 1, 2
-        ORDER BY 1 ASC, 2 ASC
-      `;
-      monthlyTrend = await prisma.$queryRawUnsafe(trendSql);
-    } else {
-      monthlyTrend = await prisma.ventasMensuales.findMany({ orderBy: [{ year: 'asc' }, { month: 'asc' }], take: 24 });
-    }
+    const userConditionTrend = req.permissionScope === 'own' ? `AND usuario_id = ${req.user.id}` : '';
+    const trendSql = `
+      SELECT 
+        EXTRACT(YEAR FROM creado_at)::int as year,
+        EXTRACT(MONTH FROM creado_at)::int as month,
+        COALESCE(SUM(monto_total), 0) as total
+      FROM ventas
+      WHERE deleted_at IS NULL ${userConditionTrend}
+        AND EXTRACT(YEAR FROM creado_at) IN (${currentYear}, ${currentYear - 1})
+      GROUP BY 1, 2
+      ORDER BY 1 ASC, 2 ASC
+    `;
+    monthlyTrend = await prisma.$queryRawUnsafe(trendSql);
 
     // O(1) properties assignment
     const agg = aggregatesRaw[0];
@@ -207,31 +204,25 @@ exports.salesHistory = async (req, res, next) => {
   try {
     const year = parseInt(req.query.year) || new Date().getFullYear();
     let data = [];
-    if (req.permissionScope === 'own') {
-      const sql = `
-        SELECT 
-          EXTRACT(MONTH FROM v.creado_at)::int as month,
-          COUNT(v.id)::int as count,
-          COALESCE(SUM(v.monto_total), 0) as total,
-          COALESCE(SUM(CASE WHEN d.categoria = 'hoteleria' THEN d.subtotal ELSE 0 END), 0) as hoteles,
-          COALESCE(SUM(CASE WHEN d.categoria = 'tiqueteria' THEN d.subtotal ELSE 0 END), 0) as vuelos,
-          COALESCE(SUM(CASE WHEN d.categoria = 'planes' THEN d.subtotal ELSE 0 END), 0) as paquetes,
-          COALESCE(SUM(CASE WHEN d.categoria = 'seguros_viaje' THEN d.subtotal ELSE 0 END), 0) as seguros,
-          COALESCE(SUM(CASE WHEN d.categoria = 'renta_vehiculos' THEN d.subtotal ELSE 0 END), 0) as transferencias
-        FROM ventas v
-        LEFT JOIN detalle_venta d ON v.id = d.venta_id
-        WHERE v.deleted_at IS NULL AND v.usuario_id = ${req.user.id} AND EXTRACT(YEAR FROM v.creado_at) = ${year}
-        GROUP BY 1
-        ORDER BY 1 ASC
-      `;
-      const result = await prisma.$queryRawUnsafe(sql);
-      data = result.map(d => ({ ...d, year }));
-    } else {
-      data = await prisma.ventasMensuales.findMany({
-        where: { year },
-        orderBy: { month: 'asc' }
-      });
-    }
+    const userConditionSql = req.permissionScope === 'own' ? `AND v.usuario_id = ${req.user.id}` : '';
+    const sql = `
+      SELECT 
+        EXTRACT(MONTH FROM v.creado_at)::int as month,
+        COUNT(v.id)::int as count,
+        COALESCE(SUM(v.monto_total), 0) as total,
+        COALESCE(SUM(CASE WHEN d.categoria = 'hoteleria' THEN d.subtotal ELSE 0 END), 0) as hoteles,
+        COALESCE(SUM(CASE WHEN d.categoria = 'tiqueteria' THEN d.subtotal ELSE 0 END), 0) as vuelos,
+        COALESCE(SUM(CASE WHEN d.categoria = 'planes' THEN d.subtotal ELSE 0 END), 0) as paquetes,
+        COALESCE(SUM(CASE WHEN d.categoria = 'seguros_viaje' THEN d.subtotal ELSE 0 END), 0) as seguros,
+        COALESCE(SUM(CASE WHEN d.categoria = 'renta_vehiculos' THEN d.subtotal ELSE 0 END), 0) as transferencias
+      FROM ventas v
+      LEFT JOIN detalle_venta d ON v.id = d.venta_id
+      WHERE v.deleted_at IS NULL ${userConditionSql} AND EXTRACT(YEAR FROM v.creado_at) = ${year}
+      GROUP BY 1
+      ORDER BY 1 ASC
+    `;
+    const result = await prisma.$queryRawUnsafe(sql);
+    data = result.map(d => ({ ...d, year }));
     success(res, data.map(d => ({
       id: d.id,
       year: d.year,

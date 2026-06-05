@@ -267,7 +267,7 @@ export default function Dashboard() {
 
       {/* Advanced Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 relative overflow-hidden">
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 relative overflow-hidden">
           <div className="absolute -right-20 -top-20 w-40 h-40 bg-blue-50 rounded-full blur-3xl"></div>
           <h2 className="text-lg font-black text-gray-800 mb-6">Comparativa de Ingresos</h2>
           <div className="h-72 w-full">
@@ -291,7 +291,16 @@ export default function Dashboard() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#64748b", fontWeight: 600 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#64748b", fontWeight: 600 }} tickFormatter={(v) => `$${(v / 1000000).toFixed(1)}M`} />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 11, fill: "#64748b", fontWeight: 600 }} 
+                    tickFormatter={(v) => {
+                      if (v >= 1000000) return `$${(v / 1000000).toFixed(1)}M`;
+                      if (v >= 1000) return `$${(v / 1000).toFixed(0)}K`;
+                      return `$${v}`;
+                    }} 
+                  />
                   <Tooltip 
                     formatter={(value: number) => formatCurrency(value)} 
                     contentStyle={{ borderRadius: "16px", border: "1px solid #f1f5f9", boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)", padding: "12px", fontWeight: "bold" }} 
@@ -305,7 +314,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 flex flex-col">
           <h2 className="text-lg font-black text-gray-800 mb-2">Estado de Cartera</h2>
           <div className="flex-grow flex flex-col justify-center">
             <div className="relative h-56 flex items-center justify-center">
@@ -314,7 +323,7 @@ export default function Dashboard() {
               ) : (
                 <ResponsiveContainer width="99%" height="100%">
                   <PieChart>
-                    <Pie data={stats.carteraData} cx="50%" cy="50%" innerRadius={75} outerRadius={95} paddingAngle={5} dataKey="value" stroke="none" cornerRadius={8}>
+                    <Pie data={stats.carteraData} cx="50%" cy="50%" innerRadius="65%" outerRadius="85%" paddingAngle={5} dataKey="value" stroke="none" cornerRadius={8}>
                       {stats.carteraData.map((_: any, index: number) => (
                         <Cell key={`cell-${index}`} fill={CARTERA_COLORS[index % CARTERA_COLORS.length]} className="drop-shadow-sm hover:opacity-80 transition-opacity" />
                       ))}
@@ -334,7 +343,7 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
-            <div className="mt-6 grid grid-cols-3 gap-3">
+            <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-3">
               {dashboardLoading && !dashboardData ? (
                 <></>
               ) : (
