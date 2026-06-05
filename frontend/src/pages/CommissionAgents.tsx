@@ -21,13 +21,14 @@ import { Card, CardHeader } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
 import { FormField, Input, Select } from "../components/ui/Form";
+import { DatePicker } from "../components/sales/forms/TicketForm";
 import { useData } from "../context/DataContext";
 import { usePermissions } from "../context/PermissionsContext";
 import { formatCurrency, capitalizeName } from "../utils/formatters";
 import StatCard from "../components/ui/StatCard";
 
 export default function CommissionAgents() {
-  const { data, addCommissionAgent, updateCommissionAgent, deleteCommissionAgent, settleCommissions, refreshSettlements, fetchCommissionAgents } = useData();
+  const { data, addCommissionAgent, updateCommissionAgent, deleteCommissionAgent, settleCommissions, refreshSettlements, fetchCommissionAgents, fetchSettlements } = useData();
   const { canCreate, canEdit, canDelete } = usePermissions();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -53,7 +54,8 @@ export default function CommissionAgents() {
   // Lazy Load Fetch
   useEffect(() => {
     fetchCommissionAgents();
-  }, [fetchCommissionAgents]);
+    fetchSettlements();
+  }, [fetchCommissionAgents, fetchSettlements]);
 
   const notifySuccess = (msg: string) => {
     setSuccessMessage(msg);
@@ -105,10 +107,35 @@ export default function CommissionAgents() {
     setIsModalOpen(true);
   };
 
+  const validateDocNumber = (value: string, docType: string): string => {
+    if (!value.trim()) return "El número de documento es obligatorio";
+    const typeUpper = docType ? docType.toUpperCase() : "";
+    if (typeUpper === "PASAPORTE" || typeUpper === "PP" || typeUpper === "PAS") {
+      if (value.length < 9 || value.length > 12) return "El pasaporte debe tener entre 9 y 12 caracteres";
+      if (!/^[a-zA-Z0-9]+$/.test(value)) return "El pasaporte solo debe contener caracteres alfanuméricos";
+    } else if (typeUpper === "NIT" || typeUpper === "RUT") {
+      if (value.length !== 11) return "El NIT/RUT debe tener exactamente 11 caracteres (9 dígitos + guion + 1 dígito)";
+      if (!/^\d{9}-\d{1}$/.test(value)) return "El NIT/RUT debe tener formato 9 dígitos - guion - 1 dígito de verificación (ej: 123456789-0)";
+    } else if (typeUpper === "CC") {
+      if (value.length < 8 || value.length > 10) return "La cédula de ciudadanía debe tener entre 8 y 10 dígitos";
+      if (!/^\d+$/.test(value)) return "La cédula de ciudadanía solo debe contener números";
+    } else if (value.length > 15) {
+      return "El documento no puede exceder 15 caracteres";
+    }
+    // Duplicate check against existing agents
+    const isDuplicate = (data.commissionAgents || []).some(
+      (a: any) => a.docNumber === value && (!editingAgent || a.id !== editingAgent.id)
+    );
+    if (isDuplicate) return "Este número de documento ya está registrado";
+    return "";
+  };
+
   const handleSave = async () => {
     const errs: Record<string, string> = {};
     if (!formData.name) errs.name = "El nombre es obligatorio";
-    if (!formData.docNumber) errs.docNumber = "El documento es obligatorio";
+    if (!formData.docType) errs.docType = "Seleccione un tipo de documento";
+    const docErr = validateDocNumber(formData.docNumber || "", formData.docType || "");
+    if (docErr) errs.docNumber = docErr;
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
 
     setIsSaving(true);
@@ -597,19 +624,54 @@ export default function CommissionAgents() {
               <Select
                 className="h-12 rounded-xl"
                 value={formData.docType || ""}
-                onChange={(e) => setFormData({ ...formData, docType: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, docType: e.target.value, docNumber: "" });
+                  if (errors.docType) setErrors({ ...errors, docType: "" });
+                  if (errors.docNumber) setErrors((p) => ({ ...p, docNumber: "" }));
+                }}
                 options={[
                   { value: "", label: "Seleccione" },
                   ...(data.config.documentTypes || []).map((dt: any) => ({ value: dt.abreviatura, label: dt.abreviatura })),
                 ]}
+                error={errors.docType}
               />
             </FormField>
             <FormField label="Número de Identificación" error={errors.docNumber}>
               <Input
                 className="h-12 rounded-xl"
                 value={formData.docNumber || ""}
-                onChange={(e) => { setFormData({ ...formData, docNumber: e.target.value }); if (errors.docNumber) setErrors({ ...errors, docNumber: "" }); }}
-                placeholder="Ej. 1234567890"
+                onChange={(e) => {
+                  let val = e.target.value;
+                  const typeUpper = formData.docType ? formData.docType.toUpperCase() : "";
+                  if (typeUpper === "CC") {
+                    val = val.replace(/\D/g, "");
+                  } else if (typeUpper === "PASAPORTE" || typeUpper === "PP" || typeUpper === "PAS") {
+                    val = val.replace(/[^a-zA-Z0-9]/g, "");
+                  } else if (typeUpper === "NIT" || typeUpper === "RUT") {
+                    val = val.replace(/[^0-9-]/g, "");
+                  } else {
+                    val = val.replace(/[^\w-]/gi, "");
+                  }
+                  setFormData({ ...formData, docNumber: val });
+                  if (errors.docNumber) setErrors((p) => ({ ...p, docNumber: "" }));
+                }}
+                onBlur={(e) => {
+                  const err = validateDocNumber(e.target.value, formData.docType || "");
+                  if (err) setErrors((p) => ({ ...p, docNumber: err }));
+                }}
+                maxLength={
+                  formData.docType ? (
+                    formData.docType.toUpperCase() === "CC" ? 10 :
+                    ["PASAPORTE", "PP", "PAS"].includes(formData.docType.toUpperCase()) ? 12 :
+                    ["NIT", "RUT"].includes(formData.docType.toUpperCase()) ? 11 : 15
+                  ) : 15
+                }
+                placeholder={
+                  formData.docType?.toUpperCase() === "CC" ? "Ej. 1234567890" :
+                  ["NIT", "RUT"].includes(formData.docType?.toUpperCase() || "") ? "Ej. 123456789-0" :
+                  ["PASAPORTE", "PP", "PAS"].includes(formData.docType?.toUpperCase() || "") ? "Ej. AB1234567" :
+                  "Ej. 1234567890"
+                }
                 error={errors.docNumber}
               />
             </FormField>
@@ -651,11 +713,11 @@ export default function CommissionAgents() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField label="Fecha de Ejecución">
-              <Input
-                type="date"
-                className="h-12 rounded-xl"
+              <DatePicker
                 value={settleData.date}
-                onChange={(e) => setSettleData({ ...settleData, date: e.target.value })}
+                onChange={(val) => setSettleData({ ...settleData, date: val })}
+                fieldName="ejecución"
+                className="h-12 rounded-xl"
               />
             </FormField>
             <FormField label="Canal de Pago">

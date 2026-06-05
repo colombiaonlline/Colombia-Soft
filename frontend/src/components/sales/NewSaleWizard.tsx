@@ -227,11 +227,11 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
     localStorage.setItem("itea_new_sale_draft", JSON.stringify(form));
   }, [form]);
 
-  // Fetch data needed for comboboxes if not already loaded or to ensure freshness
+  // Fetch data needed for comboboxes to ensure freshness
   useEffect(() => {
-    if (data.clients.length === 0) fetchClients();
-    if (data.users.length === 0) fetchUsers();
-    if (data.commissionAgents.length === 0) fetchCommissionAgents();
+    fetchClients();
+    fetchUsers();
+    fetchCommissionAgents();
   }, [fetchClients, fetchUsers, fetchCommissionAgents]);
 
   // Compute Totals Automatically
@@ -1102,7 +1102,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
 
     return (
       <form 
-        className="flex flex-col h-full bg-white animate-fade-in"
+        className="flex flex-col flex-1 min-h-0 bg-white animate-fade-in"
         onSubmit={(e) => { e.preventDefault(); closeActiveForm(); }}
       >
         {/* Sub-form Header */}
