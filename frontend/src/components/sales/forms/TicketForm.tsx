@@ -600,8 +600,8 @@ export function TicketForm({
 
   const isRoundTrip = ticket.flightMode === "round_trip";
 
-  /* ─── Shared stop-list component ─────────────────────────── */
-  const StopList = ({
+  /* ─── Shared stop-list renderer ─────────────────────────── */
+  const renderStopList = ({
     type,
     color = "primary",
   }: {
@@ -627,7 +627,7 @@ export function TicketForm({
         <div className="flex items-center justify-between">
           <span className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${c.title}`}>
             <MapPin size={11} />
-            Escalas {type === "outbound" ? "de Ida" : "de Vuelta"} (Opcional)
+            Escalas {type === "outbound" ? "de Ida" : "de Vuelta"}
           </span>
           <button
             type="button"
@@ -664,7 +664,7 @@ export function TicketForm({
 
               <div className="space-y-3 pt-1">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <FormField label="Origen">
+                  <FormField label={<span>Origen <span className="text-red-500">*</span></span>}>
                     <Combobox
                       value={stop.origin || ""}
                       onChange={(val) => updateStop(type, sIdx, { origin: val })}
@@ -674,7 +674,7 @@ export function TicketForm({
                     />
                   </FormField>
                   
-                  <FormField label="Destino">
+                  <FormField label={<span>Destino <span className="text-red-500">*</span></span>}>
                     <Combobox
                       value={stop.destination || ""}
                       onChange={(val) => updateStop(type, sIdx, { destination: val })}
@@ -684,34 +684,42 @@ export function TicketForm({
                     />
                   </FormField>
                   
-                  <FormField label="N° Vuelo">
+                  <FormField label={<span>N° Vuelo <span className="text-red-500">*</span></span>}>
                     <Input
                       required
+                      maxLength={6}
                       value={stop.flightNumber || ""}
                       onChange={(e) => {
-                        const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+                        const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 6);
                         updateStop(type, sIdx, { flightNumber: cleaned });
                       }}
                       placeholder="AV93"
                       className="text-xs"
                     />
+                    {stop.flightNumber?.length > 0 && stop.flightNumber.length < 3 && (
+                      <p className="text-[10px] text-amber-500 mt-1 font-medium animate-fade-in">⚠️ Mínimo 3 caracteres.</p>
+                    )}
                   </FormField>
                   
                   <FormField label="Asiento">
                     <Input
+                      maxLength={5}
                       value={stop.seat || ""}
                       onChange={(e) => {
-                        const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+                        const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 5);
                         updateStop(type, sIdx, { seat: cleaned });
                       }}
                       placeholder="12A"
                       className="text-xs"
                     />
+                    {stop.seat?.length > 0 && stop.seat.length < 2 && (
+                      <p className="text-[10px] text-amber-500 mt-1 font-medium animate-fade-in">⚠️ Mínimo 2 caracteres.</p>
+                    )}
                   </FormField>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <FormField label="Salida">
+                  <FormField label={<span>Salida <span className="text-red-500">*</span></span>}>
                     <DateTimePicker
                       value={stop.date || ""}
                       onChange={(val) => updateStop(type, sIdx, { date: val })}
@@ -721,7 +729,7 @@ export function TicketForm({
                     />
                   </FormField>
                   
-                  <FormField label="Llegada">
+                  <FormField label={<span>Llegada <span className="text-red-500">*</span></span>}>
                     <DateTimePicker
                       value={stop.arrivalDate || ""}
                       onChange={(val) => updateStop(type, sIdx, { arrivalDate: val })}
@@ -783,6 +791,11 @@ export function TicketForm({
               }}
               placeholder="6 caracteres exactos"
             />
+            {ticket.reservationNumber?.length > 0 && ticket.reservationNumber.length < 6 && (
+              <p className="text-[10px] text-amber-500 mt-1 font-medium animate-fade-in">
+                ⚠️ Faltan {6 - ticket.reservationNumber.length} caracteres (debe tener exactamente 6).
+              </p>
+            )}
           </FormField>
         </div>
       </div>
@@ -836,7 +849,7 @@ export function TicketForm({
                 <button
                   key={String(pill.id)}
                   type="button"
-                  onClick={() => onChange({ hasStops: pill.id, outboundStops: [] })}
+                  onClick={() => onChange({ hasStops: pill.id, outboundStops: pill.id && (!ticket.outboundStops || ticket.outboundStops.length === 0) ? [{ origin: "", destination: "", flightNumber: "", date: "", arrivalDate: "", seat: "" }] : (ticket.outboundStops || []) })}
                   className={`flex-1 py-2 px-4 rounded-lg text-xs font-semibold border-2 transition-all ${
                     isActive
                       ? "border-primary bg-primary text-white shadow-sm"
@@ -887,25 +900,33 @@ export function TicketForm({
                   <FormField label="N° Vuelo">
                     <Input
                       required
+                      maxLength={6}
                       value={leg.flightNumber}
                       onChange={(e) => {
-                        const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+                        const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 6);
                         updateLeg(lIdx, { flightNumber: cleaned });
                       }}
                       placeholder="AV93"
                       className="text-xs"
                     />
+                    {leg.flightNumber?.length > 0 && leg.flightNumber.length < 3 && (
+                      <p className="text-[10px] text-amber-500 mt-1 font-medium animate-fade-in">⚠️ Mínimo 3 caracteres.</p>
+                    )}
                   </FormField>
                   <FormField label="Asiento">
                     <Input
+                      maxLength={5}
                       value={leg.seat}
                       onChange={(e) => {
-                        const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+                        const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 5);
                         updateLeg(lIdx, { seat: cleaned });
                       }}
                       placeholder="12A"
                       className="text-xs"
                     />
+                    {leg.seat?.length > 0 && leg.seat.length < 2 && (
+                      <p className="text-[10px] text-amber-500 mt-1 font-medium animate-fade-in">⚠️ Mínimo 2 caracteres.</p>
+                    )}
                   </FormField>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -935,7 +956,7 @@ export function TicketForm({
           {/* Escalas de Ida: solo visibles si hasStops = true */}
           {ticket.hasStops && (
             <div className="pt-3 border-t border-dashed border-gray-200">
-              <StopList type="outbound" color="primary" />
+              {renderStopList({ type: "outbound", color: "primary" })}
             </div>
           )}
         </div>
@@ -955,7 +976,7 @@ export function TicketForm({
                     <button
                       key={String(pill.id)}
                       type="button"
-                      onClick={() => onChange({ returnHasStops: pill.id, returnStops: [] })}
+                      onClick={() => onChange({ returnHasStops: pill.id, returnStops: pill.id && (!ticket.returnStops || ticket.returnStops.length === 0) ? [{ origin: "", destination: "", flightNumber: "", date: "", arrivalDate: "", seat: "" }] : (ticket.returnStops || []) })}
                       className={`flex-1 py-2 px-4 rounded-lg text-xs font-semibold border-2 transition-all ${
                         isActive
                           ? "border-blue-600 bg-blue-600 text-white shadow-sm"
@@ -1000,25 +1021,33 @@ export function TicketForm({
                   <FormField label="N° Vuelo Vuelta">
                     <Input
                       required
+                      maxLength={6}
                       value={ticket.returnLeg?.flightNumber || ""}
                       onChange={(e) => {
-                        const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+                        const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 6);
                         onChange({ returnLeg: { ...ticket.returnLeg!, flightNumber: cleaned } });
                       }}
                       placeholder="AV94"
                       className="text-xs"
                     />
+                    {ticket.returnLeg?.flightNumber && ticket.returnLeg.flightNumber.length < 3 ? (
+                      <p className="text-[10px] text-amber-500 mt-1 font-medium animate-fade-in">⚠️ Mínimo 3 caracteres.</p>
+                    ) : null}
                   </FormField>
                   <FormField label="Asiento Vuelta">
                     <Input
+                      maxLength={5}
                       value={ticket.returnLeg?.seat || ""}
                       onChange={(e) => {
-                        const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+                        const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 5);
                         onChange({ returnLeg: { ...ticket.returnLeg!, seat: cleaned } });
                       }}
                       placeholder="14C"
                       className="text-xs"
                     />
+                    {ticket.returnLeg?.seat && ticket.returnLeg.seat.length < 2 ? (
+                      <p className="text-[10px] text-amber-500 mt-1 font-medium animate-fade-in">⚠️ Mínimo 2 caracteres.</p>
+                    ) : null}
                   </FormField>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1046,7 +1075,7 @@ export function TicketForm({
               {/* Escalas de Vuelta: solo visibles si returnHasStops = true */}
               {ticket.returnHasStops && (
                 <div className="pt-3 border-t border-dashed border-blue-100">
-                  <StopList type="return" color="blue" />
+                  {renderStopList({ type: "return", color: "blue" })}
                 </div>
               )}
             </div>
@@ -1083,6 +1112,11 @@ export function TicketForm({
               }}
               placeholder="Máx 13 caracteres (sin especiales)"
             />
+            {ticket.ticketNumber?.length > 0 && ticket.ticketNumber.length < 13 && (
+              <p className="text-[10px] text-amber-500 mt-1 font-medium animate-fade-in">
+                ⚠️ Faltan {13 - ticket.ticketNumber.length} caracteres (mínimo 13).
+              </p>
+            )}
           </FormField>
         </div>
       </div>

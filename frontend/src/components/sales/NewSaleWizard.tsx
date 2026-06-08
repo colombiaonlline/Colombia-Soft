@@ -352,23 +352,25 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
               if (!ticket.airline?.trim()) return false;
               if (!ticket.supplier?.trim()) return false;
               if (!ticket.reservationNumber || ticket.reservationNumber.length !== 6 || !/^[A-Z0-9]+$/.test(ticket.reservationNumber)) return false;
-              if (!ticket.ticketNumber?.trim() || ticket.ticketNumber.length === 0 || ticket.ticketNumber.length > 13) return false;
+              if (!ticket.ticketNumber?.trim() || ticket.ticketNumber.length < 13 || ticket.ticketNumber.length > 14) return false;
               
               // Tramos de ida
               if (!ticket.legs || ticket.legs.length === 0) return false;
               for (const leg of ticket.legs) {
-                if (!leg.origin?.trim() || !leg.destination?.trim() || !leg.flightNumber?.trim() || !leg.date?.trim() || !leg.arrivalDate?.trim()) {
+                if (!leg.origin?.trim() || !leg.destination?.trim() || !leg.flightNumber?.trim() || leg.flightNumber.length < 3 || leg.flightNumber.length > 6 || !leg.date?.trim() || !leg.arrivalDate?.trim()) {
                   return false;
                 }
+                if (leg.seat && (leg.seat.length < 2 || leg.seat.length > 5)) return false;
               }
               
               // Escalas de ida
               if (ticket.hasStops) {
                 if (!ticket.outboundStops || ticket.outboundStops.length === 0) return false;
                 for (const stop of ticket.outboundStops) {
-                  if (!stop.origin?.trim() || !stop.destination?.trim() || !stop.flightNumber?.trim() || !stop.date?.trim() || !stop.arrivalDate?.trim()) {
+                  if (!stop.origin?.trim() || !stop.destination?.trim() || !stop.flightNumber?.trim() || stop.flightNumber.length < 3 || stop.flightNumber.length > 6 || !stop.date?.trim() || !stop.arrivalDate?.trim()) {
                     return false;
                   }
+                  if (stop.seat && (stop.seat.length < 2 || stop.seat.length > 5)) return false;
                 }
               }
               
@@ -376,17 +378,19 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
               if (ticket.flightMode === "round_trip") {
                 if (!ticket.returnLeg) return false;
                 const ret = ticket.returnLeg;
-                if (!ret.origin?.trim() || !ret.destination?.trim() || !ret.flightNumber?.trim() || !ret.date?.trim() || !ret.arrivalDate?.trim()) {
+                if (!ret.origin?.trim() || !ret.destination?.trim() || !ret.flightNumber?.trim() || ret.flightNumber.length < 3 || ret.flightNumber.length > 6 || !ret.date?.trim() || !ret.arrivalDate?.trim()) {
                   return false;
                 }
+                if (ret.seat && (ret.seat.length < 2 || ret.seat.length > 5)) return false;
                 
                 // Escalas de Vuelta
                 if (ticket.returnHasStops) {
                   if (!ticket.returnStops || ticket.returnStops.length === 0) return false;
                   for (const stop of ticket.returnStops) {
-                    if (!stop.origin?.trim() || !stop.destination?.trim() || !stop.flightNumber?.trim() || !stop.date?.trim() || !stop.arrivalDate?.trim()) {
+                    if (!stop.origin?.trim() || !stop.destination?.trim() || !stop.flightNumber?.trim() || stop.flightNumber.length < 3 || stop.flightNumber.length > 6 || !stop.date?.trim() || !stop.arrivalDate?.trim()) {
                       return false;
                     }
+                    if (stop.seat && (stop.seat.length < 2 || stop.seat.length > 5)) return false;
                   }
                 }
               }
