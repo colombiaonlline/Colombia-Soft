@@ -303,8 +303,10 @@ const PRODUCT_TRANSFORMS = {
       ta: d.ta || 0
     });
   },
-  seguros_viaje(d, passengers, target) {
+  seguros_viaje(d, passengers, target, venta) {
     const s = d.prodSeguros;
+    if (!s) return;
+    const members = passengers.map(p => ({ name: p.nombreCompleto, docType: String(p.tipoDocumento || ''), docNumber: p.nroDocumento || '' }));
     if (!s) return;
     target.push({
       id: s.id,
@@ -314,7 +316,7 @@ const PRODUCT_TRANSFORMS = {
       startDate: s.fechaInicioVigencia?.toISOString() || null,
       endDate: s.fechaFinVigencia?.toISOString() || null,
       phone: s.telefonoContacto,
-      members: passengers.map(p => ({ name: p.nombreCompleto, docType: String(p.tipoDocumento || ''), docNumber: p.nroDocumento || '' }))
+      members: members.length > 0 ? members : (venta?.cliente?.persona ? [{ name: `${venta.cliente.persona.nombres} ${venta.cliente.persona.apellidos}`, docType: '', docNumber: venta.cliente.persona.documento || '' }] : [])
     ,
       supplier: d.proveedor?.nombre || null,
       supplierCost: d.costoProveedor || 0,
@@ -645,7 +647,7 @@ exports.getById = async (req, res, next) => {
       const passengers = mapPassengers(d);
       const handler = PRODUCT_TRANSFORMS[d.categoria];
       if (handler) {
-        handler(d, passengers, (resultMap[d.categoria] = resultMap[d.categoria] || []));
+        handler(d, passengers, (resultMap[d.categoria] = resultMap[d.categoria] || []), venta);
       }
     }
 
@@ -1146,15 +1148,19 @@ async function createProductItems(tx, ventaId, clienteId, data) {
         const productData = await handler.transform(item, detalle.id, tx);
         const product = await tx[handler.table].create({ data: productData });
 
-        if (personaId && (item.passengerInfo || item.guests)) {
-          const passengers = item.passengerInfo ? [item.passengerInfo] : (item.guests || []);
-          for (const p of passengers) {
+        const passengersList = item.passengerInfo ? [item.passengerInfo] : (item.guests || item.members || []);
+        if (passengersList.length > 0) {
+          for (const p of passengersList) {
+            let pId = personaId;
+            if (!item.passengerInfo && p.name) {
+              pId = await findOrCreatePersona(tx, p.name || p.fullName, p.docType, p.docNumber, personaId);
+            }
             await tx.pasajerosDetalle.create({
               data: {
                 detalleVentaId: detalle.id,
-                personaId,
-                esTitular: true,
-                asiento: item.seatNumber || null
+                personaId: pId,
+                esTitular: pId === personaId,
+                asiento: item.seatNumber || p.seat || null
               }
             });
           }
