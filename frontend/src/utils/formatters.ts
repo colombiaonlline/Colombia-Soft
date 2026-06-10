@@ -73,3 +73,12 @@ export function capitalizeName(str: string): string {
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
+
+export function formatSaleId(id: number | string): string {
+  return String(id).padStart(4, '0');
+}
+
+export function formatId(id: number | string): string {
+  return String(id).padStart(4, '0');
+}
+

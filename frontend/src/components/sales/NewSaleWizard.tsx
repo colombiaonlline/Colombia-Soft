@@ -191,9 +191,8 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
     if (activeForm === "seguros_viaje" && activeIdx !== null) {
       const ins = form.insurances[activeIdx];
       if (!ins) return true;
-      const hasContactName = !!ins.contactName?.trim();
-      const hasContactNumber = !!ins.contactNumber?.trim();
-      const hasAddress = !!ins.address?.trim();
+      const hasInsuranceType = !!ins.insuranceType?.trim();
+      const hasPhone = !!ins.phone?.trim();
       const hasSupplier = !!ins.supplier?.trim();
       const hasCost = ins.supplierCost > 0;
       const hasTa = ins.ta > 0;
@@ -209,7 +208,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
         return !!m.name?.trim() || !!m.docNumber?.trim();
       });
 
-      return !(hasContactName || hasContactNumber || hasAddress || hasSupplier || hasCost || hasTa || hasMembers);
+      return !(hasInsuranceType || hasPhone || hasSupplier || hasCost || hasTa || hasMembers);
     }
     return false;
   })();
@@ -1354,7 +1353,6 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
                   suppliers={data.config.suppliers}
                   paymentMethods={data.config.cards}
                   airports={data.config.airports}
-                  paymentMethods={data.config.cards}
                   baggage={data.config.baggage}
                   triggerError={triggerError}
                 />
@@ -1404,7 +1402,6 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
                   checkIn={form.checkIns[activeIdx] || INITIAL_CHECKIN(client)}
                   client={client}
                   suppliers={data.config.suppliers}
-                  paymentMethods={data.config.cards}
                   baggage={data.config.baggage}
                   onChange={(updates) => {
                     const next = [...form.checkIns];
@@ -1435,7 +1432,6 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
                   sim={form.simCards[activeIdx] || INITIAL_SIMCARD(client)}
                   client={client}
                   suppliers={data.config.suppliers}
-                  paymentMethods={data.config.cards}
                   onChange={(updates) => {
                     const next = [...form.simCards];
                     next[activeIdx] = { ...next[activeIdx], ...updates };
@@ -1450,7 +1446,6 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
                   car={form.carRentals[activeIdx] || INITIAL_CAR_RENTAL(client)}
                   client={client}
                   suppliers={data.config.suppliers}
-                  paymentMethods={data.config.cards}
                   onChange={(updates) => {
                     const next = [...form.carRentals];
                     next[activeIdx] = { ...next[activeIdx], ...updates };
@@ -1632,7 +1627,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
 
     const mappedInsurances = form.insurances.map(ins => ({
       ...ins,
-      contactNumber: ins.contactNumber ? ins.contactNumber.replace(/\D/g, "") : ""
+      phone: ins.phone ? ins.phone.replace(/\D/g, "") : ""
     }));
 
     const saleData: any = {

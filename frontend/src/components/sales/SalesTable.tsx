@@ -4,7 +4,7 @@ import { RxUpdate } from "react-icons/rx";
 import { Table, TableRow, TableCell, Pagination } from "../ui/Table";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
-import { formatCurrency, formatDate } from "../../utils/formatters";
+import { formatCurrency, formatDate, formatSaleId } from "../../utils/formatters";
 import { Sale, Client, User } from "../../types";
 
 interface SalesTableProps {
@@ -68,7 +68,7 @@ export default function SalesTable({
 
         return (
           <TableRow key={sale.id}>
-            <TableCell>{sale.id}</TableCell>
+            <TableCell>{formatSaleId(sale.id)}</TableCell>
             <TableCell>
               <div className="flex items-center gap-3">
                 {sale.clientAvatar ? (

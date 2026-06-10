@@ -43,7 +43,7 @@ import Avatar from "../components/ui/Avatar";
 import SortIcon from "../components/ui/SortIcon";
 
 import AvatarPicker, { AVATARS } from "../components/ui/AvatarPicker";
-import { capitalizeName } from "../utils/formatters";
+import { capitalizeName, formatId } from "../utils/formatters";
 import { DatePicker } from "../components/sales/forms/TicketForm";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -753,7 +753,7 @@ export default function Users() {
               ))
             ) : paginatedUsers.map((user) => (
               <TableRow key={user.id}>
-                <TableCell>{user.id}</TableCell>
+                <TableCell>{formatId(user.id)}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar src={user.avatar} name={user.name} />

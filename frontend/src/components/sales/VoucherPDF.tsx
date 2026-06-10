@@ -1,6 +1,6 @@
 import React, { forwardRef } from 'react';
 import { Sale, TicketData } from '../../types';
-import { formatDate, formatDateTime, formatCurrency } from '../../utils/formatters';
+import { formatDate, formatDateTime, formatCurrency, formatSaleId } from '../../utils/formatters';
 import { type AirportInfo } from '../../utils/airportInfo';
 import './VoucherPDF.css';
 
@@ -193,7 +193,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
           <div className="v-tb-item">
             <span className="v-tb-label">ORDEN</span>
             <span className="v-tb-value v-tb-order">
-              #{sale.id}
+              #{formatSaleId(sale.id)}
               {sale.status === 'credito' ? (
                 <span className="v-badge-status v-status-credito">CRÉDITO</span>
               ) : (
@@ -545,7 +545,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
 
         {/* ══ FOOTNOTES ═══════════════════════════════════════════════ */}
         <div className="v-footnotes">
-          Orden <strong>#{sale.id}</strong> — Fecha de emisión: <strong>{formatDate(sale.date)}</strong>
+          Orden <strong>#{formatSaleId(sale.id)}</strong> — Fecha de emisión: <strong>{formatDate(sale.date)}</strong>
           {sale.observations && ` — Obs: ${sale.observations}`}
         </div>
 
@@ -600,7 +600,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
             <div className="v-footer-tagline">Travel Agency</div>
           </div>
           <div className="v-footer-right">
-            Voucher Electrónico — Orden #{sale.id}<br />
+            Voucher Electrónico — Orden #{formatSaleId(sale.id)}<br />
             Comercial@samturtravel.com<br />
             Impreso el {currentDate}
           </div>

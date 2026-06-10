@@ -13,7 +13,7 @@ import ClientDetailModal from '../components/clients/ClientDetailModal';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { usePermissions } from '../context/PermissionsContext';
-import { formatDate, capitalizeName } from '../utils/formatters';
+import { formatDate, capitalizeName, formatId } from '../utils/formatters';
 import { Client } from '../types';
 
 import AvatarPicker, { AVATARS } from '../components/ui/AvatarPicker';
@@ -562,7 +562,7 @@ export default function Clients() {
         >
           {paginatedClients.map(client => (
             <TableRow key={client.id} className={toggledClientId === client.id ? (toggleAction === 'activated' ? 'animate-flash-green' : 'animate-flash-red') : ''}>
-              <TableCell>{client.id}</TableCell>
+              <TableCell>{formatId(client.id)}</TableCell>
               <TableCell>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent font-semibold overflow-hidden">

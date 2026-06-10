@@ -22,7 +22,7 @@ import * as api from "../../api";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
-import { formatCurrency, formatDate } from "../../utils/formatters";
+import { formatCurrency, formatDate, formatSaleId } from "../../utils/formatters";
 import { Sale, Client } from "../../types";
 
 const PRODUCT_ICONS: Record<string, React.ReactNode> = {
@@ -179,7 +179,7 @@ export default function SaleDetailModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Detalle de Venta #${sale.id}`}
+      title={`Detalle de Venta #${formatSaleId(sale.id)}`}
       size="lg"
       footer={
         <Button variant="outline" onClick={onClose}>
@@ -203,7 +203,7 @@ export default function SaleDetailModal({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
             <div>
               <span className="text-gray-500 text-xs block">Venta #</span>
-              <span className="font-bold text-gray-800">{sale.id}</span>
+              <span className="font-bold text-gray-800">{formatSaleId(sale.id)}</span>
             </div>
             <div>
               <span className="text-gray-500 text-xs block">Fecha</span>
