@@ -156,17 +156,6 @@ export function DateTimePicker({
   };
 
   const validateAndTrigger = (isoVal: string): boolean => {
-    if (!isoVal) return true;
-    const inputDate = new Date(isoVal);
-    const minDate = new Date(min);
-    if (!isNaN(inputDate.getTime()) && !isNaN(minDate.getTime())) {
-      if (inputDate < minDate) {
-        if (triggerError) {
-          triggerError(`La fecha de ${fieldName} del tiquete no puede ser anterior a la fecha y hora actual.`);
-        }
-        return false;
-      }
-    }
     return true;
   };
 
@@ -413,29 +402,6 @@ export function DatePicker({
   };
 
   const validateAndTrigger = (isoVal: string): boolean => {
-    if (!isoVal) return true;
-    const inputDate = new Date(isoVal + "T00:00:00");
-    
-    if (min) {
-      const minDate = new Date(min + "T00:00:00");
-      if (!isNaN(inputDate.getTime()) && !isNaN(minDate.getTime()) && inputDate < minDate) {
-        if (triggerError) {
-          triggerError(`La fecha de ${fieldName} no puede ser anterior a ${isoToDisplay(min)}.`);
-        }
-        return false;
-      }
-    }
-    
-    if (max) {
-      const maxDate = new Date(max + "T00:00:00");
-      if (!isNaN(inputDate.getTime()) && !isNaN(maxDate.getTime()) && inputDate > maxDate) {
-        if (triggerError) {
-          triggerError(`La fecha de ${fieldName} no puede ser posterior a ${isoToDisplay(max)}.`);
-        }
-        return false;
-      }
-    }
-    
     return true;
   };
 
@@ -542,17 +508,6 @@ export function TicketForm({
   })();
 
   const validateDateInput = (value: string, fieldName: string): boolean => {
-    if (!value) return true;
-    if (value.length < 16) return true;
-    const inputDate = new Date(value);
-    const now = new Date();
-    now.setSeconds(0, 0);
-    if (!isNaN(inputDate.getTime()) && inputDate < now) {
-      if (triggerError) {
-        triggerError(`La fecha de ${fieldName} del tiquete no puede ser anterior a la fecha y hora actual.`);
-      }
-      return false;
-    }
     return true;
   };
 
