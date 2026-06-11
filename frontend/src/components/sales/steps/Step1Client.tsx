@@ -57,7 +57,7 @@ export function Step1Client({ form, set, data, errors }: any) {
             />
           </FormField>
 
-          <FormField label="Comisionista / Referido">
+          <FormField label="Comisionista / Referido" error={errors.commissionAgent}>
             <Combobox
               value={form.commissionAgentName || ""}
               onChange={(val) => {
@@ -73,6 +73,7 @@ export function Step1Client({ form, set, data, errors }: any) {
                     set("commissionAgentId", String(agent.id));
                     set("commissionAgentName", agent.name);
                   } else {
+                    set("commissionAgentId", "");
                     set("commissionAgentName", val);
                   }
                 }
@@ -82,6 +83,7 @@ export function Step1Client({ form, set, data, errors }: any) {
                 label: a.name,
               }))}
               placeholder="Venta Directa (Sin Comisionista)"
+              error={errors.commissionAgent}
             />
           </FormField>
         </div>

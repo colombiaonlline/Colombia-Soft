@@ -144,11 +144,13 @@ export function Combobox({ value, onChange, options, placeholder, error, classNa
 
   const selectedLabel = options.find(o => o.value === value)?.label || value;
   
-  const filteredOptions = (searchTerm === selectedLabel)
+  const normalizeStr = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+  const filteredOptions = !searchTerm
     ? options
     : options.filter(opt => 
-        opt.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        opt.value.toLowerCase().includes(searchTerm.toLowerCase())
+        normalizeStr(opt.label).includes(normalizeStr(searchTerm)) ||
+        normalizeStr(opt.value).includes(normalizeStr(searchTerm))
       );
 
   return (
@@ -169,7 +171,10 @@ export function Combobox({ value, onChange, options, placeholder, error, classNa
             setIsOpen(true);
             onChange(val);
           }}
-          onFocus={() => setIsOpen(true)}
+          onFocus={(e) => {
+            setIsOpen(true);
+            e.target.select();
+          }}
           placeholder={placeholder}
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">

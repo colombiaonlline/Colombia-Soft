@@ -336,6 +336,9 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
     const errs: Record<string, string> = {};
     if (s === 1) {
       if (!form.clientId) errs.clientId = "El cliente es obligatorio";
+      if (form.commissionAgentName && !form.commissionAgentId) {
+        errs.commissionAgent = "El comisionista ingresado no está registrado";
+      }
     }
     if (s === 2) {
       if (form.selectedProducts.length === 0) {
