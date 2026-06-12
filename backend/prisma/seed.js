@@ -202,10 +202,10 @@ async function main() {
   const proveedoresData = [
     { nombre: 'Decameron Hotels', tipo: 'Hotel', emailContacto: 'reservas@decameron.com', telefono: '+5712345678', web: 'https://www.decameron.com' },
     { nombre: 'Dann Carlton', tipo: 'Hotel', emailContacto: 'reservas@danncarlton.com', telefono: '+5723456789', web: 'https://www.danncarlton.com' },
-    { nombre: 'Despegar', tipo: 'Agencia Mayorista', emailContacto: 'ventas@despegar.com', telefono: '+5734567890', web: 'https://www.despegar.com' },
+    { nombre: 'Despegar', tipo: 'Proveedor', emailContacto: 'ventas@despegar.com', telefono: '+5734567890', web: 'https://www.despegar.com' },
     { nombre: 'Hotel Estelar', tipo: 'Hotel', emailContacto: 'reservas@hotelestelar.com', telefono: '+5745678901', web: 'https://www.hotelestelar.com' },
     { nombre: 'GHL Hotels', tipo: 'Hotel', emailContacto: 'reservas@ghlhoteles.com', telefono: '+5756789012', web: 'https://www.ghlhoteles.com' },
-    { nombre: 'Viajes Falabella', tipo: 'Agencia Mayorista', emailContacto: 'ventas@viajesfalabella.com', telefono: '+5767890123', web: 'https://www.viajesfalabella.com' },
+    { nombre: 'Viajes Falabella', tipo: 'Proveedor', emailContacto: 'ventas@viajesfalabella.com', telefono: '+5767890123', web: 'https://www.viajesfalabella.com' },
   ];
   for (const p of proveedoresData) {
     await createIfNotExists('proveedores', { nombre: p.nombre }, p);

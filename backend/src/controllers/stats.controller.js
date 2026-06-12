@@ -41,7 +41,7 @@ exports.dashboard = async (req, res, next) => {
         COALESCE(SUM(CASE WHEN status = 'abonado' THEN monto_total ELSE 0 END), 0) as "partPaids",
         COALESCE(SUM(CASE WHEN EXTRACT(YEAR FROM creado_at) = ${currentYear} THEN monto_total ELSE 0 END), 0) as "currentYearSales",
         COALESCE(SUM(CASE WHEN EXTRACT(YEAR FROM creado_at) = ${currentYear - 1} THEN monto_total ELSE 0 END), 0) as "prevYearSales",
-        COALESCE(SUM(CASE WHEN status IN ('credito', 'abonado') AND monto_total > 0 THEN (costo_proveedor_total * ((monto_total - COALESCE(monto_pagado_credito, 0)) / monto_total)) ELSE 0 END), 0) as "creditMayoristas",
+        COALESCE(SUM(CASE WHEN status IN ('credito', 'abonado') AND monto_total > 0 THEN (costo_proveedor_total * ((monto_total - COALESCE(monto_pagado_credito, 0)) / monto_total)) ELSE 0 END), 0) as "creditProveedores",
         COALESCE(SUM(CASE WHEN status IN ('credito', 'abonado') AND monto_total > 0 THEN (ta_total * ((monto_total - COALESCE(monto_pagado_credito, 0)) / monto_total)) ELSE 0 END), 0) as "creditTa"
       FROM ventas
       WHERE deleted_at IS NULL ${dateCondition} ${userCondition}
@@ -108,7 +108,7 @@ exports.dashboard = async (req, res, next) => {
     const partPaids = Number(agg.partPaids) || 0;
     const currentYearSales = Number(agg.currentYearSales) || 0;
     const prevYearSales = Number(agg.prevYearSales) || 0;
-    const creditMayoristas = Number(agg.creditMayoristas) || 0;
+    const creditProveedores = Number(agg.creditProveedores) || 0;
     const creditTa = Number(agg.creditTa) || 0;
 
     const categoryMap = {
@@ -192,7 +192,7 @@ exports.dashboard = async (req, res, next) => {
         status: v.status,
       })),
       supplierCount,
-      creditMayoristas: Math.round(creditMayoristas),
+      creditProveedores: Math.round(creditProveedores),
       creditTa: Math.round(creditTa),
     });
   } catch (err) {
