@@ -147,14 +147,14 @@ export default function CommissionAgents() {
 
       if (editingAgent) {
         await updateCommissionAgent(editingAgent.id, sanitizedData);
-        notifySuccess("Aliado actualizado correctamente");
+        notifySuccess("Comisionista actualizado correctamente");
       } else {
         await addCommissionAgent(sanitizedData);
-        notifySuccess("Aliado registrado correctamente");
+        notifySuccess("Comisionista registrado correctamente");
       }
       setIsModalOpen(false);
     } catch (err: any) {
-      setErrorMessage(err?.response?.data?.message || "Error al guardar el aliado");
+      setErrorMessage(err?.response?.data?.message || "Error al guardar el comisionista");
       setShowError(true);
       setTimeout(() => setShowError(false), 3000);
     } finally {
@@ -166,9 +166,9 @@ export default function CommissionAgents() {
     if (!confirm("¿Estás seguro de eliminar este comisionista?")) return;
     try {
       await deleteCommissionAgent(id);
-      notifySuccess("Aliado eliminado correctamente");
+      notifySuccess("Comisionista eliminado correctamente");
     } catch (err: any) {
-      setErrorMessage(err?.response?.data?.message || "Error al eliminar el aliado");
+      setErrorMessage(err?.response?.data?.message || "Error al eliminar el comisionista");
       setShowError(true);
       setTimeout(() => setShowError(false), 3000);
     }
@@ -252,13 +252,13 @@ export default function CommissionAgents() {
             Comisionistas
           </h1>
           <p className="text-gray-500 font-medium mt-1 sm:mt-2 max-w-lg text-xs sm:text-sm">
-            Sistema avanzado de gestión de aliados, control de liquidaciones y seguimiento financiero.
+            Sistema avanzado de gestión de comisionistas, control de liquidaciones y seguimiento financiero.
           </p>
         </div>
         <div className="w-full sm:w-auto">
           {canCreate('commissions') && (
             <Button onClick={() => handleOpenModal()} className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-8 bg-accent hover:bg-accent/90 text-white shadow-lg shadow-accent/20 rounded-xl sm:rounded-2xl transition-all hover:scale-105 active:scale-95 font-bold justify-center text-xs sm:text-sm">
-              <Plus size={20} /> Registrar Aliado
+              <Plus size={20} /> Registrar Comisionista
             </Button>
           )}
         </div>
@@ -312,7 +312,7 @@ export default function CommissionAgents() {
                   </div>
                   <h3 className="text-xl font-bold text-gray-800">No se encontraron resultados</h3>
                   <p className="text-gray-400 mt-2 max-w-xs">
-                    Intenta ajustar tu búsqueda o registra un nuevo aliado estratégico.
+                    Intenta ajustar tu búsqueda o registra un nuevo comisionista estratégico.
                   </p>
                 </div>
               ) : (
@@ -418,7 +418,7 @@ export default function CommissionAgents() {
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-gray-800">Pagos Pendientes</h2>
-                    <p className="text-sm text-gray-500 font-medium">Aliados que han superado el umbral de liquidación.</p>
+                    <p className="text-sm text-gray-500 font-medium">Comisionistas que han superado el umbral de liquidación.</p>
                   </div>
                 </div>
 
@@ -467,7 +467,7 @@ export default function CommissionAgents() {
                     Regla de Negocio
                   </h4>
                   <p className="text-white/80 text-sm leading-relaxed relative z-10">
-                    Las liquidaciones se habilitan automáticamente cuando un aliado acumula un neto de <span className="bg-white/20 px-2 py-1 rounded-lg text-white font-black">$50,000</span>. Esto optimiza los procesos administrativos y bancarios de la oficina.
+                    Las liquidaciones se habilitan automáticamente cuando un comisionista acumula un neto de <span className="bg-white/20 px-2 py-1 rounded-lg text-white font-black">$50,000</span>. Esto optimiza los procesos administrativos y bancarios de la oficina.
                   </p>
                 </div>
                 <div className="bg-accent text-white rounded-3xl p-8 shadow-2xl relative overflow-hidden transition-transform hover:-translate-y-1">
@@ -563,11 +563,11 @@ export default function CommissionAgents() {
         </div>
       </div>
 
-      {/* === MODAL CREAR/EDITAR ALIADO === */}
+      {/* === MODAL CREAR/EDITAR COMISIONISTA === */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={editingAgent ? "Editar Perfil de Aliado" : "Registrar Nuevo Aliado Estratégico"}
+        title={editingAgent ? "Editar Perfil de Comisionista" : "Registrar Nuevo Comisionista Estratégico"}
         size="lg"
       >
         <div className="py-4 space-y-6">
@@ -592,7 +592,7 @@ export default function CommissionAgents() {
           </FormField>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField label="Categoría de Aliado">
+            <FormField label="Categoría de Comisionista">
               <Select
                 className="h-12 rounded-xl"
                 value={formData.type || ""}
@@ -602,7 +602,7 @@ export default function CommissionAgents() {
                   { value: "Comisionista", label: "Comisionista Independiente" },
                   { value: "Agencia Externa", label: "Agencia de Viajes Externa" },
                   { value: "Referido", label: "Referido / Amigo" },
-                  { value: "Otro", label: "Otro Aliado" },
+                  { value: "Otro", label: "Otro Comisionista" },
                 ]}
               />
             </FormField>

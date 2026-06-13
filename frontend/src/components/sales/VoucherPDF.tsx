@@ -214,7 +214,7 @@ function FlightBlock({ ticket, idx, airportMap }: { ticket: TicketData; idx: num
                   <td>
                     <div className="v-f-main" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       {pax.name} 
-                      {pax.esTitular && <span style={{ fontSize: '9px', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '2px 6px', borderRadius: '99px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>PASAJERO PRINCIPAL</span>}
+                      {pax.esTitular && <span style={{ fontSize: '9px', color: '#0369a1', fontWeight: 'bold', whiteSpace: 'nowrap' }}>PASAJERO PRINCIPAL</span>}
                     </div>
                   </td>
                   <td><div className="v-f-main">{pax.docNumber || '—'}</div></td>
