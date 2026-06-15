@@ -115,7 +115,7 @@ export function InsuranceForm({ insurance, onChange, data, client }: InsuranceFo
                     }
                   }}
                   options={(data?.clients || [])
-                    .filter((c: any) => c.status === "active")
+                    .filter((c: any) => c.status === "active" && String(c.id) !== String(client?.id))
                     .map((c: any) => ({
                       value: c.name || `${c.firstName} ${c.lastName || ""}`.trim(),
                       label: c.name || `${c.firstName} ${c.lastName || ""}`.trim(),

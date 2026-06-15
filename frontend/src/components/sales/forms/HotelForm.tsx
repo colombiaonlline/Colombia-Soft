@@ -10,9 +10,10 @@ interface HotelFormProps {
   onChange: (updates: Partial<HotelData>) => void;
   data: any;
   triggerError?: (msg: string) => void;
+  mainClient?: any;
 }
 
-export function HotelForm({ hotel, onChange, data, triggerError }: HotelFormProps) {
+export function HotelForm({ hotel, onChange, data, triggerError, mainClient }: HotelFormProps) {
   const minDateTime = (() => {
     const now = new Date();
     const tzOffset = now.getTimezoneOffset() * 60000;
@@ -151,7 +152,7 @@ export function HotelForm({ hotel, onChange, data, triggerError }: HotelFormProp
                     }
                   }}
                   options={(data?.clients || [])
-                    .filter((c: any) => c.status === "active")
+                    .filter((c: any) => c.status === "active" && String(c.id) !== String(mainClient?.id))
                     .map((c: any) => ({
                       value: c.name || `${c.firstName} ${c.lastName || ""}`.trim(),
                       label: c.name || `${c.firstName} ${c.lastName || ""}`.trim(),

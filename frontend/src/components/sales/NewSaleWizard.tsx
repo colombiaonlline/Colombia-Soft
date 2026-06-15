@@ -1385,6 +1385,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
               return (
                 <HotelForm
                   hotel={form.hotels[activeIdx] || INITIAL_HOTEL(client)}
+                  mainClient={client}
                   onChange={(updates) => {
                     const next = [...form.hotels];
                     next[activeIdx] = { ...next[activeIdx], ...updates };
@@ -1411,6 +1412,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
               return (
                 <PlanForm
                   plan={form.plans[activeIdx] || INITIAL_PLAN(client)}
+                  mainClient={client}
                   onChange={(updates) => {
                     const next = [...form.plans];
                     next[activeIdx] = { ...next[activeIdx], ...updates };

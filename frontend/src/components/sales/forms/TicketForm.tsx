@@ -1159,7 +1159,9 @@ export function TicketForm({
                           onChange({ passengers: next });
                         }
                       }}
-                      options={clients.map(c => ({ value: String(c.id), label: `${c.name || `${c.firstName} ${c.lastName || ''}`} - ${c.docNumber || ''}` }))}
+                      options={clients
+                        .filter(c => String(c.id) !== String(mainClient?.id))
+                        .map(c => ({ value: String(c.id), label: `${c.name || `${c.firstName} ${c.lastName || ''}`} - ${c.docNumber || ''}` }))}
                       placeholder="Buscar cliente..."
                     />
                   </div>

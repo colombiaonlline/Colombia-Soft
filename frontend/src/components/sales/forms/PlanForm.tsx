@@ -9,9 +9,10 @@ interface PlanFormProps {
   onChange: (updates: Partial<PlanData>) => void;
   data: any;
   triggerError?: (msg: string) => void;
+  mainClient?: any;
 }
 
-export function PlanForm({ plan, onChange, data, triggerError }: PlanFormProps) {
+export function PlanForm({ plan, onChange, data, triggerError, mainClient }: PlanFormProps) {
   const minDateTime = (() => {
     const now = new Date();
     const tzOffset = now.getTimezoneOffset() * 60000;
@@ -321,7 +322,7 @@ export function PlanForm({ plan, onChange, data, triggerError }: PlanFormProps) 
                     }
                   }}
                   options={(data?.clients || [])
-                    .filter((c: any) => c.status === "active")
+                    .filter((c: any) => c.status === "active" && String(c.id) !== String(mainClient?.id))
                     .map((c: any) => ({
                       value: c.name || `${c.firstName} ${c.lastName || ""}`.trim(),
                       label: c.name || `${c.firstName} ${c.lastName || ""}`.trim(),
