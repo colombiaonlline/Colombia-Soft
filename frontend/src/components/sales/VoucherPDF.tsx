@@ -1,21 +1,13 @@
 import React, { forwardRef } from 'react';
 import { Sale, TicketData } from '../../types';
-import { formatDate, formatDateTime, formatCurrency, formatSaleId } from '../../utils/formatters';
+import { formatDate, formatDateTime, formatCurrency } from '../../utils/formatters';
 import { type AirportInfo } from '../../utils/airportInfo';
 import './VoucherPDF.css';
 
 interface VoucherPDFProps {
   sale: Sale | null;
   airportMap?: Record<string, AirportInfo>;
-  baggageList?: {
-    id: number;
-    airlineName: string;
-    fareType: string;
-    personalItem: string;
-    carryOn: string;
-    checkedBag: string;
-    notes: string;
-  }[];
+  baggageList?: any[];
 }
 
 function DataCell({ label, value, highlight, fullWidth }: { label: string; value: React.ReactNode; highlight?: boolean; fullWidth?: boolean }) {
@@ -36,92 +28,10 @@ function ProductCard({ emoji, title, children }: { emoji: string; title: string;
   );
 }
 
-function FlightBlock({ ticket, idx, airportMap, baggageList }: { ticket: TicketData; idx: number; airportMap?: Record<string, AirportInfo>; baggageList?: any[] }) {
-  // Helper to filter out summary legs if layovers exist
-  const filterSummaryLegs = (legsToFilter: any[]) => {
-    if (legsToFilter.length <= 1) return legsToFilter;
-    return legsToFilter.filter((leg, idx) => {
-      const otherLegs = legsToFilter.filter((_, i) => i !== idx);
-      const hasPath = (start: string, end: string, visited: Set<string>): boolean => {
-        if (start === end) return true;
-        visited.add(start);
-        const nextLegs = otherLegs.filter(l => l.origin === start && !visited.has(l.destination));
-        for (const nextLeg of nextLegs) {
-          if (hasPath(nextLeg.destination, end, new Set(visited))) return true;
-        }
-        return false;
-      };
-      return !hasPath(leg.origin, leg.destination, new Set());
-    });
-  };
-
-  // Filter out summary/duplicate legs first
-  const actualLegs = filterSummaryLegs(ticket.legs || []);
-  const flightMode = ticket.flightMode || "one_way";
-  let outboundLegs = [...actualLegs];
-  let returnLegs: any[] = [];
-
-  if (flightMode === "round_trip" && actualLegs.length >= 2) {
-    const outboundMain = actualLegs[0];
-    // Find index of the return segment
-    let splitIdx = actualLegs.findIndex((leg, idx) => 
-      idx > 0 && 
-      leg.origin === outboundMain.destination && 
-      leg.destination === outboundMain.origin
-    );
-
-    if (splitIdx === -1) {
-      splitIdx = actualLegs.findIndex((leg, idx) => 
-        idx > 0 && 
-        leg.origin === outboundMain.destination
-      );
-    }
-
-    if (splitIdx === -1) {
-      splitIdx = actualLegs.findIndex((leg, idx) => 
-        idx > 0 && 
-        leg.destination === outboundMain.origin
-      );
-    }
-
-    if (splitIdx === -1) {
-      splitIdx = Math.ceil(actualLegs.length / 2);
-    }
-
-    outboundLegs = actualLegs.slice(0, splitIdx);
-    returnLegs = actualLegs.slice(splitIdx);
-  } else if (ticket.returnLeg && flightMode === "round_trip") {
-    returnLegs = [ticket.returnLeg];
-  }
-
-  const passengers = ticket.passengers || ((ticket as any).passengerInfo ? [(ticket as any).passengerInfo] : []);
-  const mainPassenger = passengers.find((p: any) => p.esTitular) || passengers[0];
-
-  const deduplicateLegs = (legsToDedup: any[]) => {
-    const unique = [];
-    const seen = new Set();
-    for (const leg of legsToDedup) {
-      const key = `${leg.origin}-${leg.destination}-${leg.flightNumber}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        unique.push(leg);
-      }
-    }
-    return unique;
-  };
-
-  const allLegs: any[] = [
-    ...deduplicateLegs(outboundLegs).map((l, i) => ({ 
-      ...l, 
-      isStop: i > 0,
-      ticketNumber: i === 0 ? (l.ticketNumber || ticket.ticketNumber || mainPassenger?.nroTiquete || "-") : (l.ticketNumber || "-")
-    })),
-    ...deduplicateLegs(returnLegs).map((l, i) => ({ 
-      ...l, 
-      isStop: i > 0,
-      ticketNumber: i === 0 ? (l.ticketNumber || ticket.ticketNumber || mainPassenger?.nroTiquete || "-") : (l.ticketNumber || "-")
-    }))
-  ];
+function FlightBlock({ ticket, idx, airportMap }: { ticket: TicketData; idx: number; airportMap?: Record<string, AirportInfo> }) {
+  const mainLegs = ticket.legs && ticket.legs.length > 0 ? ticket.legs : [];
+  const returnLeg = ticket.returnLeg ? [ticket.returnLeg] : [];
+  const allLegs = [...mainLegs, ...returnLeg];
 
   const legsToRender = allLegs.length > 0 ? allLegs : [{
     origin: '—',
@@ -156,6 +66,7 @@ function FlightBlock({ ticket, idx, airportMap, baggageList }: { ticket: TicketD
             <th>VUELO</th>
             <th>SALIDA</th>
             <th>LLEGADA</th>
+            <th>N° RESERVA</th>
           </tr>
         </thead>
         <tbody>
@@ -174,11 +85,7 @@ function FlightBlock({ ticket, idx, airportMap, baggageList }: { ticket: TicketD
                   <div className="v-f-main">{destStr}</div>
                   {destInfo.name && <div className="v-f-sub">{destInfo.name}</div>}
                 </td>
-                <td>
-                  <div className="v-f-main">{leg.flightNumber || '—'}</div>
-                  {leg.ticketNumber && <div className="v-f-sub">Tiquete: {leg.ticketNumber}</div>}
-                  {leg.isStop && <div className="v-f-sub text-blue-600 font-bold">(Escala)</div>}
-                </td>
+                <td><div className="v-f-main">{leg.flightNumber || '—'}</div></td>
                 <td>
                   <div className="v-f-main">{leg.date ? formatDate(leg.date) : '—'}</div>
                   <div className="v-f-sub">Hora: {formatTimeAMPM((leg as any).time)}</div>
@@ -187,89 +94,38 @@ function FlightBlock({ ticket, idx, airportMap, baggageList }: { ticket: TicketD
                   <div className="v-f-main">{(leg as any).arrivalDate ? formatDate((leg as any).arrivalDate) : (leg.date ? formatDate(leg.date) : '—')}</div>
                   <div className="v-f-sub">Hora: {formatTimeAMPM((leg as any).arrivalTime)}</div>
                 </td>
+                <td><div className="v-f-main">{li === 0 ? (ticket.reservationNumber || '—') : '—'}</div></td>
               </tr>
             );
           })}
         </tbody>
       </table>
 
-      <div className="v-flight-details-box" style={{ marginBottom: '15px' }}>
+      <div className="v-flight-details-box">
         <div className="v-fd-col">
           <span className="v-fd-label">Aerolínea:</span>
           <span className="v-badge-orange">{(ticket as any).airlineName || ticket.airline || '—'}</span>
         </div>
         <div className="v-fd-col">
           <span className="v-fd-label">Equipaje:</span>
-          <span className="v-fd-val">
-            <div>{ticket.baggagePlan || 'No especificado'}</div>
-            {(() => {
-              if (!ticket.baggagePlan || !baggageList) return null;
-              const b = baggageList.find(x => {
-                const planStr = ticket.baggagePlan?.toLowerCase() || '';
-                const fareStr = x.fareType.toLowerCase();
-                const airlineStr = x.airlineName.toLowerCase();
-                const tAirline = ((ticket as any).airlineName || ticket.airline || '').toLowerCase();
-                
-                // Si el plan es exactamente "Aerolínea - Tarifa"
-                if (`${airlineStr} - ${fareStr}` === planStr) return true;
-                
-                // Si solo dice la tarifa, verificar que la aerolínea coincida
-                if (planStr.includes(fareStr) || fareStr.includes(planStr)) {
-                  if (tAirline && (tAirline.includes(airlineStr) || airlineStr.includes(tAirline))) {
-                    return true;
-                  }
-                }
-                return false;
-              });
-              if (!b) return null;
-              const details = [];
-              if (b.personalItem && b.personalItem.toLowerCase() !== 'no' && b.personalItem.toLowerCase() !== 'no incluye') details.push(`Personal: ${b.personalItem}`);
-              if (b.carryOn && b.carryOn.toLowerCase() !== 'no' && b.carryOn.toLowerCase() !== 'no incluye') details.push(`Cabina: ${b.carryOn}`);
-              if (b.checkedBag && b.checkedBag.toLowerCase() !== 'no' && b.checkedBag.toLowerCase() !== 'no incluye') details.push(`Bodega: ${b.checkedBag}`);
-              if (details.length === 0) return null;
-              return <div style={{ fontSize: '0.95em', color: '#64748b', marginTop: '2px', fontWeight: 'normal' }}>{details.join(' • ')}</div>;
-            })()}
-          </span>
+          <span className="v-fd-val">{ticket.baggagePlan || 'No especificado'}</span>
         </div>
+        <div className="v-fd-col">
+          <span className="v-fd-label">Asiento:</span>
+          <span className="v-fd-val">{ticket.seatNumber || '—'}</span>
+        </div>
+        {ticket.ticketNumber && (
+          <div className="v-fd-col">
+            <span className="v-fd-label">N° Tiquete:</span>
+            <span className="v-fd-val">{ticket.ticketNumber}</span>
+          </div>
+        )}
       </div>
-
-      {ticket.passengers && ticket.passengers.length > 0 && (
-        <div style={{ marginTop: '10px' }}>
-          <div className="v-fd-label" style={{ marginBottom: '6px', fontSize: '13px', color: '#555' }}>PASAJEROS DEL VUELO:</div>
-          <table className="v-flight-table" style={{ width: '100%', marginBottom: '10px' }}>
-            <thead>
-              <tr>
-                <th>NOMBRE</th>
-                <th>DOCUMENTO</th>
-                <th>N° RESERVA</th>
-                <th>N° TIQUETE</th>
-                <th>ASIENTO</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ticket.passengers.map((pax, i) => (
-                <tr key={`pax-${i}`}>
-                  <td>
-                    <div className="v-f-main" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      {pax.name} 
-                      {pax.esTitular && <span style={{ fontSize: '11px', color: '#0369a1', fontWeight: 'bold', whiteSpace: 'nowrap' }}>PASAJERO PRINCIPAL</span>}
-                    </div>
-                  </td>
-                  <td><div className="v-f-main">{pax.docNumber || '—'}</div></td>
-                  <td><div className="v-f-main">{pax.esTitular ? (ticket.reservationNumber || pax.nroReserva || '—') : (pax.nroReserva || '—')}</div></td>
-                  <td><div className="v-f-main">{pax.esTitular ? (ticket.ticketNumber || pax.nroTiquete || '—') : (pax.nroTiquete || '—')}</div></td>
-                  <td><div className="v-f-main">{pax.esTitular ? (ticket.seatNumber || (ticket.legs && ticket.legs[0]?.seat) || pax.asiento || '—') : (pax.asiento || '—')}</div></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
     </div>
   );
 }
 
-export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, airportMap, baggageList }, ref) => {
+export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, airportMap }, ref) => {
   if (!sale) {
     return <div className="itea-voucher"><div ref={ref} /></div>;
   }
@@ -304,21 +160,21 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
         {/* ══ HEADER ══════════════════════════════════════════════════ */}
         <div className="v-header">
           <div className="v-logo-block">
-            <img className="v-logo-img" src="/samtur_nuevo.png.png" alt="Samtur Logo" crossOrigin="anonymous" />
+            <img className="v-logo-img" src="/itea logo.png" alt="iTea Logo" crossOrigin="anonymous" />
           </div>
           <div className="v-header-right">
-            <strong>Samtur Travel Agency</strong><br />
-            Nit 902062715- 5<br />
-            Dirección: calle 18 # 18 143 mall estación de servicios medrano<br />
-            Teléfono: 3126339919<br />
-            <strong>Fecha de Emision:</strong> {currentDate}
+            <strong>iTea Travel Agency</strong><br />
+            MEDELLÍN, ANTIOQUIA<br />
+            Teléfono: +57 (312) 875 15 89<br />
+            <strong>Fecha de Impresión:</strong> {currentDate}<br />
+            <strong>Fecha de Venta:</strong> {formatDate(sale.date)}
           </div>
         </div>
 
-        {/* ══ TOP BAR ═══════════════════════════════════════════ */}
+        {/* ══ PASSENGER BAR ═══════════════════════════════════════════ */}
         <div className="v-top-bar">
           <div className="v-tb-item">
-            <span className="v-tb-label">CLIENTE TITULAR</span>
+            <span className="v-tb-label">PASAJERO</span>
             <span className="v-tb-value">{sale.clientName}</span>
           </div>
           <div className="v-tb-item">
@@ -338,7 +194,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
           <div className="v-tb-item">
             <span className="v-tb-label">ORDEN</span>
             <span className="v-tb-value v-tb-order">
-              #{formatSaleId(sale.id)}
+              #{sale.id}
               {sale.status === 'credito' ? (
                 <span className="v-badge-status v-status-credito">CRÉDITO</span>
               ) : (
@@ -351,7 +207,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
         </div>
 
         {/* ══ TIQUETERÍA ══════════════════════════════════════════════ */}
-        {tickets.map((ticket, i) => <FlightBlock key={`ticket-${i}`} ticket={ticket} idx={i} airportMap={airportMap} baggageList={baggageList} />)}
+        {tickets.map((ticket, i) => <FlightBlock key={`ticket-${i}`} ticket={ticket} idx={i} airportMap={airportMap} />)}
 
         {/* ══ SECTION TITLE FOR OTHER PRODUCTS ════════════════════════ */}
         {hasOtherProducts && (
@@ -389,11 +245,10 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
               <React.Fragment key={`ins-${i}`}>
                 {i > 0 && <div className="v-item-divider" />}
                 <div className="v-data-grid">
-                  <DataCell label="Tipo de Seguro" value={ins.insuranceType ? <span className="v-badge v-badge-emerald">{ins.insuranceType}</span> : '—'} highlight />
-                  <DataCell label="Asegurados" value={(ins.members || []).map(m => m.name).join(', ') || '—'} />
-                  <DataCell label="Teléfono de Contacto" value={ins.phone} />
+                  <DataCell label="Tipo de Seguro" value={ins.insuranceType} highlight />
+                  <DataCell label="Teléfono" value={ins.phone} />
                   <DataCell label="Proveedor" value={ins.supplier} />
-
+                  <DataCell label="Asegurados" value={(ins.members || []).map(m => m.name).join(', ') || '—'} />
                 </div>
               </React.Fragment>
             ))}
@@ -481,8 +336,8 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
                   <DataCell label="Pasajero" value={mig.passengerName} highlight />
                   <DataCell label="Nacionalidad" value={mig.nationality} />
                   <DataCell label="Documento Solicitado" value={mig.requestedDocType} />
-                  <DataCell label={mig.docType ? `N° ${mig.docType}` : "N° Documento"} value={mig.docNumber} />
-                  {mig.passportExpiry && <DataCell label="Vencimiento" value={formatDate(mig.passportExpiry)} />}
+                  <DataCell label="N° Pasaporte" value={mig.docNumber} />
+                  <DataCell label="Vencimiento Pasaporte" value={mig.passportExpiry ? formatDate(mig.passportExpiry) : null} />
                   <DataCell label="País Destino" value={mig.destinationCountry} />
                 </div>
               </React.Fragment>
@@ -538,17 +393,13 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
               <React.Fragment key={`finca-${i}`}>
                 {i > 0 && <div className="v-item-divider" />}
                 <div className="v-data-grid">
-                  <DataCell label="Nombre de la Finca" value={finca.fincaName} highlight />
-                  <DataCell label="Ciudad o Pueblo" value={finca.fincaCity} />
-                  <DataCell label="Dirección" value={finca.fincaAddress} />
-                  <DataCell label="Responsable" value={finca.responsibleName} />
+                  <DataCell label="Responsable" value={finca.responsibleName} highlight />
                   <DataCell label="Documento" value={finca.docNumber} />
                   <DataCell label="Check-In" value={finca.checkInDate ? formatDate(finca.checkInDate) : null} />
                   <DataCell label="Check-Out" value={finca.checkOutDate ? formatDate(finca.checkOutDate) : null} />
                   <DataCell label="Adultos" value={finca.adultsCount?.toString()} />
                   <DataCell label="Niños" value={finca.childrenCount?.toString()} />
                   <DataCell label="Mascotas" value={finca.hasPets ? `Sí — ${finca.petType}` : 'No'} />
-                  {finca.observations && <DataCell label="Observaciones" value={finca.observations} fullWidth />}
                 </div>
               </React.Fragment>
             ))}
@@ -570,7 +421,6 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
                   <DataCell label="Punto de Recogida" value={tour.pickupPoint} />
                   <DataCell label="Idioma Guía" value={tour.guideLanguage} />
                   <DataCell label="Transporte" value={tour.needsTransport ? 'Incluido' : 'No requiere'} />
-                  {tour.observations && <DataCell label="Observaciones" value={tour.observations} fullWidth />}
                 </div>
               </React.Fragment>
             ))}
@@ -585,9 +435,6 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
                 {i > 0 && <div className="v-item-divider" />}
                 <div className="v-data-grid">
                   <DataCell label="Organización" value={conv.organization} highlight />
-                  <DataCell label="Nombre del Lugar" value={conv.placeName} />
-                  <DataCell label="Ciudad" value={conv.city} />
-                  <DataCell label="Dirección" value={conv.address} />
                   <DataCell label="Contacto" value={conv.contactName} />
                   <DataCell label="Tipo de Evento" value={conv.eventType} />
                   <DataCell label="Inicio" value={conv.startDate ? formatDate(conv.startDate) : null} />
@@ -630,7 +477,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
                 <div className="v-data-grid">
                   <DataCell label="Solicitante" value={visa.fullName} highlight />
                   <DataCell label="Nacionalidad" value={visa.nationality} />
-                  <DataCell label={visa.docType ? `N° ${visa.docType}` : "N° Documento"} value={visa.docNumber} />
+                  <DataCell label="N° Pasaporte" value={visa.docNumber} />
                   <DataCell label="País al que Aplica" value={visa.countryApplying} />
                   <DataCell label="Tipo de Visa" value={visa.visaType ? <span className="v-badge v-badge-accent">{visa.visaType}</span> : null} />
                   <DataCell label="Viaje Estimado" value={visa.estimatedTravelDate ? formatDate(visa.estimatedTravelDate) : null} />
@@ -671,10 +518,8 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
                   <DataCell label="Especie / Raza" value={`${pet.species || '—'} / ${pet.breed || '—'}`} />
                   <DataCell label="Peso / Tamaño" value={`${pet.weight ?? '—'} kg — ${pet.size || '—'}`} />
                   <DataCell label="Tipo de Viaje" value={pet.travelType ? <span className="v-badge">{pet.travelType}</span> : null} />
-                  <DataCell label="Empresa de Transporte" value={pet.transportCompany} />
                   <DataCell label="Fecha" value={pet.travelDate ? formatDate(pet.travelDate) : null} />
                   <DataCell label="País Destino" value={pet.destinationCountry} />
-                  {pet.observations && <DataCell label="Observaciones" value={pet.observations} fullWidth />}
                 </div>
               </React.Fragment>
             ))}
@@ -683,14 +528,14 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
 
         {/* Sin productos */}
         {!hasAnyProduct && (
-          <div style={{ padding: '32px', textAlign: 'center', color: '#64748b', fontSize: '13px', fontStyle: 'italic' }}>
+          <div style={{ padding: '32px', textAlign: 'center', color: '#64748b', fontSize: '11px', fontStyle: 'italic' }}>
             Esta venta no tiene servicios detallados disponibles para mostrar.
           </div>
         )}
 
         {/* ══ FOOTNOTES ═══════════════════════════════════════════════ */}
         <div className="v-footnotes">
-          Orden <strong>#{formatSaleId(sale.id)}</strong> — Fecha de emisión: <strong>{formatDate(sale.date)}</strong>
+          Orden <strong>#{sale.id}</strong>
           {sale.observations && ` — Obs: ${sale.observations}`}
         </div>
 
@@ -698,7 +543,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
         <div className="v-payment">
           <div className="v-payment-col">
             <h4>Información de Pago</h4>
-            <div className="v-payment-row"><label>Agencia:</label><span>Samtur</span></div>
+            <div className="v-payment-row"><label>Agencia:</label><span>Samtur Travel</span></div>
             <div className="v-payment-row">
               <label>Forma de Pago:</label>
               <span>
@@ -730,31 +575,23 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
           <h4>Términos y Condiciones</h4>
           No olvide reconfirmar el horario de los vuelos y servicios entre 24 y 48 horas antes de la salida.
           Verifique que cuente con todos los documentos necesarios para viajar.<br /><br />
-          <strong>Samtur</strong> agradece que haya elegido nuestros servicios y le desea un excelente viaje.<br /><br />
-          <strong>1.</strong> En vuelos nacionales, llegue como mínimo dos horas antes del vuelo para el chequeo y embarque.<br /><br />
-          <strong>2.</strong> En vuelos internacionales, llegue como mínimo cuatro horas antes del vuelo para el chequeo y embarque.<br /><br />
-          <strong>3.</strong> El checkin o pase de abordar es valor agregado a los servicios prestados,se enviara el checkin 1 dia antes del vuelo, este servicio se brinda dentro del tiempo segun la aerolinea. <br />
-          Se habilitará 24 horas antes de la salida del vuelo y se cerrará 4 horas antes del vuelo.Si no se realiza el check-in en este periodo, Samtur no se hace responsable por los gastos o inconvenientes que esto pueda generar.<br /><br />
-          <strong>4.</strong> Todo pasajero deberá exhibir el documento de identidad pertinente ante la aerolínea y autoridades que lo requieran.
+          <strong>iTea</strong> agradece que haya elegido nuestros servicios y le desea un excelente viaje.<br /><br />
+          <strong>1.</strong> En vuelos nacionales, llegue como mínimo tres horas antes del vuelo para el chequeo y embarque.<br /><br />
+          <strong>2.</strong> Todo pasajero deberá exhibir el documento de identidad pertinente ante la aerolínea y autoridades que lo requieran.
           <div className="v-company">
-            Samtur Travel Agency &nbsp;|&nbsp; calle 18 # 18 143 mall estación de servicios medrano &nbsp;|&nbsp; Comercial@samturtravel.com
+            Samtur Travel &nbsp;|&nbsp; Carrera 65A 13-157, Aeropuerto Olaya Herrera, Medellín &nbsp;|&nbsp; info@samturtravel.com
           </div>
-        </div>
-
-        {/* ══ ALERT ═══════════════════════════════════════════════════ */}
-        <div style={{ margin: '12px 36px', padding: '12px 20px', backgroundColor: '#fffbeb', borderLeft: '4px solid #f59e0b', color: '#92400e', fontSize: '13.5px', fontWeight: '600', borderRadius: '4px', lineHeight: '1.5' }}>
-          ⚠️ ATENCIÓN: Por favor revise detenidamente todos los datos de este voucher (nombres, fechas, horarios y servicios). Cualquier inconsistencia debe ser reportada de inmediato a su asesor.
         </div>
 
         {/* ══ FOOTER ══════════════════════════════════════════════════ */}
         <div className="v-footer">
           <div>
-            <div className="v-footer-brand">Sam<span>T</span>ur</div>
-            <div className="v-footer-tagline">Travel Agency</div>
+            <div className="v-footer-brand">i<span>T</span>ea</div>
+            <div className="v-footer-tagline">Travel</div>
           </div>
           <div className="v-footer-right">
-            Voucher Electrónico — Orden #{formatSaleId(sale.id)}<br />
-            Comercial@samturtravel.com<br />
+            Voucher Electrónico — Orden #{sale.id}<br />
+            www.itea.com.co &nbsp;|&nbsp; info@samturtravel.com<br />
             Impreso el {currentDate}
           </div>
         </div>
