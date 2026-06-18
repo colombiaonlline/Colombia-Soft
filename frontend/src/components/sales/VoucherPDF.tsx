@@ -137,6 +137,41 @@ function FlightBlock({ ticket, idx, airportMap, baggageList }: { ticket: TicketD
           </div>
         )}
       </div>
+
+      {ticket.passengers && ticket.passengers.length > 0 && (
+        <div style={{ marginTop: '20px' }}>
+          <div style={{ color: '#6b7280', marginBottom: '8px', textTransform: 'uppercase', fontSize: '11px', fontWeight: 'bold' }}>
+            PASAJEROS DEL VUELO:
+          </div>
+          <table className="v-flight-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'left', padding: '8px 12px', backgroundColor: '#f97316', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>NOMBRE</th>
+                <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#f97316', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>DOCUMENTO</th>
+                <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#f97316', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>N° RESERVA</th>
+                <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#f97316', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>N° TIQUETE</th>
+                <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#f97316', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>ASIENTO</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ticket.passengers.map((p, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                  <td style={{ padding: '12px', fontWeight: 'bold', color: '#111827' }}>
+                    {p.name}
+                    {p.esTitular && (
+                      <span style={{ marginLeft: '8px', padding: '2px 8px',  color: '#0369a1', borderRadius: '12px', fontSize: '9px', fontWeight: 'bold' }}>PASAJERO PRINCIPAL</span>
+                    )}
+                  </td>
+                  <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#1f2937' }}>{p.docNumber || '—'}</td>
+                  <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#1f2937' }}>{p.nroReserva || '—'}</td>
+                  <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#1f2937' }}>{p.nroTiquete || '—'}</td>
+                  <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#1f2937' }}>{p.asiento || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
