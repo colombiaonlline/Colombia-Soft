@@ -660,8 +660,8 @@ export default function Itineraries() {
             </div>
             <div className="p-3 bg-gray-50 border border-gray-border rounded-lg">
               <p className="text-xs text-gray-500 font-medium mb-1">Enviar a:</p>
-              <p className="text-sm font-bold text-primary truncate" title={modalClient?.email}>
-                {modalClient?.email || 'Sin correo registrado'}
+              <p className="text-sm font-bold text-primary truncate" title={selectedFlightForCheckin?.email || modalClient?.email}>
+                {selectedFlightForCheckin?.email || modalClient?.email || 'Sin correo registrado'}
               </p>
             </div>
             <div className="p-3 bg-gray-50 border border-gray-border rounded-lg">

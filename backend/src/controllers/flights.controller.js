@@ -33,7 +33,12 @@ exports.list = async (req, res, next) => {
         include: {
           prodTiqueteria: {
             include: {
-              detalleVenta: { include: { venta: { include: { cliente: { include: { persona: true } } } } } },
+              detalleVenta: { 
+                include: { 
+                  venta: { include: { cliente: { include: { persona: true } } } },
+                  pasajerosDetalle: { include: { persona: true } } 
+                } 
+              },
               aerolinea: true
             }
           },
@@ -91,23 +96,61 @@ exports.list = async (req, res, next) => {
       }
     }
 
-    const data = filteredTramos.map(t => ({
-      id: t.id,
-      passenger: t.prodTiqueteria?.detalleVenta?.venta?.cliente?.persona
-        ? `${t.prodTiqueteria.detalleVenta.venta.cliente.persona.nombres} ${t.prodTiqueteria.detalleVenta.venta.cliente.persona.apellidos}`
-        : 'Desconocido',
-      route: `${t.aeropuertoOrigen?.codigoIata || '?'} - ${t.aeropuertoDestino?.codigoIata || '?'}`,
-      airline: t.prodTiqueteria?.aerolinea?.nombre || '',
-      date: formatLocalDate(t.salida),
-      time: formatLocalTime(t.salida),
-      type: tramoType[t.id] || 'ida',
-      checkin: t.checkinStatus || t.prodTiqueteria?.checkinStatus || 'pendiente',
-      flightNumber: t.nroVueloTramo,
-      seat: null,
-      reservationNumber: t.prodTiqueteria?.nroReserva || '',
-      ticketNumber: t.nroTiquete || t.prodTiqueteria?.nroTiquete || null,
-      source: 'ticket'
-    }));
+    const data = [];
+    for (const t of filteredTramos) {
+      const detalleVenta = t.prodTiqueteria?.detalleVenta;
+      const venta = detalleVenta?.venta;
+      
+      const route = `${t.aeropuertoOrigen?.codigoIata || '?'} - ${t.aeropuertoDestino?.codigoIata || '?'}`;
+      const airline = t.prodTiqueteria?.aerolinea?.nombre || '';
+      const date = formatLocalDate(t.salida);
+      const time = formatLocalTime(t.salida);
+      const type = tramoType[t.id] || 'ida';
+      const checkin = t.checkinStatus || t.prodTiqueteria?.checkinStatus || 'pendiente';
+      const flightNumber = t.nroVueloTramo;
+      const reservationNumber = t.prodTiqueteria?.nroReserva || '';
+      const ticketNumber = t.nroTiquete || t.prodTiqueteria?.nroTiquete || null;
+      
+      let passengersToMap = [];
+      if (detalleVenta?.pasajerosDetalle && detalleVenta.pasajerosDetalle.length > 0) {
+        passengersToMap = detalleVenta.pasajerosDetalle.map(p => ({
+           idSuffix: `p-${p.id}`,
+           name: p.persona ? `${p.persona.nombres || ''} ${p.persona.apellidos || ''}`.trim() : 'Desconocido',
+           pasajeroId: p.id,
+           email: p.persona?.email || null
+        }));
+      } else {
+        passengersToMap = [{
+           idSuffix: 'main',
+           name: venta?.cliente?.persona
+             ? `${venta.cliente.persona.nombres} ${venta.cliente.persona.apellidos}`
+             : 'Desconocido',
+           pasajeroId: null,
+           email: venta?.cliente?.persona?.email || null
+        }];
+      }
+
+      for (const p of passengersToMap) {
+        data.push({
+          id: `${t.id}__${p.idSuffix}`,
+          originalTramoId: t.id,
+          pasajeroId: p.pasajeroId,
+          passenger: p.name,
+          email: p.email,
+          route,
+          airline,
+          date,
+          time,
+          type,
+          checkin,
+          flightNumber,
+          seat: null,
+          reservationNumber,
+          ticketNumber,
+          source: 'ticket'
+        });
+      }
+    }
 
     // === Also include flights from packages/plans (prodPlanes) ===
     const planWhere = {
@@ -130,7 +173,7 @@ exports.list = async (req, res, next) => {
         aerolinea: true,
         detalleVenta: {
           include: {
-            pasajerosDetalle: true,
+            pasajerosDetalle: { include: { persona: true } },
             venta: {
               include: {
                 cliente: {
@@ -152,7 +195,22 @@ exports.list = async (req, res, next) => {
         : 'Desconocido';
       const airlineName = p.aerolinea?.nombre || '';
       const planLabel = p.nombrePlan || 'Paquete';
-      const additionalPassengers = p.detalleVenta?.pasajerosDetalle ? Math.max(0, p.detalleVenta.pasajerosDetalle.length - 1) : 0;
+      let passengersToMap = [];
+      if (p.detalleVenta?.pasajerosDetalle && p.detalleVenta.pasajerosDetalle.length > 0) {
+        passengersToMap = p.detalleVenta.pasajerosDetalle.map(pas => ({
+           idSuffix: `p-${pas.id}`,
+           name: pas.persona ? `${pas.persona.nombres || ''} ${pas.persona.apellidos || ''}`.trim() : 'Desconocido',
+           pasajeroId: pas.id,
+           email: pas.persona?.email || null
+        }));
+      } else {
+        passengersToMap = [{
+           idSuffix: 'main',
+           name: passengerName,
+           pasajeroId: null,
+           email: venta.cliente?.persona?.email || null
+        }];
+      }
 
       // Ida flight (departure)
       if (p.fechaSalidaVuelo) {
@@ -161,21 +219,25 @@ exports.list = async (req, res, next) => {
         if (dateFrom && depDate < new Date(dateFrom)) { /* skip */ }
         else if (dateTo && depDate > new Date(dateTo)) { /* skip */ }
         else {
-          data.push({
-            id: `plan-ida-${p.id}`,
-            passenger: passengerName,
-            route: `${planLabel}`,
-            airline: airlineName,
-            date: formatLocalDate(depDate),
-            time: formatLocalTime(depDate),
-            type: 'ida',
-            checkin: p.checkinStatusIda || 'pendiente',
-            flightNumber: p.nroVuelo || '',
-            seat: null,
-            reservationNumber: p.nroReserva || '',
-            additionalPassengers,
-            source: 'plan'
-          });
+          for (const pas of passengersToMap) {
+            data.push({
+              id: `plan-ida-${p.id}__${pas.idSuffix}`,
+              originalTramoId: `plan-ida-${p.id}`,
+              pasajeroId: pas.pasajeroId,
+              passenger: pas.name,
+              email: pas.email,
+              route: `${planLabel}`,
+              airline: airlineName,
+              date: formatLocalDate(depDate),
+              time: formatLocalTime(depDate),
+              type: 'ida',
+              checkin: p.checkinStatusIda || 'pendiente',
+              flightNumber: p.nroVuelo || '',
+              seat: null,
+              reservationNumber: p.nroReserva || '',
+              source: 'plan'
+            });
+          }
         }
       }
 
@@ -185,21 +247,25 @@ exports.list = async (req, res, next) => {
         if (dateFrom && retDate < new Date(dateFrom)) { /* skip */ }
         else if (dateTo && retDate > new Date(dateTo)) { /* skip */ }
         else {
-          data.push({
-            id: `plan-ret-${p.id}`,
-            passenger: passengerName,
-            route: `${planLabel}`,
-            airline: airlineName,
-            date: formatLocalDate(retDate),
-            time: formatLocalTime(retDate),
-            type: 'regreso',
-            checkin: p.checkinStatusRegreso || 'pendiente',
-            flightNumber: p.nroVuelo || '',
-            seat: null,
-            reservationNumber: p.nroReserva || '',
-            additionalPassengers,
-            source: 'plan'
-          });
+          for (const pas of passengersToMap) {
+            data.push({
+              id: `plan-ret-${p.id}__${pas.idSuffix}`,
+              originalTramoId: `plan-ret-${p.id}`,
+              pasajeroId: pas.pasajeroId,
+              passenger: pas.name,
+              email: pas.email,
+              route: `${planLabel}`,
+              airline: airlineName,
+              date: formatLocalDate(retDate),
+              time: formatLocalTime(retDate),
+              type: 'regreso',
+              checkin: p.checkinStatusRegreso || 'pendiente',
+              flightNumber: p.nroVuelo || '',
+              seat: null,
+              reservationNumber: p.nroReserva || '',
+              source: 'plan'
+            });
+          }
         }
       }
     }
@@ -242,16 +308,22 @@ exports.updateCheckin = async (req, res, next) => {
     const data = req.body;
     const file = req.file;
 
+    const parts = id.split('__');
+    const baseId = parts[0];
+    const isPasajero = parts.length > 1 && parts[1].startsWith('p-');
+    const pasajeroId = isPasajero ? parts[1].substring(2) : null;
+
     // Handle Packages (Planes)
-    if (id.startsWith('plan-ida-') || id.startsWith('plan-ret-')) {
-      const isIda = id.startsWith('plan-ida-');
-      const planId = id.replace('plan-ida-', '').replace('plan-ret-', '');
+    if (baseId.startsWith('plan-ida-') || baseId.startsWith('plan-ret-')) {
+      const isIda = baseId.startsWith('plan-ida-');
+      const planId = baseId.replace('plan-ida-', '').replace('plan-ret-', '');
 
       const plan = await prisma.prodPlanes.findUnique({
         where: { id: planId },
         include: {
           detalleVenta: {
             include: {
+              pasajerosDetalle: { include: { persona: true } },
               venta: {
                 include: {
                   cliente: { include: { persona: true } }
@@ -280,12 +352,22 @@ exports.updateCheckin = async (req, res, next) => {
       // Send email if file attached
       if (file) {
         const emailService = require('../utils/emailService');
-        const email = plan.detalleVenta?.venta?.cliente?.persona?.email;
-        if (email) {
-          const pasajeroNombres = plan.detalleVenta?.venta?.cliente?.persona?.nombres || 'Cliente';
+        
+        let targetEmail = plan.detalleVenta?.venta?.cliente?.persona?.email;
+        let pasajeroNombres = plan.detalleVenta?.venta?.cliente?.persona?.nombres || 'Cliente';
+        
+        if (pasajeroId && plan.detalleVenta?.pasajerosDetalle) {
+          const pas = plan.detalleVenta.pasajerosDetalle.find(p => p.id === pasajeroId);
+          if (pas && pas.persona) {
+            targetEmail = pas.persona.email || targetEmail;
+            pasajeroNombres = `${pas.persona.nombres || ''} ${pas.persona.apellidos || ''}`.trim() || pasajeroNombres;
+          }
+        }
+
+        if (targetEmail) {
           const ruta = plan.nombrePlan || 'Paquete';
           await emailService.sendEmail({
-            to: email,
+            to: targetEmail,
             subject: `Su pase de abordar está listo - ${ruta}`,
             html: `
               <div style="font-family: sans-serif; padding: 20px;">
@@ -312,12 +394,13 @@ exports.updateCheckin = async (req, res, next) => {
 
     // Handle Normal Flights (TramosVuelo)
     const tramo = await prisma.tramosVuelo.findUnique({
-      where: { id },
+      where: { id: baseId },
       include: { 
         prodTiqueteria: {
           include: {
             detalleVenta: {
               include: {
+                pasajerosDetalle: { include: { persona: true } },
                 venta: {
                   include: { cliente: { include: { persona: true } } }
                 }
@@ -342,14 +425,22 @@ exports.updateCheckin = async (req, res, next) => {
 
     if (file) {
       const emailService = require('../utils/emailService');
-      const email = tramo.prodTiqueteria?.detalleVenta?.venta?.cliente?.persona?.email;
+      let targetEmail = tramo.prodTiqueteria?.detalleVenta?.venta?.cliente?.persona?.email;
+      let pasajeroNombres = tramo.prodTiqueteria?.detalleVenta?.venta?.cliente?.persona?.nombres || 'Cliente';
       
-      if (email) {
-        const pasajeroNombres = tramo.prodTiqueteria?.detalleVenta?.venta?.cliente?.persona?.nombres || 'Cliente';
+      if (pasajeroId && tramo.prodTiqueteria?.detalleVenta?.pasajerosDetalle) {
+        const pas = tramo.prodTiqueteria.detalleVenta.pasajerosDetalle.find(p => p.id === pasajeroId);
+        if (pas && pas.persona) {
+          targetEmail = pas.persona.email || targetEmail;
+          pasajeroNombres = `${pas.persona.nombres || ''} ${pas.persona.apellidos || ''}`.trim() || pasajeroNombres;
+        }
+      }
+      
+      if (targetEmail) {
         const ruta = `${tramo.aeropuertoOrigen?.codigoIata || '?'} - ${tramo.aeropuertoDestino?.codigoIata || '?'}`;
         
         await emailService.sendEmail({
-          to: email,
+          to: targetEmail,
           subject: `Su pase de abordar está listo - Vuelo ${ruta}`,
           html: `
             <div style="font-family: sans-serif; padding: 20px;">

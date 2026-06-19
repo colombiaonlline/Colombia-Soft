@@ -574,6 +574,9 @@ export interface Sale {
 
 export interface Flight {
   id: string;
+  originalTramoId?: string;
+  pasajeroId?: string | null;
+  email?: string | null;
   passenger: string;
   route: string;
   airline: string;
