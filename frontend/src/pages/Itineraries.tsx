@@ -37,6 +37,19 @@ export default function Itineraries() {
   const [checkinFile, setCheckinFile] = useState<File | null>(null);
   const [isSending, setIsSending] = useState(false);
 
+  const getFlightStatus = (flight: Flight) => {
+    if (flight.checkin === 'realizado') {
+      return { isRealizado: true, isVencido: false, isUrgente: false };
+    }
+    const [yr, mo, dy] = flight.date.split('-').map(Number);
+    const [hr, mn] = (flight.time || '00:00').split(':').map(Number);
+    const flightDateTime = new Date(yr, mo - 1, dy, hr, mn, 0);
+    const now = new Date();
+    const isVencido = flightDateTime < now;
+    const isUrgente = !isVencido && (flightDateTime.getTime() <= now.getTime() + (48 * 60 * 60 * 1000));
+    return { isRealizado: false, isVencido, isUrgente };
+  };
+
   // Lazy Load Fetch
   useEffect(() => {
     fetchFlights().finally(() => setIsLoading(false));
@@ -347,11 +360,14 @@ export default function Itineraries() {
                               {isPlan ? <Package size={10} className="shrink-0" /> : flight.type === 'ida' ? <PlaneTakeoff size={10} className="shrink-0" /> : <PlaneLanding size={10} className="shrink-0" />}
                               <span className="truncate flex-1">{flight.passenger}</span>
                               <span className="opacity-60 shrink-0">{flight.time}</span>
-                              {!isPlan && (
-                              <span title={flight.checkin === 'realizado' ? 'Check-in realizado' : 'Check-in pendiente'}
-                                className={`w-1.5 h-1.5 rounded-full shrink-0 ${flight.checkin === 'realizado' ? 'bg-green-500' : 'bg-yellow-400'}`}
-                              />
-                              )}
+                              {!isPlan && (() => {
+                                 const { isRealizado, isVencido } = getFlightStatus(flight);
+                                 return (
+                                   <span title={isRealizado ? 'Check-in realizado' : isVencido ? 'Check-in vencido' : 'Check-in pendiente'}
+                                     className={`w-1.5 h-1.5 rounded-full shrink-0 ${isRealizado ? 'bg-green-500' : isVencido ? 'bg-red-500' : 'bg-yellow-400'}`}
+                                   />
+                                 );
+                               })()}
                             </div>
                             );
                           })}
@@ -407,14 +423,19 @@ export default function Itineraries() {
                                 <Package size={14} className="text-emerald-500" />
                                 <span className="text-[9px] font-semibold text-emerald-500 uppercase tracking-wider">Paquete</span>
                               </>
-                            ) : (
-                              <>
-                                <span title={flight.checkin === 'realizado' ? 'Check-in realizado' : 'Check-in pendiente'}
-                                  className={`w-2 h-2 rounded-full ${flight.checkin === 'realizado' ? 'bg-green-500' : 'bg-yellow-400'}`}
-                                />
-                                <span className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider">{flight.checkin === 'realizado' ? 'Listo' : 'Pendiente'}</span>
-                              </>
-                            )}
+                            ) : (() => {
+                              const { isRealizado, isVencido } = getFlightStatus(flight);
+                              return (
+                                <>
+                                  <span title={isRealizado ? 'Check-in realizado' : isVencido ? 'Check-in vencido' : 'Check-in pendiente'}
+                                    className={`w-2 h-2 rounded-full ${isRealizado ? 'bg-green-500' : isVencido ? 'bg-red-500' : 'bg-yellow-400'}`}
+                                  />
+                                  <span className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider">
+                                    {isRealizado ? 'Listo' : isVencido ? 'Vencido' : 'Pendiente'}
+                                  </span>
+                                </>
+                              );
+                            })()}
                           </div>
                         </div>
                       );
@@ -458,16 +479,21 @@ export default function Itineraries() {
                   {filteredPending.length > 0 ? (
                     <div className="divide-y divide-gray-border">
                       {filteredPending.map(flight => {
-                        const date = new Date(flight.date);
-                        const today = new Date();
-                        today.setHours(0,0,0,0);
-                        const isUrgente = date.getTime() <= today.getTime() + (48 * 60 * 60 * 1000);
+                        const { isVencido, isUrgente } = getFlightStatus(flight);
                         const client = data.clients.find(c => c.name === flight.passenger);
 
                         return (
-                          <div key={flight.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/50 transition-colors">
+                          <div key={flight.id} className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/50 transition-colors ${isVencido ? 'opacity-85' : ''}`}>
                             <div className="flex items-start gap-4">
-                              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0 ${isUrgente ? 'bg-red-50 border-red-100 text-red-500 animate-pulse' : flight.source === 'plan' ? 'bg-emerald-50 border-emerald-100 text-emerald-500' : 'bg-blue-50 border-blue-100 text-blue-500'}`}>
+                              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0 ${
+                                isVencido 
+                                  ? 'bg-gray-100 border-gray-200 text-gray-400' 
+                                  : isUrgente 
+                                    ? 'bg-red-50 border-red-100 text-red-500 animate-pulse' 
+                                    : flight.source === 'plan' 
+                                      ? 'bg-emerald-50 border-emerald-100 text-emerald-500' 
+                                      : 'bg-blue-50 border-blue-100 text-blue-500'
+                              }`}>
                                 {flight.source === 'plan' ? (
                                   <Package size={24} />
                                 ) : (
@@ -482,7 +508,11 @@ export default function Itineraries() {
                                       {client.docType}: {client.docNumber}
                                     </span>
                                   )}
-                                  {isUrgente && <Badge variant="danger" className="text-[10px] py-0">URGENTE</Badge>}
+                                  {isVencido ? (
+                                    <Badge variant="danger" className="text-[10px] py-0 bg-red-100 text-red-800 border border-red-200">VENCIDO</Badge>
+                                  ) : isUrgente ? (
+                                    <Badge variant="danger" className="text-[10px] py-0">URGENTE</Badge>
+                                  ) : null}
                                   {flight.source === 'plan' && flight.additionalPassengers && flight.additionalPassengers > 0 ? (
                                     <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                                       +{flight.additionalPassengers} acompañantes
@@ -538,12 +568,7 @@ export default function Itineraries() {
                   </div>
                   <h3 className="text-sm font-medium text-white/80 uppercase tracking-wider">Check-ins Críticos</h3>
                   <p className="text-3xl font-bold mt-1">
-                    {pendingCheckins.filter(f => {
-                      const date = new Date(f.date);
-                      const today = new Date();
-                      today.setHours(0,0,0,0);
-                      return date.getTime() <= today.getTime() + (48 * 60 * 60 * 1000);
-                    }).length}
+                    {pendingCheckins.filter(f => getFlightStatus(f).isUrgente).length}
                   </p>
                   <p className="text-xs text-white/60 mt-4 leading-relaxed">
                     Recuerda que el check-in debe realizarse al menos 24 horas antes de la salida para evitar inconvenientes.
