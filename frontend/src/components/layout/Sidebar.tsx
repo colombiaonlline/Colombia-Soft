@@ -79,7 +79,7 @@ export function Sidebar({ isMobileOpen = false, onClose }: SidebarProps) {
     >
       <div className={`p-5 border-b border-[#032650] overflow-hidden transition-all duration-300 flex justify-between md:justify-center items-center ${isExpanded ? "px-6" : "px-4"}`}>
         <div className="flex-shrink-0 w-16 h-16 flex items-center justify-center bg-[#ffffff] rounded-2xl shadow-lg border border-slate-100 p-1 hover:scale-110 hover:-rotate-3 hover:shadow-xl transition-all duration-300 cursor-pointer">
-          <img src="/samtur_nuevo.png.png" alt="Samtur Travel Agency" className="w-full h-full object-contain drop-shadow-sm" />
+          <img src="/Colombia Online_nuevo.png.png" alt="Colombia Online" className="w-full h-full object-contain drop-shadow-sm" />
         </div>
         {/* Mobile Close Button */}
         <button 

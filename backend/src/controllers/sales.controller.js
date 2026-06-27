@@ -4,7 +4,7 @@ const prisma = require('../config/db');
 const { success, error } = require('../utils/apiResponse');
 const { buildMeta } = require('../utils/paginationHelper');
 const emailService = require('../utils/emailService');
-const { getSamturLogoBase64 } = require('../utils/logoHelper');
+const { getColombia OnlineLogoBase64 } = require('../utils/logoHelper');
 
 exports.list = async (req, res, next) => {
   try {
@@ -1591,7 +1591,7 @@ exports.create = async (req, res, next) => {
                 console.log(`[VOUCHER] Sending email to ${clientEmail} for ${handler.nombreServicio} with ${attachments.length} attachments...`);
                 const result = await emailService.sendEmail({
                   to: clientEmail,
-                  subject: `Tu voucher de ${handler.nombreServicio} - iTea Travel`,
+                  subject: `Tu voucher de ${handler.nombreServicio} - Colombia Online`,
                   html: `
                     <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaec; border-radius: 8px; overflow: hidden;">
                       <div style="background-color: #0f172a; padding: 20px; text-align: center;">
@@ -2218,7 +2218,7 @@ exports.sendVoucher = async (req, res, next) => {
 
     // URL pública del logo para el correo (la imagen debe estar accesible via internet)
     const frontendUrl = process.env.FRONTEND_URL || 'https://itea-soft.onrender.com';
-    const logoUrl = `${frontendUrl}/samtur_nuevo.png.png`;
+    const logoUrl = `${frontendUrl}/Colombia Online_nuevo.png.png`;
 
     const html = `
       <!DOCTYPE html>
@@ -2226,7 +2226,7 @@ exports.sendVoucher = async (req, res, next) => {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Voucher de Viaje - Samtur Travel Agency</title>
+        <title>Voucher de Viaje - Colombia Online</title>
       </head>
       <body style="margin:0;padding:0;background:#f4f7fb;font-family:'Segoe UI',Arial,sans-serif;">
         <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f7fb;padding:32px 0;">
@@ -2239,10 +2239,10 @@ exports.sendVoucher = async (req, res, next) => {
                   <td style="background:linear-gradient(135deg,#032650 0%,#0b396b 60%,#021a36 100%);padding:24px 40px;">
                     <table width="100%" cellpadding="0" cellspacing="0" border="0">
                       <tr>
-                        <!-- Left: Samtur Logo -->
+                        <!-- Left: Colombia Online Logo -->
                         <td align="left" valign="middle" width="50%">
                           <div style="display:inline-block;background:#ffffff;border-radius:8px;padding:6px 10px;">
-                            <img src="${logoUrl}" alt="Samtur Logo" style="height:52px; display:block;" />
+                            <img src="${logoUrl}" alt="Colombia Online Logo" style="height:52px; display:block;" />
                           </div>
                         </td>
                         <!-- Right: iTea text -->
@@ -2351,7 +2351,7 @@ exports.sendVoucher = async (req, res, next) => {
                       El voucher completo con todos los detalles de tu reserva se encuentra adjunto en este correo en formato PDF.
                     </p>
                     <p style="margin:0;font-size:14px;color:#475569;line-height:1.7;">
-                      Gracias por confiar en <strong style="color:#032650;">Samtur Travel Agency</strong>. 
+                      Gracias por confiar en <strong style="color:#032650;">Colombia Online</strong>. 
                       ¡Te deseamos un excelente viaje! ✈️
                     </p>
                   </td>
@@ -2361,10 +2361,10 @@ exports.sendVoucher = async (req, res, next) => {
                 <tr>
                   <td style="background:linear-gradient(135deg,#021a36 0%,#032650 50%,#0b396b 100%);border-top:4px solid #07818e;padding:20px 40px;text-align:center;">
                     <p style="margin:0 0 6px;font-size:11px;color:rgba(255,255,255,0.55);letter-spacing:1px;">
-                      Samtur Travel Agency &nbsp;|&nbsp; Calle 18 # 18 143 mall estación de servicios medrano
+                      Colombia Online &nbsp;|&nbsp; Calle 18 # 18 143 mall estación de servicios medrano
                     </p>
                     <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.45);">
-                      Comercial@samturtravel.com &nbsp;|&nbsp; +57 (312) 633 99 19
+                      Comercial@colombia-online.com &nbsp;|&nbsp; +57 (312) 633 99 19
                     </p>
                   </td>
                 </tr>
@@ -2379,7 +2379,7 @@ exports.sendVoucher = async (req, res, next) => {
 
     // Convertir base64 a Buffer para adjuntar
     const pdfBuffer = Buffer.from(pdfBase64, 'base64');
-    const fileName = `Voucher_Samtur_Orden_${saleId}_${clientName.replace(/\s+/g, '_')}.pdf`;
+    const fileName = `Voucher_Colombia Online_Orden_${saleId}_${clientName.replace(/\s+/g, '_')}.pdf`;
     
     let logoBuffer = null;
     try {
@@ -2397,15 +2397,15 @@ exports.sendVoucher = async (req, res, next) => {
 
     if (logoBuffer) {
       attachments.push({
-        filename: 'samtur_nuevo.png.png',
+        filename: 'Colombia Online_nuevo.png.png',
         content: logoBuffer,
-        cid: 'samturLogo'
+        cid: 'Colombia OnlineLogo'
       });
     }
 
     const emailResult = await emailService.sendEmail({
       to: clientEmail,
-      subject: `✈ Tu Voucher de Viaje - Orden #${saleId} | Samtur Travel Agency`,
+      subject: `✈ Tu Voucher de Viaje - Orden #${saleId} | Colombia Online`,
       html,
       attachments
     });

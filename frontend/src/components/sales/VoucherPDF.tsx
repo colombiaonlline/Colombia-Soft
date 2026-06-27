@@ -225,10 +225,10 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
         {/* ══ HEADER ══════════════════════════════════════════════════ */}
         <div className="v-header">
           <div className="v-logo-block">
-            <img className="v-logo-img" src="/samtur_nuevo.png.png" alt="Samtur Logo" crossOrigin="anonymous" />
+            <img className="v-logo-img" src="/Colombia Online_nuevo.png.png" alt="Colombia Online Logo" crossOrigin="anonymous" />
           </div>
           <div className="v-header-right">
-            <strong>Samtur Travel Agency</strong>
+            <strong>Colombia Online</strong>
             <br />
             NIT: 902062715-5<br />
             
@@ -638,7 +638,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
         <div className="v-payment">
           <div className="v-payment-col">
             <h4>Información de Pago</h4>
-            <div className="v-payment-row"><label>Agencia:</label><span>Samtur Travel</span></div>
+            <div className="v-payment-row"><label>Agencia:</label><span>Colombia Online</span></div>
             <div className="v-payment-row">
               <label>Forma de Pago:</label>
               <span>
@@ -669,14 +669,14 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
         <div className="v-legal">
           <h4>TÉRMINOS Y CONDICIONES</h4>
           No olvide reconfirmar el horario de los vuelos y servicios entre 24 y 48 horas antes de la salida. Verifique que cuente con todos los documentos necesarios para viajar.<br /><br />
-          Samtur agradece que haya elegido nuestros servicios y le desea un excelente viaje.<br /><br />
+          Colombia Online agradece que haya elegido nuestros servicios y le desea un excelente viaje.<br /><br />
           <strong>1.</strong> En vuelos nacionales, llegue como mínimo dos horas antes del vuelo para el chequeo y embarque.<br /><br />
           <strong>2.</strong> En vuelos internacionales, llegue como mínimo cuatro horas antes del vuelo para el chequeo y embarque.<br /><br />
           <strong>3.</strong> El checkin o pase de abordar es valor agregado a los servicios prestados, este servicio se brinda dentro del tiempo segun la aereolinea.<br />
-          Se habilitará 24 horas antes de la salida del vuelo y se cerrará 4 horas antes del vuelo. Si no se realiza el check-in en este periodo, Samtur no se hace responsable por los gastos o inconvenientes que esto pueda generar.<br /><br />
+          Se habilitará 24 horas antes de la salida del vuelo y se cerrará 4 horas antes del vuelo. Si no se realiza el check-in en este periodo, Colombia Online no se hace responsable por los gastos o inconvenientes que esto pueda generar.<br /><br />
           <strong>4.</strong> Todo pasajero deberá exhibir el documento de identidad pertinente ante la aerolínea y autoridades que lo requieran.
           <div className="v-company" style={{ marginTop: '12px' }}>
-            Samtur Travel Agency | calle 18 # 18 143 mall estación de servicios medrano | Comercial@samturtravel.com
+            Colombia Online | calle 18 # 18 143 mall estación de servicios medrano | Comercial@colombia-online.com
           </div>
           <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#fff3cd', color: '#856404', border: '1px solid #ffeeba', borderRadius: '4px', fontSize: '11px' }}>
             <strong>▲ ATENCIÓN:</strong> Por favor revise detenidamente todos los datos de este voucher (nombres, fechas, horarios y servicios). Cualquier inconsistencia debe ser reportada de inmediato a su asesor.
@@ -692,8 +692,8 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
           <div className="v-footer-right">
             <div className="v-footer-line">
               <p>
-                www.samturtravel.com &nbsp;|&nbsp; info@samturtravel.com<br />
-                © {new Date().getFullYear()} Samtur. Todos los derechos reservados.
+                www.colombia-online.com &nbsp;|&nbsp; info@colombia-online.com<br />
+                © {new Date().getFullYear()} Colombia Online. Todos los derechos reservados.
               </p>
             </div>
           </div>

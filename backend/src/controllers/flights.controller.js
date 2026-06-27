@@ -376,7 +376,7 @@ exports.updateCheckin = async (req, res, next) => {
                 <p>Adjuntamos a este correo su pase de abordar.</p>
                 <p>¡Buen viaje!</p>
                 <br>
-                <p>Atentamente,<br>El equipo de iTea Travel</p>
+                <p>Atentamente,<br>El equipo de Colombia Online</p>
               </div>
             `,
             attachments: files.map(f => ({
@@ -447,7 +447,7 @@ exports.updateCheckin = async (req, res, next) => {
               <p>Adjuntamos a este correo su pase de abordar.</p>
               <p>¡Buen viaje!</p>
               <br>
-              <p>Atentamente,<br>El equipo de iTea Travel</p>
+              <p>Atentamente,<br>El equipo de Colombia Online</p>
             </div>
           `,
           attachments: files.map(f => ({

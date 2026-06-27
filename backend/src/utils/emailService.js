@@ -16,7 +16,7 @@ const sendEmail = async ({ to, subject, html, attachments = [] }) => {
     const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
     
     const data = await resend.emails.send({
-      from: `iTea Travel <${fromEmail}>`,
+      from: `Colombia Online <${fromEmail}>`,
       to,
       subject,
       html,

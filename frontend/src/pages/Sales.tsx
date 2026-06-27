@@ -242,7 +242,7 @@ export default function Sales() {
         const clonedFooter = footerElement.cloneNode(true) as HTMLElement;
         const footerRight = clonedFooter.querySelector('.v-footer-right');
         if (footerRight) {
-          footerRight.innerHTML = `Voucher Electrónico — Orden #${fullSale.id}<br />Comercial@samturtravel.com<br />Impreso el ${currentDate}<br />Página ${i + 1} de ${totalPages}`;
+          footerRight.innerHTML = `Voucher Electrónico — Orden #${fullSale.id}<br />Comercial@colombia-online.com<br />Impreso el ${currentDate}<br />Página ${i + 1} de ${totalPages}`;
         }
         pageDiv.appendChild(clonedFooter);
       }
@@ -289,7 +289,7 @@ export default function Sales() {
       setShowSuccess(true);
 
       const { doc } = await buildVoucherPdf(voucherSale);
-      doc.save(`Voucher_Samtur_#${voucherSale.id}_${voucherSale.clientName.replace(/\s+/g, '_')}.pdf`);
+      doc.save(`Voucher_Colombia Online_#${voucherSale.id}_${voucherSale.clientName.replace(/\s+/g, '_')}.pdf`);
 
       setSuccessMessage(`✅ Voucher descargado correctamente`);
       setTimeout(() => setShowSuccess(false), 3000);
