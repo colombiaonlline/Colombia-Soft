@@ -85,22 +85,22 @@ export default function ClientDetailModal({ isOpen, onClose, client, clientSales
 
         {clientFlights.length > 0 && (
           <div>
-            <h4 className="font-semibold mb-2 flex items-center gap-2">
+            <h4 className="font-semibold mb-2 flex items-center gap-2 text-gray-900 dark:!text-[#ffffff]">
               <Plane size={14} className="text-accent" /> Vuelos ({clientFlights.length})
             </h4>
             <div className="space-y-2">
               {clientFlights.map(flight => (
                 <div key={flight.id} className={`flex items-center justify-between p-2 rounded-lg border text-xs ${
-                  flight.type === 'ida' ? 'bg-blue-50 border-blue-100' : 'bg-indigo-50 border-indigo-100'
+                  flight.type === 'ida' ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-100 dark:border-blue-900/50' : 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-100 dark:border-indigo-900/50'
                 }`}>
                   <div className="flex items-center gap-2">
-                    <Plane size={12} className={flight.type === 'ida' ? 'text-blue-500' : 'text-indigo-500 rotate-180'} />
-                    <span className="font-semibold">{flight.route}</span>
-                    <span className="text-gray-500">{formatDate(flight.date)} · {flight.time}</span>
-                    <span className="text-gray-500">{flight.airline}</span>
+                    <Plane size={12} className={flight.type === 'ida' ? 'text-blue-500 dark:text-blue-400' : 'text-indigo-500 dark:text-indigo-400 rotate-180'} />
+                    <span className="font-semibold text-gray-900 dark:!text-[#ffffff]">{flight.route}</span>
+                    <span className="text-gray-500 dark:text-slate-400">{formatDate(flight.date)} · {flight.time}</span>
+                    <span className="text-gray-500 dark:text-slate-400">{flight.airline}</span>
                   </div>
                   <span className={`px-2 py-0.5 rounded-full font-bold ${
-                    flight.checkin === 'realizado' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                    flight.checkin === 'realizado' ? 'bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400' : 'bg-yellow-100 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-400'
                   }`}>
                     {flight.checkin === 'realizado' ? 'Check-in ✓' : 'Pendiente'}
                   </span>

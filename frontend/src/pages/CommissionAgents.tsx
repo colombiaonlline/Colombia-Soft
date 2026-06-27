@@ -283,7 +283,7 @@ export default function CommissionAgents() {
 
       {/* Tab Navigation */}
       <div className="flex flex-col gap-6 relative z-10">
-        <div className="flex flex-wrap sm:flex-nowrap gap-1.5 sm:gap-2 bg-white/50 backdrop-blur-sm p-1.5 rounded-2xl border border-gray-100 shadow-sm w-full sm:w-auto self-start">
+        <div className="flex flex-wrap sm:flex-nowrap gap-1.5 sm:gap-2 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm p-1.5 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm w-full sm:w-auto self-start">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -294,7 +294,7 @@ export default function CommissionAgents() {
                 className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 ${
                   isActive
                     ? "bg-primary text-white shadow-xl shadow-primary/20 scale-105"
-                    : "text-gray-500 hover:bg-white hover:text-primary"
+                    : "text-gray-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-primary dark:hover:text-primary"
                 }`}
               >
                 <Icon size={16} className={isActive ? "animate-pulse" : ""} />
@@ -321,11 +321,11 @@ export default function CommissionAgents() {
               </div>
 
               {filteredAgents.length === 0 ? (
-                <div className="bg-white rounded-[2rem] border border-dashed border-gray-200 py-20 flex flex-col items-center text-center">
-                  <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-6 text-gray-200">
+                <div className="bg-white dark:bg-slate-800/50 rounded-[2rem] border border-dashed border-gray-200 dark:border-slate-700 py-20 flex flex-col items-center text-center">
+                  <div className="w-24 h-24 bg-gray-50 dark:bg-slate-900/50 rounded-full flex items-center justify-center mb-6 text-gray-200 dark:text-slate-600">
                     <Coins size={48} />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-800">No se encontraron resultados</h3>
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-white">No se encontraron resultados</h3>
                   <p className="text-gray-400 mt-2 max-w-xs">
                     Intenta ajustar tu búsqueda o registra un nuevo comisionista estratégico.
                   </p>
@@ -426,13 +426,13 @@ export default function CommissionAgents() {
           {/* === PESTAÑA LIQUIDACIONES === */}
           {activeTab === "settlements" && (
             <div className="space-y-6 animate-fade-in-up">
-              <div className="bg-white/60 backdrop-blur-md rounded-[2.5rem] border border-gray-100 p-8 shadow-xl">
+              <div className="bg-white/60 dark:bg-slate-800/50 backdrop-blur-md rounded-[2.5rem] border border-gray-100 dark:border-slate-700 p-8 shadow-xl">
                 <div className="flex items-center gap-4 mb-8">
                   <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center">
                     <Wallet size={24} />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Pagos Pendientes</h2>
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Pagos Pendientes</h2>
                     <p className="text-sm text-gray-500 font-medium">Comisionistas que han superado el umbral de liquidación.</p>
                   </div>
                 </div>
@@ -440,18 +440,18 @@ export default function CommissionAgents() {
                 {filteredAgents.filter((a: any) => a.accumulated >= 50000).length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {filteredAgents.filter((a: any) => a.accumulated >= 50000).map((agent: any) => (
-                      <div key={agent.id} className="relative group p-6 bg-gradient-to-br from-amber-50 to-white border border-amber-100 rounded-3xl hover:shadow-xl transition-all duration-300">
+                      <div key={agent.id} className="relative group p-6 bg-gradient-to-br from-amber-50 to-white dark:from-amber-900/20 dark:to-slate-800 border border-amber-100 dark:border-amber-900/30 rounded-3xl hover:shadow-xl transition-all duration-300">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                           <div className="flex items-center gap-3">
                              <div className="w-10 h-10 bg-amber-500 text-white rounded-xl flex items-center justify-center font-bold">
                                {agent.name.charAt(0)}
                              </div>
-                             <span className="font-bold text-gray-800">{agent.name}</span>
+                             <span className="font-bold text-gray-800 dark:text-white">{agent.name}</span>
                           </div>
-                          <span className="text-[10px] font-black text-amber-600 bg-white px-2 py-1 rounded-lg border border-amber-100 uppercase self-start sm:self-auto">Saldo Pendiente</span>
+                          <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 bg-white dark:bg-amber-900/30 px-2 py-1 rounded-lg border border-amber-100 dark:border-amber-800/50 uppercase self-start sm:self-auto">Saldo Pendiente</span>
                         </div>
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <p className="text-2xl sm:text-3xl font-black text-gray-800">{formatCurrency(agent.accumulated)}</p>
+                          <p className="text-2xl sm:text-3xl font-black text-gray-800 dark:text-white">{formatCurrency(agent.accumulated)}</p>
                           <Button onClick={() => openSettleModal(agent)} className="bg-amber-500 hover:bg-amber-600 text-white px-6 rounded-xl font-bold h-12 w-full sm:w-auto justify-center">
                             Pagar Ahora
                           </Button>
@@ -460,11 +460,11 @@ export default function CommissionAgents() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-20 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200">
-                    <div className="w-20 h-20 bg-white rounded-full shadow-sm flex items-center justify-center mx-auto mb-6 text-gray-300">
+                  <div className="text-center py-20 bg-gray-50/50 dark:bg-slate-900/30 rounded-3xl border border-dashed border-gray-200 dark:border-slate-700">
+                    <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-full shadow-sm flex items-center justify-center mx-auto mb-6 text-gray-300 dark:text-slate-500">
                       <CreditCard size={32} />
                     </div>
-                    <p className="text-gray-500 font-bold text-lg">¡Todo al día!</p>
+                    <p className="text-gray-500 dark:text-slate-400 font-bold text-lg">¡Todo al día!</p>
                     <p className="text-gray-400 text-sm mt-1">No hay liquidaciones pendientes por encima de $50,000.</p>
                   </div>
                 )}
@@ -505,28 +505,28 @@ export default function CommissionAgents() {
 
           {/* === PESTAÑA HISTORIAL === */}
           {activeTab === "history" && (
-            <Card className="animate-fade-in border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white/80 backdrop-blur-md">
-              <CardHeader className="bg-gray-50/50 p-8 border-b border-gray-100">
+            <Card className="animate-fade-in border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white/80 dark:bg-slate-800/80 backdrop-blur-md">
+              <CardHeader className="bg-gray-50/50 dark:bg-slate-900/50 p-8 border-b border-gray-100 dark:border-slate-700">
                 <div className="flex items-center gap-3">
                    <div className="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center">
                       <History size={20} />
                    </div>
-                   <h2 className="text-2xl font-bold text-gray-800">Registro Histórico</h2>
+                   <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Registro Histórico</h2>
                 </div>
               </CardHeader>
               <div className="p-0">
                 <div className="overflow-x-auto w-full">
                   <table className="w-full text-left border-collapse min-w-[750px]">
                     <thead>
-                      <tr className="bg-gray-50/30">
-                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Fecha</th>
-                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Beneficiario</th>
-                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Método de Pago</th>
-                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Referencia</th>
-                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 text-right">Monto</th>
+                      <tr className="bg-gray-50/30 dark:bg-slate-800/30">
+                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-700">Fecha</th>
+                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-700">Beneficiario</th>
+                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-700">Método de Pago</th>
+                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-700">Referencia</th>
+                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-700 text-right">Monto</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-50">
+                    <tbody className="divide-y divide-gray-50 dark:divide-slate-700/50">
                       {(data.commissionSettlements || []).length > 0 ? (
                         [...(data.commissionSettlements || [])].reverse().map((s: any) => (
                           <tr key={s.id} className="hover:bg-accent/5 transition-all group">
@@ -538,14 +538,14 @@ export default function CommissionAgents() {
                             </td>
                             <td className="px-8 py-5">
                               <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-2xl bg-white border border-gray-100 text-primary flex items-center justify-center text-sm font-black shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                                <div className="w-10 h-10 rounded-2xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 text-primary flex items-center justify-center text-sm font-black shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300">
                                   {s.agentName?.charAt(0) || "?"}
                                 </div>
-                                <span className="font-bold text-gray-800 text-sm">{s.agentName}</span>
+                                <span className="font-bold text-gray-800 dark:text-white text-sm">{s.agentName}</span>
                               </div>
                             </td>
                             <td className="px-8 py-5">
-                              <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[9px] font-black uppercase tracking-wider border border-blue-100">{s.paymentMethod}</span>
+                              <span className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-[9px] font-black uppercase tracking-wider border border-blue-100 dark:border-blue-800/50">{s.paymentMethod}</span>
                             </td>
                             <td className="px-8 py-5">
                               <div className="flex flex-col">
@@ -554,7 +554,7 @@ export default function CommissionAgents() {
                               </div>
                             </td>
                             <td className="px-8 py-5 text-right">
-                               <p className="text-base font-black text-gray-800">{formatCurrency(s.amount)}</p>
+                               <p className="text-base font-black text-gray-800 dark:text-white">{formatCurrency(s.amount)}</p>
                                <span className="text-[9px] text-success font-bold uppercase tracking-widest">● Procesado</span>
                             </td>
                           </tr>
@@ -563,7 +563,7 @@ export default function CommissionAgents() {
                         <tr>
                           <td colSpan={5} className="px-8 py-20 text-center">
                             <div className="flex flex-col items-center">
-                               <FileText className="text-gray-200 mb-4" size={48} />
+                               <FileText className="text-gray-200 dark:text-slate-600 mb-4" size={48} />
                                <p className="text-gray-400 font-bold uppercase tracking-widest text-sm">No hay registros aún</p>
                             </div>
                           </td>

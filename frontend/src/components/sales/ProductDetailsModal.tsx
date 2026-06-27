@@ -93,7 +93,7 @@ function renderTicketPassengers(items: any[]) {
             </div>
             <div className="flex gap-3 mt-1 sm:mt-0 text-[10px] text-gray-600 text-right">
               {p.nroReserva && <div><span className="font-semibold uppercase text-gray-400">Reserva:</span> {p.nroReserva}</div>}
-              {p.nroTiquete && <div><span className="font-semibold uppercase text-gray-400">Tiquete:</span> {p.nroTiquete}</div>}
+              {p.nroTiquete && <div><span className="font-semibold uppercase text-gray-400">Tiquete:</span> <span className="break-all">{p.nroTiquete}</span></div>}
               {p.asiento && <div><span className="font-semibold uppercase text-gray-400">Asiento:</span> {p.asiento}</div>}
             </div>
           </div>
@@ -266,7 +266,7 @@ export default function ProductDetailsModal({ product, onClose, airportMap }: Pr
                       </div>
                       <div className="text-gray-600">
                         <span className="font-bold text-[10px] text-gray-400 block uppercase mb-0.5">N° Tiquete</span>
-                        <span className="font-medium text-gray-800">{leg.ticketNumber || "-"}</span>
+                        <span className="font-medium text-gray-800 break-all">{leg.ticketNumber || "-"}</span>
                       </div>
                     </div>
                   ))}
@@ -314,7 +314,7 @@ export default function ProductDetailsModal({ product, onClose, airportMap }: Pr
                       </div>
                       <div className="text-gray-600">
                         <span className="font-bold text-[10px] text-gray-400 block uppercase mb-0.5">N° Tiquete</span>
-                        <span className="font-medium text-blue-800">{leg.ticketNumber || "-"}</span>
+                        <span className="font-medium text-blue-800 break-all">{leg.ticketNumber || "-"}</span>
                       </div>
                     </div>
                   ))}

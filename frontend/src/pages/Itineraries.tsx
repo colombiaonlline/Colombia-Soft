@@ -255,16 +255,16 @@ export default function Itineraries() {
       {activeTab === 'calendar' ? (
         <div className="animate-fade-in space-y-6">
           {/* Sub-navegación para el Calendario */}
-          <div className="flex bg-gray-100/50 p-1 rounded-xl w-full sm:w-fit mx-auto border border-gray-border">
+          <div className="flex bg-gray-100/50 dark:bg-slate-800/50 p-1 rounded-xl w-full sm:w-fit mx-auto border border-gray-border dark:border-slate-700">
             <button
               onClick={() => setCalendarTab('ida')}
-              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${calendarTab === 'ida' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-blue-400'}`}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${calendarTab === 'ida' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-blue-400'}`}
             >
               <PlaneTakeoff size={15} /> Vuelos de Ida ({flightsIda.length})
             </button>
             <button
               onClick={() => setCalendarTab('regreso')}
-              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${calendarTab === 'regreso' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-indigo-400'}`}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${calendarTab === 'regreso' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-indigo-400'}`}
             >
               <PlaneLanding size={15} /> Vuelos de Regreso ({flightsRegreso.length})
             </button>
@@ -272,13 +272,13 @@ export default function Itineraries() {
 
           {/* Controles del Calendario */}
           <Card className="overflow-hidden border-none shadow-lg">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 bg-white border-b border-gray-border">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 bg-white dark:bg-slate-800 border-b border-gray-border dark:border-slate-700">
               <div className="flex flex-wrap items-center justify-between sm:justify-start gap-3 sm:gap-4">
                 <div className="flex items-center gap-1">
                   <select
                     value={currentMonth}
                     onChange={(e) => setCurrentMonth(Number(e.target.value))}
-                    className="text-base sm:text-lg font-bold text-primary bg-transparent outline-none cursor-pointer hover:bg-gray-100 rounded p-1"
+                    className="text-base sm:text-lg font-bold text-primary dark:text-white bg-transparent outline-none cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 rounded p-1"
                   >
                     {MONTHS.map((m, i) => (
                       <option key={m} value={i}>{m}</option>
@@ -287,21 +287,21 @@ export default function Itineraries() {
                   <select
                     value={currentYear}
                     onChange={(e) => setCurrentYear(Number(e.target.value))}
-                    className="text-base sm:text-lg font-bold text-primary bg-transparent outline-none cursor-pointer hover:bg-gray-100 rounded p-1"
+                    className="text-base sm:text-lg font-bold text-primary dark:text-white bg-transparent outline-none cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 rounded p-1"
                   >
                     {Array.from({ length: 11 }, (_, i) => new Date().getFullYear() - 3 + i).map(y => (
                       <option key={y} value={y}>{y}</option>
                     ))}
                   </select>
                 </div>
-                <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-border">
-                  <button onClick={() => changeMonth(-1)} className="p-1 hover:bg-white hover:shadow-sm rounded-md transition-all text-gray-500">
+                <div className="flex items-center gap-1 bg-gray-50 dark:bg-slate-900/50 p-1 rounded-lg border border-gray-border dark:border-slate-700">
+                  <button onClick={() => changeMonth(-1)} className="p-1 hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm rounded-md transition-all text-gray-500 dark:text-slate-400">
                     <ChevronLeft size={18} />
                   </button>
-                  <button onClick={() => { setCurrentMonth(new Date().getMonth()); setCurrentYear(new Date().getFullYear()); }} className="px-2 py-1 text-xs font-bold text-primary hover:bg-white hover:shadow-sm rounded-md transition-all">
+                  <button onClick={() => { setCurrentMonth(new Date().getMonth()); setCurrentYear(new Date().getFullYear()); }} className="px-2 py-1 text-xs font-bold text-primary dark:text-white hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm rounded-md transition-all">
                     HOY
                   </button>
-                  <button onClick={() => changeMonth(1)} className="p-1 hover:bg-white hover:shadow-sm rounded-md transition-all text-gray-500">
+                  <button onClick={() => changeMonth(1)} className="p-1 hover:bg-white dark:hover:bg-slate-700 hover:shadow-sm rounded-md transition-all text-gray-500 dark:text-slate-400">
                     <ChevronRight size={18} />
                   </button>
                 </div>
@@ -317,14 +317,14 @@ export default function Itineraries() {
             <CardBody className="p-0">
               {/* Desktop Calendar Grid */}
               <div className="hidden sm:block">
-                <div className="grid grid-cols-7 bg-gray-50/50">
+                <div className="grid grid-cols-7 bg-gray-50/50 dark:bg-slate-900/50">
                   {DAYS.map(day => (
-                    <div key={day} className="py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest border-r border-gray-border/50 last:border-r-0">
+                    <div key={day} className="py-3 text-center text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest border-r border-gray-border/50 dark:border-slate-700 last:border-r-0">
                       {day}
                     </div>
                   ))}
                 </div>
-                <div className="grid grid-cols-7 border-t border-gray-border/50">
+                <div className="grid grid-cols-7 border-t border-gray-border/50 dark:border-slate-700">
                   {calendarDays.map((item, i) => {
                     const isOtherMonth = item.month !== currentMonth;
                     const dayKey = getDayKey(item.day, item.month, item.year);
@@ -336,9 +336,9 @@ export default function Itineraries() {
                     return (
                       <div
                         key={i}
-                        className={`min-h-[140px] p-2 border-r border-b border-gray-border/50 relative group transition-colors ${isOtherMonth ? 'bg-gray-50/30' : 'bg-white hover:bg-primary/[0.02]'}`}
+                        className={`min-h-[140px] p-2 border-r border-b border-gray-border/50 dark:border-slate-700 relative group transition-colors ${isOtherMonth ? 'bg-gray-50/30 dark:bg-slate-800/20' : 'bg-white dark:bg-slate-800 hover:bg-primary/[0.02] dark:hover:bg-slate-700/50'}`}
                       >
-                        <div className={`text-xs font-bold mb-2 flex items-center justify-center w-7 h-7 rounded-full transition-all ${isToday ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110' : isOtherMonth ? 'text-gray-300' : 'text-gray-500'}`}>
+                        <div className={`text-xs font-bold mb-2 flex items-center justify-center w-7 h-7 rounded-full transition-all ${isToday ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110' : isOtherMonth ? 'text-gray-300 dark:text-slate-600' : 'text-gray-500 dark:text-slate-300'}`}>
                           {item.day}
                         </div>
 
@@ -390,7 +390,7 @@ export default function Itineraries() {
               </div>
 
               {/* Mobile List View */}
-              <div className="block sm:hidden p-4 space-y-4 bg-gray-50/30">
+              <div className="block sm:hidden p-4 space-y-4 bg-gray-50/30 dark:bg-slate-900/30">
                 {currentMonthFlights.length > 0 ? (
                   <div className="space-y-3">
                     {currentMonthFlights.map(flight => {
@@ -461,13 +461,13 @@ export default function Itineraries() {
                 <CardHeader actions={
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                    <input
-                      type="text"
-                      placeholder="Buscar pasajero o ruta..."
-                      className="pl-9 pr-10 py-1.5 text-sm bg-gray-50 border border-gray-border rounded-lg w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      value={checkinSearch}
-                      onChange={e => setCheckinSearch(e.target.value)}
-                    />
+                      <input
+                        type="text"
+                        placeholder="Buscar pasajero o ruta..."
+                        className="pl-9 pr-10 py-1.5 text-sm bg-gray-50 dark:bg-slate-800/80 border border-gray-border dark:border-slate-700 rounded-lg w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:text-white"
+                        value={checkinSearch}
+                        onChange={e => setCheckinSearch(e.target.value)}
+                      />
                     {checkinSearch && (
                       <button onClick={() => setCheckinSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded">
                         <X size={14} />
@@ -485,16 +485,16 @@ export default function Itineraries() {
                         const client = data.clients.find(c => c.name === flight.passenger);
 
                         return (
-                          <div key={flight.id} className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/50 transition-colors ${isVencido ? 'opacity-85' : ''}`}>
+                          <div key={flight.id} className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-colors ${isVencido ? 'opacity-85' : ''}`}>
                             <div className="flex items-start gap-4">
                               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0 ${
                                 isVencido 
-                                  ? 'bg-gray-100 border-gray-200 text-gray-400' 
+                                  ? 'bg-gray-100 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-400 dark:text-slate-400' 
                                   : isUrgente 
-                                    ? 'bg-red-50 border-red-100 text-red-500 animate-pulse' 
+                                    ? 'bg-red-50 dark:bg-red-950/40 border-red-100 dark:border-red-900/40 text-red-500 dark:text-red-400 animate-pulse' 
                                     : flight.source === 'plan' 
-                                      ? 'bg-emerald-50 border-emerald-100 text-emerald-500' 
-                                      : 'bg-blue-50 border-blue-100 text-blue-500'
+                                      ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-100 dark:border-emerald-900/40 text-emerald-500 dark:text-emerald-400' 
+                                      : 'bg-blue-50 dark:bg-blue-950/40 border-blue-100 dark:border-blue-900/40 text-blue-500 dark:text-blue-400'
                               }`}>
                                 {flight.source === 'plan' ? (
                                   <Package size={24} />
@@ -504,29 +504,29 @@ export default function Itineraries() {
                               </div>
                               <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-2">
-                                  <span className="font-bold text-primary truncate">{flight.passenger}</span>
+                                  <span className="font-bold text-primary dark:text-white truncate">{flight.passenger}</span>
                                   {client && (
-                                    <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded border border-gray-200">
+                                    <span className="text-[10px] bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 px-1.5 py-0.5 rounded border border-gray-200 dark:border-slate-700">
                                       {client.docType}: {client.docNumber}
                                     </span>
                                   )}
                                   {isVencido ? (
-                                    <Badge variant="danger" className="text-[10px] py-0 bg-red-100 text-red-800 border border-red-200">VENCIDO</Badge>
+                                    <Badge variant="danger" className="text-[10px] py-0 bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-400 border border-red-200 dark:border-red-900/50">VENCIDO</Badge>
                                   ) : isUrgente ? (
-                                    <Badge variant="danger" className="text-[10px] py-0">URGENTE</Badge>
+                                    <Badge variant="danger" className="text-[10px] py-0 bg-red-500/10 dark:bg-red-500/20 text-red-500 dark:text-red-400 border-transparent">URGENTE</Badge>
                                   ) : null}
                                   {flight.source === 'plan' && flight.additionalPassengers && flight.additionalPassengers > 0 ? (
-                                    <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                                    <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-900/50">
                                       +{flight.additionalPassengers} acompañantes
                                     </span>
                                   ) : null}
                                 </div>
-                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 mt-1">
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-slate-400 mt-1">
                                   <span className="flex items-center gap-1"><Filter size={12} /> {flight.route}</span>
                                   <span className="flex items-center gap-1"><Clock size={12} /> {formatDate(flight.date)} - {flight.time}</span>
-                                  <span className="font-medium text-primary/60">{flight.airline}</span>
+                                  <span className="font-medium text-primary/60 dark:text-slate-500">{flight.airline}</span>
                                   {flight.reservationNumber && (
-                                    <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-mono text-[10px] border border-blue-150 font-semibold">
+                                    <span className="bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded font-mono text-[10px] border border-blue-150 dark:border-blue-900/50 font-semibold">
                                       Reserva: {flight.reservationNumber}
                                     </span>
                                   )}
@@ -547,11 +547,11 @@ export default function Itineraries() {
                       })}
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center p-12 text-gray-400">
-                      <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-4">
+                    <div className="flex flex-col items-center justify-center p-12 text-gray-400 dark:text-slate-500">
+                      <div className="w-16 h-16 bg-green-50 dark:bg-green-950/40 text-green-500 dark:text-green-400 rounded-full flex items-center justify-center mb-4">
                         <CheckCircle2 size={32} />
                       </div>
-                      <p className="font-bold text-gray-600">¡Todo al día!</p>
+                      <p className="font-bold text-gray-600 dark:text-slate-400">¡Todo al día!</p>
                       <p className="text-sm">No hay check-ins pendientes para los próximos vuelos.</p>
                     </div>
                   )}
