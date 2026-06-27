@@ -26,7 +26,7 @@
 .itea-voucher .v-page {
   width: 820px;
   background: #f8fafc;
-  border-top: 6px solid #102846;
+  border-top: 6px solid #0d5ca7;
 }
 
 /* ── HEADER ── */
@@ -36,7 +36,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 3px solid #f2892f;
+  border-bottom: 4px solid #f2b705;
 }
 
 .itea-voucher .v-logo-block {
@@ -46,8 +46,8 @@
 }
 
 .itea-voucher .v-logo-img {
-  max-width: 240px;
-  max-height: 90px;
+  max-width: 280px;
+  max-height: 120px;
   width: auto;
   height: auto;
   object-fit: contain;
@@ -62,12 +62,12 @@
 }
 
 .itea-voucher .v-header-right strong {
-  color: #102846;
+  color: #0d5ca7;
 }
 
 /* ── TOP BAR (Passenger & Order) ── */
 .itea-voucher .v-top-bar {
-  background: linear-gradient(135deg, #102846 0%, #163863 60%, #081423 100%);
+  background: linear-gradient(135deg, #0d5ca7 0%, #3ba0e9 60%, #003f7a 100%);
   padding: 16px 36px;
   display: flex;
   gap: 0;
@@ -95,7 +95,7 @@
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  color: #f2892f;
+  color: #fcc419;
   letter-spacing: 1.5px;
   display: block;
   margin-bottom: 5px;
@@ -141,7 +141,7 @@
 
 /* ── SECTION TITLE (Otros Servicios) ── */
 .itea-voucher .v-section-title {
-  background: linear-gradient(90deg, #081423 0%, #102846 50%, #163863 100%);
+  background: linear-gradient(90deg, #003f7a 0%, #0d5ca7 50%, #3ba0e9 100%);
   padding: 12px 36px;
   font-size: 13px;
   font-weight: 800;
@@ -172,11 +172,11 @@
   border-radius: 8px;
   border: 1px solid #e2e8f0;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(3,38,80,0.08);
+  box-shadow: 0 2px 8px rgba(13,92,167,0.08);
 }
 
 .itea-voucher .v-flight-header {
-  background: linear-gradient(135deg, #102846 0%, #163863 100%);
+  background: linear-gradient(135deg, #0d5ca7 0%, #3ba0e9 100%);
   padding: 12px 20px;
   font-size: 13px;
   font-weight: 800;
@@ -203,7 +203,7 @@
 }
 
 .itea-voucher .v-flight-table thead tr {
-  background: linear-gradient(90deg, #f2892f 0%, #f49e54 100%);
+  background: linear-gradient(90deg, #0d5ca7 0%, #3ba0e9 100%);
 }
 
 .itea-voucher .v-flight-table thead th {
@@ -252,7 +252,7 @@
 .itea-voucher .v-f-main {
   font-weight: 700;
   font-size: 14px;
-  color: #102846;
+  color: #003f7a;
 }
 
 .itea-voucher .v-f-sub {
@@ -262,9 +262,9 @@
 }
 
 .itea-voucher .v-flight-details-box {
-  background: linear-gradient(90deg, #eef6f7 0%, #f0f7f8 100%);
+  background: linear-gradient(90deg, #f3f8fc 0%, #eef5fa 100%);
   padding: 14px 20px;
-  border-top: 1px solid #cce8eb;
+  border-top: 1px solid #cce3f5;
   display: flex;
   gap: 32px;
   align-items: center;
@@ -285,12 +285,12 @@
 .itea-voucher .v-fd-val {
   font-size: 13px;
   font-weight: 700;
-  color: #102846;
+  color: #003f7a;
 }
 
 .itea-voucher .v-badge-orange {
   display: inline;
-  color: #f5832a;
+  color: #d98200;
   font-weight: 700;
   font-size: 13px;
   text-transform: uppercase;
@@ -307,11 +307,11 @@
   border-radius: 8px;
   border: 1px solid #e2e8f0;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(3,38,80,0.06);
+  box-shadow: 0 2px 8px rgba(13,92,167,0.06);
 }
 
 .itea-voucher .v-product-label {
-  background: linear-gradient(135deg, #102846 0%, #163863 100%);
+  background: linear-gradient(135deg, #0d5ca7 0%, #3ba0e9 100%);
   color: #ffffff;
   font-size: 12px;
   font-weight: 800;
@@ -369,7 +369,7 @@
 }
 
 .itea-voucher .v-data-cell-value.highlight {
-  color: #102846;
+  color: #003f7a;
   font-weight: 700;
 }
 
@@ -386,7 +386,7 @@
 }
 
 .itea-voucher .v-table thead tr {
-  background: linear-gradient(90deg, #f2892f 0%, #f49e54 100%);
+  background: linear-gradient(90deg, #0d5ca7 0%, #3ba0e9 100%);
 }
 
 .itea-voucher .v-table thead th {
@@ -426,7 +426,7 @@
 .itea-voucher .v-cell-main {
   font-weight: 700;
   font-size: 14px;
-  color: #102846;
+  color: #003f7a;
 }
 
 .itea-voucher .v-cell-sub {
@@ -438,7 +438,7 @@
 /* ── BADGES ── */
 .itea-voucher .v-badge {
   display: inline;
-  color: #102846;
+  color: #003f7a;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -446,7 +446,7 @@
 }
 
 .itea-voucher .v-badge-accent {
-  color: #f2892f;
+  color: #d98200;
 }
 
 /* ── FOOTNOTES ── */
@@ -458,14 +458,14 @@
   background: #ffffff;
   border-radius: 6px;
   border: 1px solid #e2e8f0;
-  border-left: 4px solid #102846;
+  border-left: 4px solid #0d5ca7;
 }
 
 /* ── PAYMENT SECTION ── */
 .itea-voucher .v-payment {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  border-top: 3px solid #102846;
+  border-top: 3px solid #0d5ca7;
   margin-top: 8px;
 }
 
@@ -487,9 +487,9 @@
   font-weight: 800;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: #102846;
+  color: #003f7a;
   margin-bottom: 14px;
-  border-left: 4px solid #f2892f;
+  border-left: 4px solid #f2b705;
   padding-left: 8px;
 }
 
@@ -515,7 +515,7 @@
 }
 
 .itea-voucher .v-payment-grand {
-  background: linear-gradient(135deg, #081423 0%, #102846 100%);
+  background: linear-gradient(135deg, #003f7a 0%, #0d5ca7 100%);
   margin: 12px -28px -20px;
   padding: 12px 28px;
   display: flex;
@@ -525,7 +525,7 @@
 
 .itea-voucher .v-payment-grand label,
 .itea-voucher .v-payment-grand span {
-  color: #f2892f;
+  color: #fcc419;
   font-weight: 800;
   font-size: 17px;
   font-family: "Montserrat", sans-serif;
@@ -533,33 +533,33 @@
 
 .itea-voucher .v-endorsements {
   font-size: 11px;
-  color: #ffffff;
-  font-weight: 700;
+  color: #081423;
+  font-weight: 800;
   margin-top: 12px;
-  background: linear-gradient(135deg, #f2892f 0%, #f49e54 100%);
-  padding: 7px 12px;
+  background: linear-gradient(135deg, #f2b705 0%, #fcc419 100%);
+  padding: 8px 12px;
   border-radius: 4px;
   letter-spacing: 0.5px;
 }
 
 /* ── LEGAL ── */
 .itea-voucher .v-legal {
-  background: linear-gradient(180deg, #f5f5f5 0%, #e8eef5 100%);
+  background: linear-gradient(180deg, #f5f5f5 0%, #eef5fa 100%);
   padding: 18px 36px;
   font-size: 11.5px;
   color: #1e293b;
   line-height: 1.8;
-  border-top: 3px solid #102846;
+  border-top: 3px solid #0d5ca7;
 }
 
 .itea-voucher .v-legal h4 {
   font-size: 12px;
   font-weight: 800;
-  color: #102846;
+  color: #003f7a;
   margin-bottom: 10px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  border-bottom: 2px solid #f2892f;
+  border-bottom: 2px solid #f2b705;
   display: inline-block;
   padding-bottom: 3px;
 }
@@ -567,7 +567,7 @@
 .itea-voucher .v-legal .v-company {
   margin-top: 12px;
   font-weight: 700;
-  color: #102846;
+  color: #003f7a;
   padding-top: 10px;
   border-top: 1px solid #cbd5e1;
   font-size: 11px;
@@ -575,8 +575,8 @@
 
 /* ── FOOTER ── */
 .itea-voucher .v-footer {
-  background: linear-gradient(135deg, #081423 0%, #102846 50%, #163863 100%);
-  border-top: 4px solid #f2892f;
+  background: linear-gradient(135deg, #003f7a 0%, #0d5ca7 50%, #3ba0e9 100%);
+  border-top: 4px solid #f2b705;
   padding: 16px 36px;
   display: flex;
   justify-content: space-between;
@@ -592,7 +592,7 @@
 }
 
 .itea-voucher .v-footer-brand span {
-  color: #f2892f;
+  color: #fcc419;
 }
 
 .itea-voucher .v-footer-tagline {

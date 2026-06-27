@@ -225,7 +225,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
         {/* ══ HEADER ══════════════════════════════════════════════════ */}
         <div className="v-header">
           <div className="v-logo-block">
-            <img className="v-logo-img" src="/Colombia Online_nuevo.png.png" alt="Colombia Online Logo" crossOrigin="anonymous" />
+            <img className="v-logo-img" src="/colombiaonline-logo.jpeg" alt="Colombia Online Logo" crossOrigin="anonymous" />
           </div>
           <div className="v-header-right">
             <strong>Colombia Online</strong>
@@ -668,6 +668,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
         {/* ══ LEGAL ═══════════════════════════════════════════════════ */}
         <div className="v-legal">
           <h4>TÉRMINOS Y CONDICIONES</h4>
+          <br />
           No olvide reconfirmar el horario de los vuelos y servicios entre 24 y 48 horas antes de la salida. Verifique que cuente con todos los documentos necesarios para viajar.<br /><br />
           Colombia Online agradece que haya elegido nuestros servicios y le desea un excelente viaje.<br /><br />
           <strong>1.</strong> En vuelos nacionales, llegue como mínimo dos horas antes del vuelo para el chequeo y embarque.<br /><br />
@@ -686,8 +687,8 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
         {/* ══ FOOTER ══════════════════════════════════════════════════ */}
         <div className="v-footer">
           <div>
-            <div className="v-footer-brand">Sam<span>tur</span></div>
-            <div className="v-footer-tagline">Travel</div>
+            <div className="v-footer-brand">Colombia<span>Online</span></div>
+            <div className="v-footer-tagline">Agencia de Viajes</div>
           </div>
           <div className="v-footer-right">
             <div className="v-footer-line">
