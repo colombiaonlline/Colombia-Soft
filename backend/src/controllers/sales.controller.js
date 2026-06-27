@@ -4,7 +4,7 @@ const prisma = require('../config/db');
 const { success, error } = require('../utils/apiResponse');
 const { buildMeta } = require('../utils/paginationHelper');
 const emailService = require('../utils/emailService');
-const { getColombia OnlineLogoBase64 } = require('../utils/logoHelper');
+const { getColombiaOnlineLogoBase64 } = require('../utils/logoHelper');
 
 exports.list = async (req, res, next) => {
   try {

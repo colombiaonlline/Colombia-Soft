@@ -6,7 +6,7 @@ const path = require('path');
  * para embeber directamente en el HTML del correo.
  * Resend no soporta CID inline images, por lo que se usa data URI.
  */
-function getColombia OnlineLogoBase64() {
+function getColombiaOnlineLogoBase64() {
   try {
     const logoPath = path.join(__dirname, '../assets/logo.png');
     const logoBuffer = fs.readFileSync(logoPath);
@@ -17,4 +17,4 @@ function getColombia OnlineLogoBase64() {
   }
 }
 
-module.exports = { getColombia OnlineLogoBase64 };
+module.exports = { getColombiaOnlineLogoBase64 };
