@@ -1321,24 +1321,24 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
         }}
       >
         {/* Sub-form Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b bg-gray-50/50">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-border dark:border-slate-700/50 bg-gray-50/50 dark:bg-slate-800/50">
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               type="button"
               onClick={closeActiveForm}
-              className="p-1.5 sm:p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-600"
+              className="p-1.5 sm:p-2 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-full transition-colors text-gray-600 dark:text-slate-300"
             >
               <ChevronLeft size={18} className="sm:hidden" />
               <ChevronLeft size={20} className="hidden sm:block" />
             </button>
             <div>
-              <h3 className="font-bold text-primary flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base">
+              <h3 className="font-bold text-primary dark:text-teal-400 flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base">
                 {product?.label}
-                <span className="text-[10px] sm:text-xs font-normal text-gray-500 bg-gray-100 px-1.5 sm:px-2 py-0.5 rounded-full">
+                <span className="text-[10px] sm:text-xs font-normal text-gray-500 dark:text-slate-400 bg-gray-100 dark:bg-slate-700 px-1.5 sm:px-2 py-0.5 rounded-full">
                   Item #{activeIdx + 1}
                 </span>
               </h3>
-              <p className="text-[9px] sm:text-[10px] text-gray-500 hidden sm:block">
+              <p className="text-[9px] sm:text-[10px] text-gray-500 dark:text-slate-400 hidden sm:block">
                 Completa la información detallada del servicio
               </p>
             </div>
@@ -1382,7 +1382,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
         </div>
 
         {/* Sub-form Content */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-8 bg-gray-light/30">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-8 bg-gray-light/30 dark:bg-slate-900/50">
           <div className="max-w-3xl mx-auto">
         {(() => {
           switch (activeForm) {

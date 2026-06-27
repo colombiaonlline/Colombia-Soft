@@ -895,9 +895,9 @@ export default function Users() {
             Configuración de Permisos por Defecto
           </CardHeader>
           <CardBody>
-            <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl mb-6 flex gap-3">
-              <AlertCircle className="text-amber-500 shrink-0" size={20} />
-              <p className="text-xs text-amber-700 leading-relaxed">
+            <div className="p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 rounded-xl mb-6 flex gap-3">
+              <AlertCircle className="text-amber-500 dark:text-amber-400 shrink-0" size={20} />
+              <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
                 Aquí defines los permisos predeterminados. Los cambios aplicarán
                 a todos los usuarios del rol seleccionado que no tengan permisos
                 personalizados.

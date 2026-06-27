@@ -149,18 +149,18 @@ export function getCreditSummaryTotals(clients: Client[], sales: Sale[]): {
 
 export function getStatusColor(status: 'pending' | 'partial' | 'paid' | 'overdue'): string {
   switch (status) {
-    case 'overdue': return 'text-red-600 dark:text-red-300 bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/50';
-    case 'partial': return 'text-blue-600 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-900/50';
-    case 'paid': return 'text-green-600 dark:text-green-300 bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-900/50';
-    default: return 'text-yellow-600 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-950/40 border-yellow-200 dark:border-yellow-900/50';
+    case 'overdue': return 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/20 border-red-200 dark:border-red-500/30';
+    case 'partial': return 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/20 border-blue-200 dark:border-blue-500/30';
+    case 'paid': return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-500/20 border-green-200 dark:border-green-500/30';
+    default: return 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-500/20 border-yellow-200 dark:border-yellow-500/30';
   }
 }
 
 export function getClientStatusColor(status: 'overdue' | 'urgent' | 'pending' | 'ok'): { bg: string; text: string; label: string } {
   switch (status) {
-    case 'overdue': return { bg: 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/50', text: 'text-red-600 dark:text-red-300', label: 'Vencido' };
-    case 'urgent': return { bg: 'bg-orange-50 dark:bg-orange-950/40 border-orange-200 dark:border-orange-900/50', text: 'text-orange-600 dark:text-orange-300', label: 'Pronto' };
-    case 'pending': return { bg: 'bg-yellow-50 dark:bg-yellow-950/40 border-yellow-200 dark:border-yellow-900/50', text: 'text-yellow-600 dark:text-yellow-300', label: 'Pendiente' };
-    default: return { bg: 'bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-900/50', text: 'text-green-600 dark:text-green-300', label: 'Al día' };
+    case 'overdue': return { bg: 'bg-red-50 dark:bg-red-500/20 border-red-200 dark:border-red-500/30', text: 'text-red-600 dark:text-red-400', label: 'Vencido' };
+    case 'urgent': return { bg: 'bg-orange-50 dark:bg-orange-500/20 border-orange-200 dark:border-orange-500/30', text: 'text-orange-600 dark:text-orange-400', label: 'Pronto' };
+    case 'pending': return { bg: 'bg-yellow-50 dark:bg-yellow-500/20 border-yellow-200 dark:border-yellow-500/30', text: 'text-yellow-600 dark:text-yellow-400', label: 'Pendiente' };
+    default: return { bg: 'bg-green-50 dark:bg-green-500/20 border-green-200 dark:border-green-500/30', text: 'text-green-600 dark:text-green-400', label: 'Al día' };
   }
 }

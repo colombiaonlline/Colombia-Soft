@@ -72,7 +72,7 @@ export function TourForm({ tour, mainClient, data, onChange, triggerError }: Tou
     <div className="space-y-6 animate-fade-in">
       {mainClient && <ClientInfoSection client={mainClient} />}
 
-      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+      <div className="bg-gray-50 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-700">
         <h4 className="text-xs font-bold text-primary uppercase tracking-widest mb-4 flex items-center gap-2">
           <LuMap size={14} /> Tour Guiado
         </h4>
@@ -154,7 +154,7 @@ export function TourForm({ tour, mainClient, data, onChange, triggerError }: Tou
         </div>
       </div>
 
-      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+      <div className="bg-gray-50 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-700">
         <div className="flex items-center justify-between mb-4">
           <h4 className="text-xs font-bold text-primary uppercase tracking-widest flex items-center gap-2">
             <Users size={14} />

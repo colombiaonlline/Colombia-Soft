@@ -125,7 +125,7 @@ export function PlanForm({ plan, onChange, data, triggerError, mainClient }: Pla
         />
       )}
 
-      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+      <div className="bg-gray-50 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-700">
         <h4 className="text-xs font-bold text-primary uppercase tracking-widest mb-4 flex items-center gap-2">
           <Package size={14} />
           Datos del Plan Vacacional
@@ -186,8 +186,8 @@ export function PlanForm({ plan, onChange, data, triggerError, mainClient }: Pla
       </div>
 
       {plan.packageType !== "supplier" && (
-        <div className="bg-blue-50/20 p-4 rounded-xl border border-blue-100">
-          <h4 className="text-xs font-bold text-blue-700 uppercase tracking-widest mb-4 flex items-center gap-2">
+        <div className="bg-blue-50/20 dark:bg-blue-500/10 p-4 rounded-xl border border-blue-100 dark:border-blue-500/20">
+          <h4 className="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2">
             <Plane size={14} />
             Reservación y Transporte
           </h4>
@@ -298,8 +298,8 @@ export function PlanForm({ plan, onChange, data, triggerError, mainClient }: Pla
         </div>
       )}
 
-      <div className="bg-emerald-50/20 p-4 rounded-xl border border-emerald-100">
-        <h4 className="text-xs font-bold text-emerald-700 uppercase tracking-widest mb-4 flex items-center gap-2">
+      <div className="bg-emerald-50/20 dark:bg-emerald-500/10 p-4 rounded-xl border border-emerald-100 dark:border-emerald-500/20">
+        <h4 className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
           <Briefcase size={14} /> Finanzas
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -347,7 +347,7 @@ export function PlanForm({ plan, onChange, data, triggerError, mainClient }: Pla
         </div>
       </div>
 
-      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+      <div className="bg-gray-50 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-700">
         <div className="flex items-center justify-between mb-4">
           <h4 className="text-xs font-bold text-primary uppercase tracking-widest flex items-center gap-2">
             <Users size={14} />

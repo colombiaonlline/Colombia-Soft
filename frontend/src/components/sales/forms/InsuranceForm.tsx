@@ -33,7 +33,7 @@ export function InsuranceForm({ insurance, onChange, data, client }: InsuranceFo
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+      <div className="bg-gray-50 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-700">
         <h4 className="text-xs font-bold text-primary uppercase tracking-widest mb-4 flex items-center gap-2">
           <AlertCircle size={14} />
           Datos del Seguro de Viaje
@@ -81,7 +81,7 @@ export function InsuranceForm({ insurance, onChange, data, client }: InsuranceFo
         </div>
       </div>
 
-      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+      <div className="bg-gray-50 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-700">
         <div className="flex items-center justify-between mb-4">
           <h4 className="text-xs font-bold text-primary uppercase tracking-widest flex items-center gap-2">
             <Users size={14} />
@@ -146,8 +146,8 @@ export function InsuranceForm({ insurance, onChange, data, client }: InsuranceFo
         </div>
       </div>
 
-      <div className="bg-emerald-50/20 p-4 rounded-xl border border-emerald-100">
-        <h4 className="text-xs font-bold text-emerald-700 uppercase tracking-widest mb-4 flex items-center gap-2">
+      <div className="bg-emerald-50/20 dark:bg-emerald-500/10 p-4 rounded-xl border border-emerald-100 dark:border-emerald-500/20">
+        <h4 className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
           <Briefcase size={14} /> Información Financiera
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

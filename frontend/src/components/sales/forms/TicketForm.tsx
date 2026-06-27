@@ -778,7 +778,7 @@ export function TicketForm({
       </datalist>
 
       {/* ── Información General ─────────────────────────────── */}
-      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+      <div className="bg-gray-50 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-700">
         <h4 className="text-xs font-bold text-primary uppercase tracking-widest mb-4 flex items-center gap-2">
           <Plane size={14} /> Información General del Vuelo
         </h4>
@@ -1149,9 +1149,9 @@ export function TicketForm({
       </div>
 
       {/* ── Información de Pasajeros ────────────────────────── */}
-      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+      <div className="bg-gray-50 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-700">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-3">
-          <h4 className="text-xs font-bold text-gray-700 uppercase tracking-widest flex items-center gap-2">
+          <h4 className="text-xs font-bold text-gray-700 dark:text-slate-300 uppercase tracking-widest flex items-center gap-2">
             <User size={14} /> Pasajeros
           </h4>
           <Button
@@ -1192,7 +1192,7 @@ export function TicketForm({
             const isNew = !pax.name && !pax.docNumber;
 
             return (
-              <div key={idx} className="p-4 border border-gray-200 rounded-lg bg-white relative group">
+              <div key={idx} className="p-4 border border-gray-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 relative group">
                 {!pax.esTitular && (
                   <button
                     type="button"
@@ -1210,7 +1210,7 @@ export function TicketForm({
 
                 {isNew ? (
                   <div className="flex flex-col gap-2">
-                    <span className="text-xs font-bold text-gray-700">{idx + 1}. Seleccionar Cliente</span>
+                    <span className="text-xs font-bold text-gray-700 dark:text-slate-300">{idx + 1}. Seleccionar Cliente</span>
                     <Combobox
                       value=""
                       onChange={(val) => {
@@ -1239,10 +1239,10 @@ export function TicketForm({
                   <>
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-gray-700">{idx + 1}. {pax.name || 'Sin Nombre'}</span>
-                        {pax.esTitular && <span className="text-[9px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-widest">Titular</span>}
+                        <span className="text-xs font-bold text-gray-700 dark:text-slate-300">{idx + 1}. {pax.name || 'Sin Nombre'}</span>
+                        {pax.esTitular && <span className="text-[9px] bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-widest">Titular</span>}
                       </div>
-                      <label className="flex items-center gap-1 cursor-pointer hover:bg-gray-100 p-1 rounded transition-colors">
+                      <label className="flex items-center gap-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 p-1 rounded transition-colors">
                         <input 
                           type="radio" 
                           name={`titular-${idx}`} 
@@ -1254,16 +1254,16 @@ export function TicketForm({
                           }} 
                           className="w-3 h-3 text-blue-600 focus:ring-blue-500"
                         />
-                        <span className="text-[10px] text-gray-600 font-bold uppercase">Es Titular</span>
+                        <span className="text-[10px] text-gray-600 dark:text-slate-400 font-bold uppercase">Es Titular</span>
                       </label>
                     </div>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                       <FormField label="Documento">
-                        <Input value={pax.docNumber || (pax as any).documento || ''} disabled className="bg-gray-50 text-xs" />
+                        <Input value={pax.docNumber || (pax as any).documento || ''} disabled className="bg-gray-50 dark:bg-slate-900/50 text-xs" />
                       </FormField>
                       <FormField label="F. Nacimiento">
-                        <Input type="date" value={pax.birthDate || ''} disabled className="bg-gray-50 text-xs" />
+                        <Input type="date" value={pax.birthDate || ''} disabled className="bg-gray-50 dark:bg-slate-900/50 text-xs" />
                       </FormField>
                       { !pax.esTitular && (
                         <FormField label="Asiento (Opcional)">
@@ -1331,8 +1331,8 @@ export function TicketForm({
       </div>
 
       {/* ── Detalles Financieros ──────────────────────────────── */}
-      <div className="bg-emerald-50/20 p-4 rounded-xl border border-emerald-100">
-        <h4 className="text-xs font-bold text-emerald-700 uppercase tracking-widest mb-4 flex items-center gap-2">
+      <div className="bg-emerald-50/20 dark:bg-emerald-500/10 p-4 rounded-xl border border-emerald-100 dark:border-emerald-500/20">
+        <h4 className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
           <Briefcase size={14} /> Detalles Financieros
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

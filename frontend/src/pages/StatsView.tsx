@@ -23,9 +23,9 @@ function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
 
   return (
-    <div className="bg-white/95 backdrop-blur-md border border-gray-100 rounded-2xl shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] p-5 min-w-[200px]">
+    <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-gray-100 dark:border-slate-700 rounded-2xl shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] p-5 min-w-[200px]">
       {label && (
-        <p className="text-sm font-black text-gray-800 mb-3 border-b border-gray-100 pb-2 tracking-tight">
+        <p className="text-sm font-black text-gray-800 dark:text-slate-100 mb-3 border-b border-gray-100 dark:border-slate-700 pb-2 tracking-tight">
           {label}
         </p>
       )}
@@ -49,9 +49,9 @@ function CustomTooltip({ active, payload, label }: any) {
                   className="w-3 h-3 rounded-full shadow-sm"
                   style={{ backgroundColor: entry.color || entry.fill }}
                 />
-                <span className="text-gray-500 uppercase tracking-wider">{entry.name || "Valor"}</span>
+                <span className="text-gray-500 dark:text-slate-400 uppercase tracking-wider">{entry.name || "Valor"}</span>
               </div>
-              <span className="font-black text-gray-800 text-sm">{displayValue}</span>
+              <span className="font-black text-gray-800 dark:text-slate-100 text-sm">{displayValue}</span>
             </div>
           );
         })}
@@ -89,8 +89,8 @@ function TopClients() {
         </div>
       ) : data.length === 0 ? (
         <div className="h-full flex flex-col items-center justify-center text-gray-400">
-          <div className="p-4 bg-gray-50 rounded-full mb-3">
-            <Users className="w-6 h-6 text-gray-300" />
+          <div className="p-4 bg-gray-50 dark:bg-slate-800 rounded-full mb-3">
+            <Users className="w-6 h-6 text-gray-300 dark:text-slate-600" />
           </div>
           <span className="text-sm font-semibold">No hay clientes suficientes</span>
         </div>
@@ -116,13 +116,13 @@ function TopClients() {
               tickLine={false}
               width={140}
             />
-            <Tooltip cursor={{ fill: "#f8fafc" }} content={<CustomTooltip />} />
+            <Tooltip cursor={{ fill: "rgba(148, 163, 184, 0.1)" }} content={<CustomTooltip />} />
             <Bar
               dataKey="total"
               name="Total Invertido"
               radius={[0, 8, 8, 0] as any}
               barSize={24}
-              background={{ fill: "#f1f5f9", radius: [0, 8, 8, 0] as any }}
+              background={{ fill: "rgba(148, 163, 184, 0.15)", radius: [0, 8, 8, 0] as any }}
             >
               {data.map((_, index) => (
                 <Cell key={`cell-${index}`} fill="url(#gradientClient)" className="hover:opacity-80 transition-opacity cursor-pointer drop-shadow-sm" />
@@ -169,8 +169,8 @@ function TopAsesores() {
         </div>
       ) : data.length === 0 ? (
         <div className="h-full flex flex-col items-center justify-center text-gray-400">
-          <div className="p-4 bg-gray-50 rounded-full mb-3">
-            <Award className="w-6 h-6 text-gray-300" />
+          <div className="p-4 bg-gray-50 dark:bg-slate-800 rounded-full mb-3">
+            <Award className="w-6 h-6 text-gray-300 dark:text-slate-600" />
           </div>
           <span className="text-sm font-semibold">No hay ventas de asesores registradas</span>
         </div>
@@ -186,11 +186,11 @@ function TopAsesores() {
                 <stop offset="100%" stopColor="#f97316" stopOpacity={0.6} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.2)" />
             <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#64748b", fontWeight: 700 }} dy={10} />
             <YAxis yAxisId="left" orientation="left" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8", fontWeight: 600 }} tickFormatter={(val) => `$${(val / 1000000).toFixed(1)}M`} />
             <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8", fontWeight: 600 }} />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: "#f8fafc" }} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(148, 163, 184, 0.1)" }} />
             <Legend wrapperStyle={{ fontSize: "12px", fontWeight: 700, paddingTop: "20px" }} iconType="circle" />
             <Bar yAxisId="left" dataKey="total" name="Ingresos Generados" fill="url(#gradientAsesor)" radius={[8, 8, 0, 0] as any} maxBarSize={50} className="hover:opacity-90 drop-shadow-sm transition-opacity cursor-pointer" />
             <Line yAxisId="right" type="monotone" dataKey="count" name="Ventas (Cantidad)" stroke="#10b981" strokeWidth={4} dot={{ r: 6, strokeWidth: 3, fill: "#fff", className: "drop-shadow-md" }} activeDot={{ r: 8, fill: "#10b981", stroke: "#fff" }} />
@@ -229,8 +229,8 @@ function CategoryDistribution() {
         </div>
       ) : data.length === 0 ? (
         <div className="h-full flex flex-col items-center justify-center text-gray-400">
-          <div className="p-4 bg-gray-50 rounded-full mb-3">
-            <PieChartIcon className="w-6 h-6 text-gray-300" />
+          <div className="p-4 bg-gray-50 dark:bg-slate-800 rounded-full mb-3">
+            <PieChartIcon className="w-6 h-6 text-gray-300 dark:text-slate-600" />
           </div>
           <span className="text-sm font-semibold">No hay categorías registradas</span>
         </div>
@@ -258,24 +258,24 @@ export default function StatsView() {
       {/* Header Info Stats */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
         <div>
-          <h2 className="text-2xl font-extrabold text-gray-800 flex items-center gap-3 tracking-tight">
+          <h2 className="text-2xl font-extrabold text-gray-800 dark:text-slate-100 flex items-center gap-3 tracking-tight">
             Análisis de Rendimiento
           </h2>
-          <p className="text-gray-500 text-sm mt-1 font-medium">
+          <p className="text-gray-500 dark:text-slate-400 text-sm mt-1 font-medium">
             Métricas detalladas sobre la efectividad del equipo y las preferencias de los clientes.
           </p>
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative group">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-50 rounded-full blur-3xl opacity-50 -z-10 group-hover:bg-amber-100 transition-colors duration-500"></div>
-        <div className="p-8 border-b border-gray-50 flex items-center gap-4">
-          <div className="p-3.5 bg-gradient-to-br from-amber-100 to-orange-100 rounded-2xl shadow-inner">
-            <Award className="w-6 h-6 text-orange-600" />
+      <div className="bg-white dark:bg-slate-800 rounded-3xl border border-gray-100 dark:border-slate-700 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative group">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-50 dark:bg-amber-500/10 rounded-full blur-3xl opacity-50 -z-10 group-hover:bg-amber-100 dark:group-hover:bg-amber-500/20 transition-colors duration-500"></div>
+        <div className="p-8 border-b border-gray-50 dark:border-slate-700 flex items-center gap-4">
+          <div className="p-3.5 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-500/20 dark:to-orange-500/20 rounded-2xl shadow-inner">
+            <Award className="w-6 h-6 text-orange-600 dark:text-orange-400" />
           </div>
           <div>
-            <h3 className="text-xl font-black text-gray-800">Líderes de Ventas</h3>
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Ingresos vs Volumen Comercial</span>
+            <h3 className="text-xl font-black text-gray-800 dark:text-slate-100">Líderes de Ventas</h3>
+            <span className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest">Ingresos vs Volumen Comercial</span>
           </div>
         </div>
         <div className="p-8 pt-4">
@@ -284,15 +284,15 @@ export default function StatsView() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative group">
-          <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-50 rounded-full blur-3xl opacity-50 -z-10 group-hover:bg-blue-100 transition-colors duration-500"></div>
-          <div className="p-8 border-b border-gray-50 flex items-center gap-4">
-            <div className="p-3.5 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl shadow-inner">
-              <Users className="w-6 h-6 text-indigo-600" />
+        <div className="bg-white dark:bg-slate-800 rounded-3xl border border-gray-100 dark:border-slate-700 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative group">
+          <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-50 dark:bg-blue-500/10 rounded-full blur-3xl opacity-50 -z-10 group-hover:bg-blue-100 dark:group-hover:bg-blue-500/20 transition-colors duration-500"></div>
+          <div className="p-8 border-b border-gray-50 dark:border-slate-700 flex items-center gap-4">
+            <div className="p-3.5 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-500/20 dark:to-indigo-500/20 rounded-2xl shadow-inner">
+              <Users className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div>
-              <h3 className="text-xl font-black text-gray-800">Top Clientes</h3>
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Mayor Inversión Acumulada</span>
+              <h3 className="text-xl font-black text-gray-800 dark:text-slate-100">Top Clientes</h3>
+              <span className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest">Mayor Inversión Acumulada</span>
             </div>
           </div>
           <div className="p-8 pt-4">
@@ -300,15 +300,15 @@ export default function StatsView() {
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative group">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-50 rounded-full blur-3xl opacity-50 -z-10 group-hover:bg-emerald-100 transition-colors duration-500"></div>
-          <div className="p-8 border-b border-gray-50 flex items-center gap-4">
-            <div className="p-3.5 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl shadow-inner">
-              <PieChartIcon className="w-6 h-6 text-teal-600" />
+        <div className="bg-white dark:bg-slate-800 rounded-3xl border border-gray-100 dark:border-slate-700 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative group">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-50 dark:bg-emerald-500/10 rounded-full blur-3xl opacity-50 -z-10 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-500/20 transition-colors duration-500"></div>
+          <div className="p-8 border-b border-gray-50 dark:border-slate-700 flex items-center gap-4">
+            <div className="p-3.5 bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-500/20 dark:to-teal-500/20 rounded-2xl shadow-inner">
+              <PieChartIcon className="w-6 h-6 text-teal-600 dark:text-teal-400" />
             </div>
             <div>
-              <h3 className="text-xl font-black text-gray-800">Distribución</h3>
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Participación por Categoría</span>
+              <h3 className="text-xl font-black text-gray-800 dark:text-slate-100">Distribución</h3>
+              <span className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest">Participación por Categoría</span>
             </div>
           </div>
           <div className="p-8 pt-4">

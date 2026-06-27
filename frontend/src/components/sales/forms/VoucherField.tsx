@@ -243,12 +243,12 @@ export function FinancialSection({ supplierName, supplierCost, ta, supplierPayme
   const totalCost = (Number(supplierCost) || 0) + (Number(ta) || 0);
 
   return (
-    <div className="mt-6 p-5 bg-emerald-50/50 rounded-2xl border border-emerald-100 space-y-4">
+    <div className="mt-6 p-5 bg-emerald-50/50 dark:bg-emerald-500/10 rounded-2xl border border-emerald-100 dark:border-emerald-500/20 space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-bold text-emerald-700 uppercase tracking-widest flex items-center gap-2">
+        <h4 className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-widest flex items-center gap-2">
           <LuDollarSign size={14} /> Detalles Financieros del Servicio
         </h4>
-        <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full border border-emerald-200">
+        <span className="text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-2 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/30">
           Validación Activa
         </span>
       </div>
@@ -273,7 +273,7 @@ export function FinancialSection({ supplierName, supplierCost, ta, supplierPayme
             <CurrencyInput 
               value={supplierCost || ""} 
               onChange={(val) => handleNumericChange('supplierCost', val)} 
-              className={`pl-7 transition-all ${!supplierCost ? 'border-amber-200 bg-amber-50/30' : 'border-emerald-200 focus:border-emerald-500'}`}
+              className={`pl-7 transition-all ${!supplierCost ? 'border-amber-200 dark:border-amber-500/30 bg-amber-50/30 dark:bg-amber-500/10' : 'border-emerald-200 dark:border-emerald-500/30 focus:border-emerald-500 dark:focus:border-emerald-400 dark:bg-slate-900/50'}`}
               placeholder="0.00" 
             />
           </div>
@@ -284,7 +284,7 @@ export function FinancialSection({ supplierName, supplierCost, ta, supplierPayme
             <CurrencyInput 
               value={ta || ""} 
               onChange={(val) => handleNumericChange('ta', val)} 
-              className={`pl-7 transition-all ${!ta ? 'border-amber-200 bg-amber-50/30' : 'border-emerald-200 focus:border-emerald-500'}`}
+              className={`pl-7 transition-all ${!ta ? 'border-amber-200 dark:border-amber-500/30 bg-amber-50/30 dark:bg-amber-500/10' : 'border-emerald-200 dark:border-emerald-500/30 focus:border-emerald-500 dark:focus:border-emerald-400 dark:bg-slate-900/50'}`}
               placeholder="0.00" 
             />
           </div>
@@ -300,20 +300,20 @@ export function FinancialSection({ supplierName, supplierCost, ta, supplierPayme
                 label: m.lastFourDigits ? `${m.name} (**${m.lastFourDigits})` : m.name
               }))}
               placeholder="Seleccionar método..."
-              inputClassName={`pl-8 ${isPaymentMethodRequired && !supplierPaymentMethod ? 'border-amber-200 bg-amber-50/30' : 'border-emerald-200'}`}
+              inputClassName={`pl-8 ${isPaymentMethodRequired && !supplierPaymentMethod ? 'border-amber-200 dark:border-amber-500/30 bg-amber-50/30 dark:bg-amber-500/10' : 'border-emerald-200 dark:border-emerald-500/30 dark:bg-slate-900/50'}`}
               preventNumbers={false}
             />
           </div>
         </FormField>
       </div>
       
-      <div className="flex items-center justify-between p-3 bg-white/80 rounded-xl border border-emerald-100 shadow-sm animate-fade-in">
+      <div className="flex items-center justify-between p-3 bg-white/80 dark:bg-slate-800/80 rounded-xl border border-emerald-100 dark:border-emerald-500/20 shadow-sm animate-fade-in">
         <div className="flex flex-col">
-          <span className="text-[10px] font-black text-emerald-800 uppercase tracking-tighter">Costo Total para la Agencia</span>
-          <span className="text-[9px] text-gray-400 font-medium">(Costo Proveedor + Tarifa Administrativa)</span>
+          <span className="text-[10px] font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-tighter">Costo Total para la Agencia</span>
+          <span className="text-[9px] text-gray-400 dark:text-slate-400 font-medium">(Costo Proveedor + Tarifa Administrativa)</span>
         </div>
         <div className="flex flex-col items-end">
-          <span className="text-lg font-black text-emerald-900 leading-none">
+          <span className="text-lg font-black text-emerald-900 dark:text-emerald-300 leading-none">
             ${totalCost.toLocaleString('es-CO', { minimumFractionDigits: 0 })}
           </span>
           {totalCost > 0 && <span className="text-[9px] text-emerald-600 font-bold uppercase">Valor Liquidado</span>}

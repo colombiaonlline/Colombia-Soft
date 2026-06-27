@@ -24,7 +24,7 @@ export function CheckInForm({ checkIn, client, suppliers, baggage, paymentMethod
     <div className="space-y-6 animate-fade-in">
       {client && <ClientInfoSection client={client} />}
 
-      <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+      <div className="bg-gray-50 dark:bg-slate-800/50 p-4 rounded-xl border border-gray-100 dark:border-slate-700">
         <h4 className="text-xs font-bold text-primary uppercase tracking-widest mb-4 flex items-center gap-2">
           <LuPlane size={14} /> Gestión de Check-in
         </h4>

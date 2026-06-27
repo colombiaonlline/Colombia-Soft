@@ -34,10 +34,10 @@ export default function PermissionsGrid({ permissions, onChange }: PermissionsGr
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {modules.map(mod => (
-        <div key={mod.id} className="p-5 border border-gray-border rounded-2xl bg-white shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-3 mb-5 pb-3 border-b border-gray-100">
-            <div className="p-2.5 bg-primary/10 text-primary rounded-xl">{mod.icon}</div>
-            <span className="font-bold text-base text-gray-800">{mod.label}</span>
+        <div key={mod.id} className="p-5 border border-gray-border dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-5 pb-3 border-b border-gray-100 dark:border-slate-700">
+            <div className="p-2.5 bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-400 rounded-xl">{mod.icon}</div>
+            <span className="font-bold text-base text-gray-800 dark:text-slate-100">{mod.label}</span>
           </div>
           <div className="flex flex-col gap-3">
             {Object.keys(permissions[mod.id]).map(permKey => {
@@ -50,18 +50,18 @@ export default function PermissionsGrid({ permissions, onChange }: PermissionsGr
               const isLocked = mod.id === 'dashboard' && permKey === 'view';
               
               return (
-                <div key={permKey} className="flex items-center justify-between p-2.5 bg-gray-50/50 hover:bg-gray-50 rounded-xl transition-colors border border-transparent hover:border-gray-100">
-                  <span className="text-xs font-bold text-gray-600 capitalize">{displayLabel}</span>
+                <div key={permKey} className="flex items-center justify-between p-2.5 bg-gray-50/50 dark:bg-slate-700/30 hover:bg-gray-50 dark:hover:bg-slate-700/50 rounded-xl transition-colors border border-transparent hover:border-gray-100 dark:hover:border-slate-600">
+                  <span className="text-xs font-bold text-gray-600 dark:text-slate-300 capitalize">{displayLabel}</span>
                   {typeof val === 'boolean' ? (
                     <div 
-                      className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors duration-300 ${isLocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${val ? 'bg-green-500' : 'bg-gray-300'}`}
+                      className={`w-10 h-5 flex items-center rounded-full p-1 transition-colors duration-300 ${isLocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${val ? 'bg-green-500' : 'bg-gray-300 dark:bg-slate-600'}`}
                       onClick={() => !isLocked && toggle(mod.id, permKey)}
                     >
                       <div className={`bg-white w-3.5 h-3.5 rounded-full shadow-sm transform transition-transform duration-300 ${val ? 'translate-x-5' : 'translate-x-0'}`} />
                     </div>
                   ) : (
                     <select 
-                      className={`text-xs border border-gray-200 rounded-lg px-2 py-1 font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 ${isLocked ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-primary cursor-pointer'}`}
+                      className={`text-xs border border-gray-200 dark:border-slate-600 rounded-lg px-2 py-1 font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 ${isLocked ? 'bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-slate-500 cursor-not-allowed' : 'bg-white dark:bg-slate-800 text-primary dark:text-blue-400 cursor-pointer'}`}
                       value={val}
                       disabled={isLocked}
                       onChange={(e) => {

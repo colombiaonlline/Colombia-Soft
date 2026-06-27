@@ -16,17 +16,17 @@ interface BadgeProps {
 
 export function Badge({ variant, children, className = "" }: BadgeProps) {
   const variants: Record<string, string> = {
-    pagado: "bg-green-100 text-green-800",
-    abonado: "bg-blue-100 text-blue-800",
-    credito: "bg-orange-100 text-orange-800",
-    pendiente: "bg-orange-100 text-orange-800",
-    active: "bg-green-100 text-green-800",
-    inactive: "bg-red-100 text-red-800",
-    danger: "bg-red-100 text-red-800",
-    anulado: "bg-red-100 text-red-800",
-    realizado: "bg-green-100 text-green-800",
-    "pendiente-check": "bg-yellow-100 text-yellow-800",
-    accent: "bg-accent/20 text-accent",
+    pagado: "bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-400",
+    abonado: "bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-400",
+    credito: "bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-400",
+    pendiente: "bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-400",
+    active: "bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-400",
+    inactive: "bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-400",
+    danger: "bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-400",
+    anulado: "bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-400",
+    realizado: "bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-400",
+    "pendiente-check": "bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-400",
+    accent: "bg-accent/20 text-accent dark:bg-accent/20 dark:text-teal-400",
   };
 
   return (
