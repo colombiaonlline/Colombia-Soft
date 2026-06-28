@@ -47,7 +47,7 @@
     @apply bg-[var(--color-bg-base)] text-[var(--color-text-main)] transition-colors duration-200;
   }
 
-  input:not([type="checkbox"]):not([type="radio"]),
+  input:not([type="checkbox"]):not([type="radio"]):not(.datepicker-input),
   select,
   textarea {
     @apply bg-white text-gray-900 transition-colors duration-200;
@@ -81,8 +81,10 @@
   .dark .border-gray-300 { border-color: var(--color-border-main) !important; }
 }
 
-/* Fix for react-tailwindcss-datepicker in dark mode */
-.datepicker-container input {
+/* Fix for react-tailwindcss-datepicker */
+.datepicker-container input,
+.datepicker-container input:focus,
+.datepicker-container input:hover {
   background-color: transparent !important;
 }
 .dark .datepicker-container {
@@ -158,6 +160,19 @@
   background-color: var(--color-bg-card) !important;
   color: var(--color-text-main) !important;
   border-color: var(--color-border-main) !important;
+}
+
+/* Override: el input del datepicker siempre debe ser transparente.
+   Se usa triple selector para superar la especificidad de la regla anterior */
+.dark .datepicker-container input,
+.dark .datepicker-container input:focus,
+.dark .datepicker-container input:hover,
+.datepicker-container input,
+.datepicker-container input:focus,
+.datepicker-container input:hover {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .dark option {
@@ -389,4 +404,18 @@ body {
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(7, 129, 142, 0.3) transparent;
+}
+
+/* ====================================================
+   DATEPICKER TRANSPARENT INPUT - FINAL OVERRIDE
+   Debe estar al final del archivo para ganar en cascade
+   ==================================================== */
+.datepicker-container input[type="text"],
+.datepicker-container input,
+.dark .datepicker-container input[type="text"],
+.dark .datepicker-container input {
+  background-color: transparent !important;
+  background: transparent !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
 }
