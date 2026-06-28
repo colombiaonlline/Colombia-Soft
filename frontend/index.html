@@ -11,6 +11,18 @@
     />
   </head>
   <body>
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('itea_dark_mode');
+          if (saved === 'true' || (saved === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
