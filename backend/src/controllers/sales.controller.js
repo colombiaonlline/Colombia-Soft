@@ -73,6 +73,7 @@ exports.list = async (req, res, next) => {
           cp.avatar_url as "clientAvatar",
           up.nombres || ' ' || up.apellidos as "asesorName",
           comp.nombres || ' ' || comp.apellidos as "commissionAgentName",
+          respp.nombres || ' ' || respp.apellidos as "responsableName",
           
           COALESCE((
             SELECT json_agg(json_build_object(
@@ -107,6 +108,8 @@ exports.list = async (req, res, next) => {
         JOIN personas up ON u.persona_id = up.id
         LEFT JOIN comisionistas com ON v.comisionista_id = com.id
         LEFT JOIN personas comp ON com.persona_id = comp.id
+        LEFT JOIN responsables resp ON v.responsable_id = resp.id
+        LEFT JOIN personas respp ON resp.persona_id = respp.id
         WHERE 1=1 ${searchCondition} ${statusCondition} ${asesorCondition} ${clientCondition} ${dateCondition}
         ORDER BY ${sqlOrderBy} ${sortOrder === 'desc' ? 'DESC' : 'ASC'}
         LIMIT ${perPage} OFFSET ${skip}
@@ -169,6 +172,7 @@ exports.list = async (req, res, next) => {
         clientEmail: v.clientEmail,
         clientAvatar: v.clientAvatar,
         responsableId: v.responsableId,
+        responsableName: v.responsableName,
         asesorId: v.usuarioId,
         asesorName: v.asesorName,
         date: v.creadoAt,
@@ -698,6 +702,8 @@ exports.getById = async (req, res, next) => {
       clientName: `${venta.cliente.persona.nombres} ${venta.cliente.persona.apellidos}`,
       asesorId: venta.usuarioId,
       asesorName: `${venta.usuario.persona.nombres} ${venta.usuario.persona.apellidos}`,
+      responsableId: venta.responsableId || null,
+      responsableName: venta.responsable ? `${venta.responsable.persona.nombres} ${venta.responsable.persona.apellidos}` : null,
       date: venta.creadoAt,
       total: venta.montoTotal,
       paymentMethod: venta.metodoPagoPrincipal?.nombre || null,

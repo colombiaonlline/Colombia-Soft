@@ -253,8 +253,8 @@ export default function SaleDetailModal({
           <h4 className="text-sm font-bold text-primary border-b border-gray-200 pb-2 mb-3">
             Detalles del Cliente
           </h4>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-            <div className="col-span-2 sm:col-span-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+            <div className="col-span-1">
               <span className="text-gray-500 text-xs block">Nombre</span>
               <span className="font-medium text-gray-800">
                 {sale.clientName}
@@ -262,19 +262,19 @@ export default function SaleDetailModal({
             </div>
             {client ? (
               <>
-                <div className="col-span-2 sm:col-span-1">
+                <div className="col-span-1">
                   <span className="text-gray-500 text-xs block">Documento</span>
                   <span className="font-medium text-gray-800">
                     {client.docType} {client.docNumber}
                   </span>
                 </div>
-                <div className="col-span-2 sm:col-span-1">
+                <div className="col-span-1">
                   <span className="text-gray-500 text-xs block">Correo</span>
                   <span className="font-medium text-gray-800 break-words">
                     {client.email}
                   </span>
                 </div>
-                <div className="col-span-2 sm:col-span-1">
+                <div className="col-span-1">
                   <span className="text-gray-500 text-xs block">Teléfono</span>
                   <span className="font-medium text-gray-800">
                     {client.phone}
@@ -294,7 +294,7 @@ export default function SaleDetailModal({
           <h4 className="text-sm font-bold text-primary border-b border-gray-200 pb-2 mb-3">
             Detalles Operativos y Financieros
           </h4>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-6 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
             <div>
               <span className="text-gray-500 text-xs block">
                 Asesor
@@ -303,6 +303,16 @@ export default function SaleDetailModal({
                 {sale.asesorName}
               </span>
             </div>
+            {sale.responsableName && (
+              <div>
+                <span className="text-gray-500 text-xs block">
+                  Responsable
+                </span>
+                <span className="font-medium text-gray-800">
+                  {sale.responsableName}
+                </span>
+              </div>
+            )}
             <div>
               <span className="text-gray-500 text-xs block">
                 Proveedor(es)
