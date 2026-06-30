@@ -306,9 +306,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setDashboardLoading(!loadDashboardCache());
     setSalesLoading(!loadSalesCache());
 
-    if (!cachedConfig) {
-       fetchConfig();
-    }
+    // Siempre obtenemos la configuración en segundo plano para actualizar el caché
+    fetchConfig();
   }, [user?.id, fetchConfig]);
 
   const refreshData = () => { 

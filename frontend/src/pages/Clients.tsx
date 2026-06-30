@@ -5,7 +5,7 @@ import { Card, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
-import { FormField, Input, Select } from '../components/ui/Form';
+import { FormField, Input, Select, Combobox } from '../components/ui/Form';
 import { Table, TableRow, TableCell } from '../components/ui/Table';
 import StatCard from '../components/ui/StatCard';
 import SortIcon from '../components/ui/SortIcon';
@@ -693,15 +693,16 @@ export default function Clients() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <FormField label="Tipo de Documento" error={errors.docType}>
-                <Select
+                <Combobox
                   value={formData.docType}
-                  onChange={e => {
-                    setFormData({ ...formData, docType: e.target.value });
+                  onChange={val => {
+                    setFormData({ ...formData, docType: val });
                     if (errors.docType) setErrors(prev => ({ ...prev, docType: '' }));
-                    validateField('docType', e.target.value);
+                    validateField('docType', val);
                   }}
                   options={[{ value: '', label: 'Seleccionar...' }, ...data.config.documentTypes.map(d => ({ value: d.abreviatura, label: d.abreviatura }))]}
                   error={errors.docType}
+                  placeholder="Seleccionar..."
                 />
               </FormField>
               <FormField label="Número de Documento" error={errors.docNumber}>

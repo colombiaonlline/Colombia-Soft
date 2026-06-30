@@ -28,7 +28,7 @@ import { Card, CardHeader, CardBody } from "../components/ui/Card";
 import { Table, TableRow, TableCell } from "../components/ui/Table";
 import { Modal } from "../components/ui/Modal";
 import { Badge } from "../components/ui/Badge";
-import { Input, Select, FormField } from "../components/ui/Form";
+import { FormField, Input, Select, Combobox } from "../components/ui/Form";
 import {
   User,
   RolePermissions,
@@ -1039,12 +1039,12 @@ export default function Users() {
             />
           </FormField>
           <FormField label="Tipo Doc" error={errors.docType}>
-            <Select
+            <Combobox
               value={formData.docType}
-              onChange={(e) => {
-                setFormData({ ...formData, docType: e.target.value });
+              onChange={(val) => {
+                setFormData({ ...formData, docType: val });
                 if (errors.docType) setErrors((p) => ({ ...p, docType: "" }));
-                validateField("docType", e.target.value);
+                validateField("docType", val);
               }}
               options={[
                 { value: "", label: "Seleccione" },
@@ -1054,6 +1054,7 @@ export default function Users() {
                 })),
               ]}
               error={errors.docType}
+              placeholder="Seleccione"
             />
           </FormField>
           <FormField label="Documento" error={errors.docNumber}>

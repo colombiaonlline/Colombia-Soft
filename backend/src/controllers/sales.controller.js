@@ -2381,27 +2381,12 @@ exports.sendVoucher = async (req, res, next) => {
     const pdfBuffer = Buffer.from(pdfBase64, 'base64');
     const fileName = `Voucher_Colombia Online_Orden_${saleId}_${clientName.replace(/\s+/g, '_')}.pdf`;
     
-    let logoBuffer = null;
-    try {
-      logoBuffer = fs.readFileSync(path.join(__dirname, '../assets/logo.png'));
-    } catch (e) {
-      console.error('[VOUCHER] Logo no encontrado en src/assets/logo.png', e.message);
-    }
-
     const attachments = [
       {
         filename: fileName,
         content: pdfBuffer
       }
     ];
-
-    if (logoBuffer) {
-      attachments.push({
-        filename: 'Colombia Online_nuevo.png.png',
-        content: logoBuffer,
-        cid: 'Colombia OnlineLogo'
-      });
-    }
 
     const emailResult = await emailService.sendEmail({
       to: clientEmail,
