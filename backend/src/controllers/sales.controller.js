@@ -1595,17 +1595,22 @@ exports.create = async (req, res, next) => {
             if (attachments.length > 0) {
               try {
                 console.log(`[VOUCHER] Sending email to ${clientEmail} for ${handler.nombreServicio} with ${attachments.length} attachments...`);
+                const formattedSaleId = String(created.id).padStart(4, '0');
+                const frontendUrl = process.env.FRONTEND_URL || 'https://www.itea-colombiaonline.com';
+                const logoUrl = `${frontendUrl}/colombiaonline-logo.jpeg`;
+                
                 const result = await emailService.sendEmail({
                   to: clientEmail,
-                  subject: `Tu voucher de ${handler.nombreServicio} - Colombia Online`,
+                  subject: `Tu voucher de ${handler.nombreServicio} - Orden #${formattedSaleId} | Colombia Online`,
                   html: `
                     <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaec; border-radius: 8px; overflow: hidden;">
-                      <div style="background-color: #0f172a; padding: 20px; text-align: center;">
-                        <h1 style="color: #ffffff; margin: 0; font-size: 24px;">¡Tu voucher está listo!</h1>
+                      <div style="background-color: #032650; padding: 20px; text-align: center;">
+                        <img src="${logoUrl}" alt="Colombia Online Logo" style="height: 50px; background: white; padding: 5px; border-radius: 4px;" />
                       </div>
                       <div style="padding: 30px;">
+                        <h1 style="color: #032650; font-size: 22px;">¡Tu voucher está listo!</h1>
                         <p style="font-size: 16px;">Hola <strong>${clientName}</strong>,</p>
-                        <p style="font-size: 16px;">Adjunto a este correo encontrarás el comprobante correspondiente a tu servicio de <strong>${handler.nombreServicio}</strong>.</p>
+                        <p style="font-size: 16px;">Adjunto a este correo encontrarás el comprobante correspondiente a tu servicio de <strong>${handler.nombreServicio}</strong> para la <strong style="color:#07818e;">Orden #${formattedSaleId}</strong>.</p>
                         <p style="font-size: 16px; margin-top: 20px;">Gracias por confiar en nosotros.</p>
                       </div>
                     </div>
@@ -2193,6 +2198,9 @@ exports.sendVoucher = async (req, res, next) => {
 
     const clientName = `${venta.cliente.persona.nombres} ${venta.cliente.persona.apellidos}`;
     const asesorName = `${venta.usuario.persona.nombres} ${venta.usuario.persona.apellidos}`;
+    
+    // Formatear el ID de venta a 4 dígitos (ej. 0009 en vez de 9)
+    const formattedSaleId = String(saleId).padStart(4, '0');
 
     // Construir lista de servicios para el cuerpo del correo
     const serviciosMap = {
@@ -2223,8 +2231,8 @@ exports.sendVoucher = async (req, res, next) => {
     });
 
     // URL pública del logo para el correo (la imagen debe estar accesible via internet)
-    const frontendUrl = process.env.FRONTEND_URL || 'https://itea-soft.onrender.com';
-    const logoUrl = `${frontendUrl}/Colombia Online_nuevo.png.png`;
+    const frontendUrl = process.env.FRONTEND_URL || 'https://www.itea-colombiaonline.com';
+    const logoUrl = `${frontendUrl}/colombiaonline-logo.jpeg`;
 
     const html = `
       <!DOCTYPE html>
@@ -2275,7 +2283,7 @@ exports.sendVoucher = async (req, res, next) => {
                     <p style="margin:0;font-size:15px;color:#475569;line-height:1.7;">
                       Nos complace confirmar tu reserva. Adjunto a este correo encontrarás tu 
                       <strong style="color:#032650;">voucher oficial de viaje</strong> correspondiente a la 
-                      <strong style="color:#07818e;">Orden #${saleId}</strong>.
+                      <strong style="color:#07818e;">Orden #${formattedSaleId}</strong>.
                     </p>
                   </td>
                 </tr>
@@ -2311,7 +2319,7 @@ exports.sendVoucher = async (req, res, next) => {
                           <table width="100%" cellpadding="0" cellspacing="0">
                             <tr>
                               <td style="padding:5px 0;font-size:13px;color:#64748b;width:140px;">Orden N°:</td>
-                              <td style="padding:5px 0;font-size:13px;font-weight:700;color:#032650;">#${saleId}</td>
+                              <td style="padding:5px 0;font-size:13px;font-weight:700;color:#032650;">#${formattedSaleId}</td>
                             </tr>
                             <tr>
                               <td style="padding:5px 0;font-size:13px;color:#64748b;">Pasajero:</td>
@@ -2383,9 +2391,9 @@ exports.sendVoucher = async (req, res, next) => {
       </html>
     `;
 
-    // Convertir base64 a Buffer para adjuntar
+     // Convertir base64 a Buffer para adjuntar
     const pdfBuffer = Buffer.from(pdfBase64, 'base64');
-    const fileName = `Voucher_Colombia Online_Orden_${saleId}_${clientName.replace(/\s+/g, '_')}.pdf`;
+    const fileName = `Voucher_Colombia Online_Orden_${formattedSaleId}_${clientName.replace(/\s+/g, '_')}.pdf`;
     
     const attachments = [
       {
@@ -2396,7 +2404,7 @@ exports.sendVoucher = async (req, res, next) => {
 
     const emailResult = await emailService.sendEmail({
       to: clientEmail,
-      subject: `✈ Tu Voucher de Viaje - Orden #${saleId} | Colombia Online`,
+      subject: `✈ Tu Voucher de Viaje - Orden #${formattedSaleId} | Colombia Online`,
       html,
       attachments
     });
