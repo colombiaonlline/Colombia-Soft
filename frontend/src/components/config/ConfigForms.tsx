@@ -563,27 +563,25 @@ export default function ConfigForms({ section, formData, setFormData, errors, se
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField label="Plan de Equipaje">
-                <Select
+                <Combobox
                   value={formData.flight?.baggagePlan || ''}
-                  onChange={(e) => {
-                    const plan = data.config.baggage.find((b: any) => `${b.airlineName} - ${b.fareType}` === e.target.value);
+                  onChange={(val) => {
+                    const plan = data.config.baggage.find((b: any) => `${b.airlineName} - ${b.fareType}` === val);
                     setFormData({ 
                       ...formData, 
                       flight: { 
                         ...formData.flight, 
-                        baggagePlan: e.target.value,
+                        baggagePlan: val,
                         cabinBaggage: plan ? plan.carryOn : formData.flight?.cabinBaggage,
                         checkedBaggage: plan ? plan.checkedBag : formData.flight?.checkedBaggage
                       } 
                     });
                   }}
-                  options={[
-                    { value: '', label: 'Seleccionar plan...' },
-                    ...data.config.baggage.map((b: any) => ({
-                      value: `${b.airlineName} - ${b.fareType}`,
-                      label: `${b.airlineName} - ${b.fareType}`,
-                    })),
-                  ]}
+                  options={data.config.baggage.map((b: any) => ({
+                    value: `${b.airlineName} - ${b.fareType}`,
+                    label: `${b.airlineName} - ${b.fareType}`,
+                  }))}
+                  placeholder="Seleccionar plan..."
                 />
               </FormField>
               

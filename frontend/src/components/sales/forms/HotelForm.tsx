@@ -103,7 +103,6 @@ export function HotelForm({ hotel, onChange, data, triggerError, mainClient }: H
               value={hotel.hotelType || ""}
               onChange={(val) => onChange({ hotelType: val })}
               options={[
-                { value: "", label: "Seleccionar..." },
                 { value: "hotel", label: "Hotel" },
                 { value: "hotel_turistico", label: "Hotel Turístico" },
                 { value: "resort", label: "Resort / Todo Incluido" },

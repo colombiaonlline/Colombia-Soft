@@ -154,7 +154,7 @@ export function Combobox({ value, onChange, options, placeholder, error, classNa
       );
 
   return (
-    <div className={`relative ${className}`} ref={containerRef}>
+    <div className={`relative focus-within:z-30 ${className}`} ref={containerRef}>
       <div className="relative">
         <input
           type="text"
@@ -230,7 +230,9 @@ export function Select({ options, error, className = '', ...props }: SelectProps
       {...props}
     >
       {options.map(opt => (
-        <option key={opt.value} value={opt.value}>{opt.label}</option>
+        <option key={opt.value} value={opt.value} disabled={opt.value === ''} hidden={opt.value === ''}>
+          {opt.label}
+        </option>
       ))}
     </select>
   );

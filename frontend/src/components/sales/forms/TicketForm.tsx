@@ -198,7 +198,7 @@ export function DateTimePicker({
   };
 
   return (
-    <div className={`relative flex items-center ${className}`}>
+    <div className={`relative flex items-center focus-within:z-30 ${className}`}>
       {/* Input visual con mascara */}
       <input
         type="text"

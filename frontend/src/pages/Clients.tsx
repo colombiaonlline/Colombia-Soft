@@ -700,7 +700,7 @@ export default function Clients() {
                     if (errors.docType) setErrors(prev => ({ ...prev, docType: '' }));
                     validateField('docType', val);
                   }}
-                  options={[{ value: '', label: 'Seleccionar...' }, ...data.config.documentTypes.map(d => ({ value: d.abreviatura, label: d.abreviatura }))]}
+                  options={data.config.documentTypes.map(d => ({ value: d.abreviatura, label: d.abreviatura }))}
                   error={errors.docType}
                   placeholder="Seleccionar..."
                 />
