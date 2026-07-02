@@ -1552,7 +1552,8 @@ exports.create = async (req, res, next) => {
         cliente: { select: { persona: { select: { nombres: true, apellidos: true, email: true, avatarUrl: true } } } },
         usuario: { select: { persona: { select: { nombres: true, apellidos: true } } } },
         comisionista: { select: { persona: { select: { nombres: true, apellidos: true } } } },
-        metodoPagoPrincipal: true
+        metodoPagoPrincipal: true,
+        pagosVenta: { include: { metodoPago: true } }
       }
     });
 
@@ -1651,6 +1652,12 @@ exports.create = async (req, res, next) => {
       supplierCost: created.costoProveedorTotal,
       ta: created.taTotal,
       isSettled: created.comisionLiquidada,
+      payments: (created.pagosVenta || []).map(p => ({
+        id: p.id,
+        date: p.fechaPago,
+        amount: p.monto,
+        method: p.metodoPago?.nombre || null
+      })),
       ticketData: data.ticketData,
       hotelData: data.hotelData,
       insuranceData: data.insuranceData,
