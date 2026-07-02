@@ -73,6 +73,7 @@ export default function Config() {
   const [successMessage, setSuccessMessage] = useState('');
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Lazy Load Fetch
   useEffect(() => {
@@ -246,6 +247,7 @@ export default function Config() {
   const handleSubmit = async () => {
     if (!validate()) return;
     
+    setIsSaving(true);
     try {
       if (editingItem) {
         await updateConfigItem(currentSection as ConfigSection, editingItem.id, formData);
@@ -261,6 +263,8 @@ export default function Config() {
       setErrorMessage(err?.response?.data?.message || 'Error al guardar. Verifica los datos e intenta de nuevo.');
       setShowError(true);
       setTimeout(() => setShowError(false), 3000);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -292,7 +296,25 @@ export default function Config() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in relative">
+      {/* Toast Notifications */}
+      {showSuccess && (
+        <div className="fixed top-24 right-8 z-[9999] animate-fade-in-up">
+          <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-lg flex items-center gap-3">
+            <ShieldCheck size={20} />
+            <p className="font-medium">{successMessage}</p>
+          </div>
+        </div>
+      )}
+      {showError && (
+        <div className="fixed top-24 right-8 z-[9999] animate-fade-in-up">
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg flex items-center gap-3">
+            <Info size={20} />
+            <p className="font-medium">{errorMessage}</p>
+          </div>
+        </div>
+      )}
+
       {/* Dynamic Header */}
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -494,8 +516,10 @@ export default function Config() {
         size={currentSection === 'packages' ? 'xl' : 'lg'}
         footer={
           <>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit}>Guardar Cambios</Button>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)} disabled={isSaving}>Cancelar</Button>
+            <Button onClick={handleSubmit} disabled={isSaving}>
+              {isSaving ? (editingItem ? "Actualizando..." : "Creando...") : "Guardar Cambios"}
+            </Button>
           </>
         }
       >
