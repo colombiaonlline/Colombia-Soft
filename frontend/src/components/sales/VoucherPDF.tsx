@@ -1,6 +1,6 @@
 import React, { forwardRef } from 'react';
 import { Sale, TicketData } from '../../types';
-import { formatDate, formatDateTime, formatCurrency } from '../../utils/formatters';
+import { formatDate, formatDateTime, formatCurrency, formatSaleId } from '../../utils/formatters';
 import { type AirportInfo } from '../../utils/airportInfo';
 import './VoucherPDF.css';
 
@@ -170,16 +170,16 @@ function FlightBlock({ ticket, idx, airportMap, baggageList }: { ticket: TicketD
             <tbody>
               {ticket.passengers.map((p, i) => (
                 <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                  <td style={{ padding: '12px', fontWeight: 'bold', color: '#111827' }}>
+                  <td style={{ padding: '12px', fontWeight: 'bold', color: '#000000' }}>
                     {p.name}
                     {p.esTitular && (
                       <span style={{ marginLeft: '8px', padding: '2px 8px',  color: '#0369a1', borderRadius: '12px', fontSize: '9px', fontWeight: 'bold' }}>PASAJERO PRINCIPAL</span>
                     )}
                   </td>
-                  <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#1f2937' }}>{p.docNumber || '—'}</td>
-                  <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#1f2937' }}>{p.nroReserva || '—'}</td>
-                  <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#1f2937' }}>{p.nroTiquete || '—'}</td>
-                  <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#1f2937' }}>{p.asiento || '—'}</td>
+                  <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#000000' }}>{p.docNumber || '—'}</td>
+                  <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#000000' }}>{p.nroReserva || '—'}</td>
+                  <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#000000' }}>{p.nroTiquete || '—'}</td>
+                  <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#000000' }}>{p.asiento || '—'}</td>
                 </tr>
               ))}
             </tbody>
@@ -262,7 +262,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
           <div className="v-tb-item">
             <span className="v-tb-label">ORDEN</span>
             <span className="v-tb-value v-tb-order">
-              #{sale.id}
+              #{formatSaleId(sale.id)}
               {sale.status === 'credito' ? (
                 <span className="v-badge-status v-status-credito">CRÉDITO</span>
               ) : (
@@ -630,7 +630,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
 
         {/* ══ FOOTNOTES ═══════════════════════════════════════════════ */}
         <div className="v-footnotes">
-          Orden <strong>#{sale.id}</strong>
+          Orden <strong>#{formatSaleId(sale.id)}</strong>
           
         </div>
 
