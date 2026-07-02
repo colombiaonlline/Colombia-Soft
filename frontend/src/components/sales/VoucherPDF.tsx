@@ -679,7 +679,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
           <strong>5.</strong> Los cambios, cancelaciones, reembolsos y penalidades están sujetos a las políticas y condiciones de cada proveedor. Los costos adicionales que se generen por dichas modificaciones serán asumidos por el pasajero.<br /><br />
           <strong>Ley de Protección de Menores:</strong> En cumplimiento de la Ley 679 de 2001 y la Ley 1098 de 2006, nuestra agencia rechaza y denuncia toda forma de explotación, pornografía y turismo sexual con niños, niñas y adolescentes. Estas conductas constituyen un delito y son sancionadas por la legislación colombiana.
           <div className="v-company" style={{ marginTop: '12px' }}>
-            Colombia Online | calle 18 # 18 143 mall estación de servicios medrano | Comercial@colombia-online.com
+            Colombia Online | Carrera 65A 13-157 Medellin, Aeropuerto Olaya Herrera, Local 146 | Comercial@colombia-online.com
           </div>
           <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#fff3cd', color: '#856404', border: '1px solid #ffeeba', borderRadius: '4px', fontSize: '11px' }}>
             <strong>▲ ATENCIÓN:</strong> Por favor revise detenidamente todos los datos de este voucher (nombres, fechas, horarios y servicios). Cualquier inconsistencia debe ser reportada de inmediato a su asesor.

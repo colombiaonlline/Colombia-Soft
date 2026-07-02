@@ -508,11 +508,11 @@
 }
 
 .itea-voucher .v-payment-row label {
-  color: #334155;
+  color: #334155 !important;
 }
 
 .itea-voucher .v-payment-row span {
-  color: #1e293b;
+  color: #1e293b !important;
   font-weight: 600;
 }
 
