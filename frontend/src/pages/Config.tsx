@@ -20,7 +20,9 @@ import {
   Compass,
   Eye,
   ShieldCheck,
-  Info
+  Info,
+  TrendingUp,
+  AlertCircle
 } from 'lucide-react';
 import { Card, CardHeader, CardBody } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -299,18 +301,24 @@ export default function Config() {
     <div className="space-y-6 animate-fade-in relative">
       {/* Toast Notifications */}
       {showSuccess && (
-        <div className="fixed top-24 right-8 z-[9999] animate-fade-in-up">
-          <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-lg flex items-center gap-3">
-            <ShieldCheck size={20} />
-            <p className="font-medium">{successMessage}</p>
+        <div className="fixed top-20 right-6 z-[9999] bg-emerald-50 border border-emerald-200 text-emerald-700 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-in-right">
+          <div className="bg-emerald-500 text-white rounded-full p-1">
+            <TrendingUp size={18} />
+          </div>
+          <div>
+            <p className="font-bold text-sm">Operación Exitosa</p>
+            <p className="text-xs opacity-90">{successMessage}</p>
           </div>
         </div>
       )}
       {showError && (
-        <div className="fixed top-24 right-8 z-[9999] animate-fade-in-up">
-          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg flex items-center gap-3">
-            <Info size={20} />
-            <p className="font-medium">{errorMessage}</p>
+        <div className="fixed top-32 right-6 z-[9999] bg-rose-50 border border-rose-200 text-rose-700 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-in-right">
+          <div className="bg-rose-500 text-white rounded-full p-1">
+            <AlertCircle size={18} />
+          </div>
+          <div>
+            <p className="font-bold text-sm">Error</p>
+            <p className="text-xs opacity-90">{errorMessage}</p>
           </div>
         </div>
       )}
