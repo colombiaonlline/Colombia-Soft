@@ -80,7 +80,8 @@ exports.list = async (req, res, next) => {
               'id', p.id,
               'fechaPago', p.fecha_pago,
               'monto', p.monto,
-              'metodoPago', (SELECT json_build_object('nombre', mp.nombre) FROM metodos_pago mp WHERE mp.id = p.metodo_pago_id)
+              'metodoPago', (SELECT json_build_object('nombre', mp.nombre) FROM metodos_pago mp WHERE mp.id = p.metodo_pago_id),
+              'referencia', p.referencia
             ))
             FROM pagos_venta p WHERE p.venta_id = v.id
           ), '[]'::json) as "pagosVenta",
@@ -1523,11 +1524,11 @@ exports.create = async (req, res, next) => {
 
       if (data.payments && data.payments.length > 0) {
         ventaCreateData.pagosVenta = {
-          create: data.payments.map(p => ({
+          create: await Promise.all(data.payments.map(async p => ({
             monto: p.amount,
-            metodoPagoId: parseInt(p.method) || null,
+            metodoPagoId: await resolvePaymentMethodId(prisma, p.method),
             referencia: p.reference || null
-          }))
+          })))
         };
       }
 

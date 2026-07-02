@@ -645,7 +645,7 @@ export default function Sales() {
         isAdmin={isAdmin}
         onUpdateSale={updateSale}
         onAddSale={addSale}
-        onRegisterPayment={(saleId, amount, method) => registerCreditPayment(saleId, amount, method)}
+        onRegisterPayment={(saleId, amount, method, reference) => registerCreditPayment(saleId, amount, method, reference)}
         onDeletePayment={(saleId, paymentId) => deleteSalePayment(saleId, paymentId)}
         onDownloadVoucher={handleDownloadVoucher}
       />

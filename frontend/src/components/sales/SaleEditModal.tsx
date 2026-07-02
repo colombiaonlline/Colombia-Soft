@@ -21,7 +21,7 @@ interface SaleEditModalProps {
   isAdmin: boolean;
   onUpdateSale?: (id: number, data: any) => void;
   onAddSale?: (data: any) => void;
-  onRegisterPayment: (saleId: number, amount: number, method?: string) => Promise<any>;
+  onRegisterPayment: (saleId: number, amount: number, method?: string, reference?: string) => Promise<any>;
   onDeletePayment: (saleId: number, paymentId: string) => Promise<void>;
   onDownloadVoucher: (sale: Sale) => void;
 }
