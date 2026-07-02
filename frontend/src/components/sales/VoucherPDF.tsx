@@ -115,12 +115,12 @@ function FlightBlock({ ticket, idx, airportMap, baggageList }: { ticket: TicketD
         {legsToRender.map((leg, li) => {
           const legAirlineName = leg.airline || (ticket as any).airlineName || ticket.airline || '—';
           const legBaggagePlan = leg.baggagePlan || ticket.baggagePlan;
-          const bg = baggageList?.find(b => b.fareType === legBaggagePlan && (b.airlineName === legAirlineName || !legAirlineName));
+          const bg = baggageList?.find(b => legBaggagePlan === `${b.airlineName} - ${b.fareType}` || b.fareType === legBaggagePlan);
           return (
             <div key={`leg-details-${idx}-${li}`} style={{ display: 'flex', width: '100%', gap: '15px', flexWrap: 'wrap', paddingBottom: li < legsToRender.length - 1 ? '10px' : '0', borderBottom: li < legsToRender.length - 1 ? '1px dashed #e5e7eb' : 'none' }}>
               <div style={{ minWidth: '150px' }}>
                 <span className="v-fd-label">{leg.origin && leg.destination ? `${leg.origin} → ${leg.destination}` : 'Información'}:</span>
-                <span className="v-badge-orange">{legAirlineName}</span>
+                <span className="v-badge">{legAirlineName}</span>
               </div>
               <div style={{ flex: 1, minWidth: '200px' }}>
                 <span className="v-fd-label">Equipaje:</span>
@@ -160,11 +160,11 @@ function FlightBlock({ ticket, idx, airportMap, baggageList }: { ticket: TicketD
           <table className="v-flight-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
             <thead>
               <tr>
-                <th style={{ textAlign: 'left', padding: '8px 12px', backgroundColor: '#f97316', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>NOMBRE</th>
-                <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#f97316', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>DOCUMENTO</th>
-                <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#f97316', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>N° RESERVA</th>
-                <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#f97316', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>N° TIQUETE</th>
-                <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#f97316', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>ASIENTO</th>
+                <th style={{ textAlign: 'left', padding: '8px 12px', backgroundColor: '#0d5ca7', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>NOMBRE</th>
+                <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#0d5ca7', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>DOCUMENTO</th>
+                <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#0d5ca7', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>N° RESERVA</th>
+                <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#0d5ca7', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>N° TIQUETE</th>
+                <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#0d5ca7', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>ASIENTO</th>
               </tr>
             </thead>
             <tbody>
