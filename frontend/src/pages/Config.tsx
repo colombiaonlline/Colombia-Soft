@@ -69,6 +69,10 @@ export default function Config() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [deleteItemId, setDeleteItemId] = useState<number | null>(null);
   const [viewingPackage, setViewingPackage] = useState<any>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Lazy Load Fetch
   useEffect(() => {
@@ -239,15 +243,25 @@ export default function Config() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validate()) return;
     
-    if (editingItem) {
-      updateConfigItem(currentSection as ConfigSection, editingItem.id, formData);
-    } else {
-      addConfigItem(currentSection as ConfigSection, formData);
+    try {
+      if (editingItem) {
+        await updateConfigItem(currentSection as ConfigSection, editingItem.id, formData);
+        setSuccessMessage(`¡${getSingularLabel(currentSection as SectionId)} actualizado correctamente!`);
+      } else {
+        await addConfigItem(currentSection as ConfigSection, formData);
+        setSuccessMessage(`¡${getSingularLabel(currentSection as SectionId)} registrado correctamente!`);
+      }
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+      setIsModalOpen(false);
+    } catch (err: any) {
+      setErrorMessage(err?.response?.data?.message || 'Error al guardar. Verifica los datos e intenta de nuevo.');
+      setShowError(true);
+      setTimeout(() => setShowError(false), 3000);
     }
-    setIsModalOpen(false);
   };
 
   const handleDelete = (id: number) => {
