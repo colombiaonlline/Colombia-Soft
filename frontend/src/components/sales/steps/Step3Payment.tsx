@@ -9,6 +9,7 @@ export function Step3Payment({ form, set, data, errors }: any) {
   // Local state for the new payment item being added
   const [payMethodId, setPayMethodId] = useState("");
   const [payAmount, setPayAmount] = useState("");
+  const [payReference, setPayReference] = useState("");
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
   const [isTouched, setIsTouched] = useState(false);
 
@@ -77,7 +78,7 @@ export function Step3Payment({ form, set, data, errors }: any) {
       amount: amt,
       methodId: payMethodId,
       methodName: selectedMethod ? selectedMethod.name : "Otro",
-      reference: "" // Reference field is removed
+      reference: payReference || ""
     };
 
     set("payments", [...paymentsList, newPayment]);
@@ -85,6 +86,7 @@ export function Step3Payment({ form, set, data, errors }: any) {
     // Reset local inputs
     setPayMethodId("");
     setPayAmount("");
+    setPayReference("");
     setIsTouched(false);
     setLocalErrors({});
   };
@@ -176,6 +178,7 @@ export function Step3Payment({ form, set, data, errors }: any) {
               <thead>
                 <tr className="bg-slate-50/50 text-slate-500 font-bold border-b border-slate-200">
                   <th className="px-4 py-3">Método de Pago</th>
+                  <th className="px-4 py-3">Referencia</th>
                   <th className="px-4 py-3">Monto</th>
                   <th className="px-4 py-3 text-right">Acción</th>
                 </tr>
@@ -185,6 +188,9 @@ export function Step3Payment({ form, set, data, errors }: any) {
                   <tr key={idx} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-4 py-3 font-semibold text-slate-700">
                       {p.methodName}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 text-[11px] font-medium">
+                      {p.reference || '-'}
                     </td>
                     <td className="px-4 py-3 text-emerald-600 font-bold">
                       ${p.amount.toLocaleString("es-CO")}
@@ -219,7 +225,7 @@ export function Step3Payment({ form, set, data, errors }: any) {
               <Plus size={16} className="text-primary" /> Registrar Nuevo Abono
             </h5>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
               <FormField label="Forma de Pago" error={localErrors.method}>
                 <Combobox
                   value={payMethodId}
@@ -245,6 +251,14 @@ export function Step3Payment({ form, set, data, errors }: any) {
                   }}
                   placeholder="Ej. 500.000"
                   error={localErrors.amount}
+                />
+              </FormField>
+
+              <FormField label="Referencia de Pago (Opcional)">
+                <Input
+                  value={payReference}
+                  onChange={(e) => setPayReference(e.target.value)}
+                  placeholder="N° Comprobante, Transferencia..."
                 />
               </FormField>
             </div>
