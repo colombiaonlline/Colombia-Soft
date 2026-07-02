@@ -238,6 +238,8 @@
   padding: 14px 12px;
   vertical-align: middle;
   text-align: center;
+  color: #111827 !important;
+  font-weight: 600;
 }
 
 .itea-voucher .v-flight-table tbody td:nth-child(1),
