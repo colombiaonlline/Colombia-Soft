@@ -402,6 +402,11 @@ export default function CommissionAgents() {
 
                           <div className="flex items-center justify-between pt-4 border-t border-gray-50">
                             <div className="flex flex-col">
+                              {agent.observacion && (
+                                <span className="text-xs text-gray-500 mb-2 italic line-clamp-2" title={agent.observacion}>
+                                  "{agent.observacion}"
+                                </span>
+                              )}
                               <span className="text-[9px] text-gray-400 font-bold uppercase">Documento</span>
                               <span className="text-xs font-medium text-gray-600">{agent.docType} {agent.docNumber}</span>
                             </div>
@@ -691,6 +696,20 @@ export default function CommissionAgents() {
               />
             </FormField>
           </div>
+
+          <FormField label="Observación (Opcional)" error={errors.observacion}>
+            <textarea
+              className="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-transparent px-4 py-3 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+              rows={3}
+              maxLength={300}
+              value={formData.observacion || ""}
+              onChange={(e) => setFormData({ ...formData, observacion: e.target.value })}
+              placeholder="Notas u observaciones sobre el comisionista (máx 300 caracteres)..."
+            />
+            <div className="text-right text-[10px] text-gray-400 mt-1">
+              {(formData.observacion || "").length} / 300
+            </div>
+          </FormField>
 
           <div className="flex gap-4 justify-end pt-4 border-t">
             <Button variant="outline" onClick={() => setIsModalOpen(false)} className="h-12 px-8 rounded-xl font-bold" disabled={isSaving}>Cancelar</Button>

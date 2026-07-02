@@ -150,7 +150,8 @@ exports.createAgent = async (req, res, next) => {
         tipo: data.type || null,
         umbralPago: parseFloat(data.paymentThreshold) || 0,
         acumulado: 0,
-        status: data.status || 'Activo'
+        status: data.status || 'Activo',
+        observacion: data.observacion ? data.observacion.substring(0, 300) : null
       },
       include: { persona: { include: { tipoDocumento: true } } }
     });
@@ -165,7 +166,8 @@ exports.createAgent = async (req, res, next) => {
       accumulated: agent.acumulado,
       paymentThreshold: agent.umbralPago,
       phone: agent.persona.telefono,
-      email: agent.persona.email
+      email: agent.persona.email,
+      observacion: agent.observacion || ''
     }, null, 201);
   } catch (err) {
     next(err);
@@ -221,6 +223,9 @@ exports.updateAgent = async (req, res, next) => {
     if (data.status !== undefined) await prisma.comisionistas.update({ where: { id }, data: { status: data.status } });
     if (data.paymentThreshold !== undefined) {
       await prisma.comisionistas.update({ where: { id }, data: { umbralPago: parseFloat(data.paymentThreshold) || 0 } });
+    }
+    if (data.observacion !== undefined) {
+      await prisma.comisionistas.update({ where: { id }, data: { observacion: data.observacion ? data.observacion.substring(0, 300) : null } });
     }
 
     success(res, { message: 'Comisionista actualizado' });

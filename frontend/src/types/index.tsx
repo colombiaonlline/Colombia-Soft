@@ -610,6 +610,7 @@ export interface CommissionAgent {
   email?: string;
   accumulated?: number;
   paymentThreshold?: number;
+  observacion?: string;
 }
 
 export interface TravelPackage {
