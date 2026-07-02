@@ -251,7 +251,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
               {sale.paymentMethod 
                 ? sale.paymentMethod 
                 : (sale.payments && sale.payments.length > 0 
-                    ? (sale.payments.length > 1 ? 'Mixto' : sale.payments[0].method) 
+                    ? (sale.payments.length > 1 ? 'Mixto' : `${sale.payments[0].method}${sale.payments[0].reference ? ` (Ref: ${sale.payments[0].reference})` : ''}`) 
                     : '—')}
             </span>
           </div>
@@ -645,7 +645,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
                 {sale.paymentMethod 
                   ? sale.paymentMethod 
                   : (sale.payments && sale.payments.length > 0 
-                      ? (sale.payments.length > 1 ? 'Mixto' : sale.payments[0].method) 
+                      ? (sale.payments.length > 1 ? 'Mixto' : `${sale.payments[0].method}${sale.payments[0].reference ? ` (Ref: ${sale.payments[0].reference})` : ''}`) 
                       : '—')}
               </span>
             </div>

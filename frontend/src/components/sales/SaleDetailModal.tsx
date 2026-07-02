@@ -454,7 +454,9 @@ export default function SaleDetailModal({
                 {payments.map((p: any, i: number) => (
                   <div key={i} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
                     <span className="font-bold text-gray-800 text-sm">{formatCurrency(p.amount)}</span>
-                    <span className="text-xs text-gray-500 font-medium">{p.method} · {formatDate(p.date)}</span>
+                    <span className="text-xs text-gray-500 font-medium">
+                      {p.method} {p.reference ? `(Ref: ${p.reference})` : ''} · {formatDate(p.date)}
+                    </span>
                   </div>
                 ))}
               </div>

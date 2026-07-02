@@ -194,7 +194,8 @@ exports.list = async (req, res, next) => {
           id: p.id,
           date: p.fechaPago,
           amount: p.monto,
-          method: p.metodoPago?.nombre || null
+          method: p.metodoPago?.nombre || null,
+          reference: p.referencia || null
         })),
         servicesSummary,
       };
@@ -750,7 +751,8 @@ exports.getById = async (req, res, next) => {
         id: p.id,
         date: p.fechaPago,
         amount: p.monto,
-        method: p.metodoPago?.nombre || null
+        method: p.metodoPago?.nombre || null,
+        reference: p.referencia || null
       })),
       ticketData: resultMap.tiqueteria || [],
       hotelData: resultMap.hoteleria || [],
@@ -1656,7 +1658,8 @@ exports.create = async (req, res, next) => {
         id: p.id,
         date: p.fechaPago,
         amount: p.monto,
-        method: p.metodoPago?.nombre || null
+        method: p.metodoPago?.nombre || null,
+        reference: p.referencia || null
       })),
       ticketData: data.ticketData,
       hotelData: data.hotelData,
