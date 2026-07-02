@@ -167,7 +167,7 @@ const untransformBody = async (section, body) => {
         // Corrección de integridad: Usamos findFirst porque 'nombre' no es una llave única estricta en el modelo de aerolineas
         let airline = await prisma.aerolineas.findFirst({ where: { nombre: body.airlineName } });
         if (!airline) {
-          airline = await prisma.aerolineas.create({ data: { nombre: body.airlineName, codigoIata: body.airlineName.slice(0, 2).toUpperCase() } });
+          airline = await prisma.aerolineas.create({ data: { nombre: body.airlineName, codigoIata: null } });
         }
         data.aerolineaId = airline.id;
       }
@@ -192,7 +192,7 @@ const createPackageRelations = async (tx, paqueteId, body) => {
     if (body.flight.airline) {
       let airline = await tx.aerolineas.findFirst({ where: { nombre: body.flight.airline } });
       if (!airline) {
-        airline = await tx.aerolineas.create({ data: { nombre: body.flight.airline, codigoIata: body.flight.airline.slice(0, 2).toUpperCase() } });
+        airline = await tx.aerolineas.create({ data: { nombre: body.flight.airline, codigoIata: null } });
       }
       aerolineaId = airline.id;
     }
