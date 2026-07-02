@@ -675,7 +675,9 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
           <strong>2.</strong> En vuelos internacionales, llegue como mínimo cuatro horas antes del vuelo para el chequeo y embarque.<br /><br />
           <strong>3.</strong> El checkin o pase de abordar es valor agregado a los servicios prestados, este servicio se brinda dentro del tiempo segun la aereolinea.<br />
           Se habilitará 24 horas antes de la salida del vuelo y se cerrará 4 horas antes del vuelo. Si no se realiza el check-in en este periodo, Colombia Online no se hace responsable por los gastos o inconvenientes que esto pueda generar.<br /><br />
-          <strong>4.</strong> Todo pasajero deberá exhibir el documento de identidad pertinente ante la aerolínea y autoridades que lo requieran.
+          <strong>4.</strong> Todo pasajero deberá exhibir el documento de identidad pertinente ante la aerolínea y autoridades que lo requieran.<br /><br />
+          <strong>5.</strong> Los cambios, cancelaciones, reembolsos y penalidades están sujetos a las políticas y condiciones de cada proveedor. Los costos adicionales que se generen por dichas modificaciones serán asumidos por el pasajero.<br /><br />
+          <strong>Ley de Protección de Menores:</strong> En cumplimiento de la Ley 679 de 2001 y la Ley 1098 de 2006, nuestra agencia rechaza y denuncia toda forma de explotación, pornografía y turismo sexual con niños, niñas y adolescentes. Estas conductas constituyen un delito y son sancionadas por la legislación colombiana.
           <div className="v-company" style={{ marginTop: '12px' }}>
             Colombia Online | calle 18 # 18 143 mall estación de servicios medrano | Comercial@colombia-online.com
           </div>
