@@ -140,13 +140,86 @@ exports.create = async (req, res, next) => {
       if (dt) tipoDocumentoId = dt.id;
     }
 
-    // Check if user with this document already exists
+    // Check if user with this document or email already exists (active or inactive)
+    let existingUser = null;
     if (data.docNumber) {
-      const existingUser = await prisma.usuarios.findFirst({
-        where: { persona: { documento: data.docNumber } }
+      existingUser = await prisma.usuarios.findFirst({
+        where: { persona: { documento: data.docNumber } },
+        include: { persona: true }
       });
-      if (existingUser) {
-        return error(res, 'Este número de documento ya está registrado como usuario', 400);
+    }
+
+    if (!existingUser && data.email) {
+      existingUser = await prisma.usuarios.findUnique({
+        where: { email: data.email },
+        include: { persona: true }
+      });
+    }
+
+    if (existingUser) {
+      if (existingUser.status === 'active') {
+        return error(res, 'Este número de documento o correo electrónico ya está registrado como usuario activo', 400);
+      } else {
+        // REACTIVATE EXISITING INACTIVE USER
+        const rol = await prisma.roles.findUnique({ where: { nombre: data.role } });
+        if (!rol) return error(res, 'Rol no válido', 400);
+
+        // 1. Reactivar persona
+        const persona = await prisma.personas.update({
+          where: { id: existingUser.personaId },
+          data: {
+            nombres: formatName(data.firstName || data.name?.split(' ')[0] || existingUser.persona.nombres),
+            apellidos: formatName(data.lastName || data.name?.split(' ').slice(1).join(' ') || existingUser.persona.apellidos),
+            tipoDocumentoId: tipoDocumentoId || existingUser.persona.tipoDocumentoId,
+            email: data.email || existingUser.persona.email,
+            telefono: data.phone || existingUser.persona.telefono,
+            birthDate: data.birthDate ? new Date(data.birthDate) : existingUser.persona.birthDate,
+            avatarUrl: data.avatar || existingUser.persona.avatarUrl,
+            status: 'active',
+            deletedAt: null
+          }
+        });
+
+        // 2. Reactivar usuario
+        const usuario = await prisma.usuarios.update({
+          where: { id: existingUser.id },
+          data: {
+            email: data.email || existingUser.email,
+            passwordHash,
+            rolId: rol.id,
+            status: 'active'
+          },
+          include: { persona: { include: { tipoDocumento: true } }, rol: true }
+        });
+
+        // 3. Enviar correo de reactivación
+        try {
+          await emailService.sendEmail({
+            to: usuario.email,
+            subject: '¡Tu cuenta en Colombia Online ha sido reactivada!',
+            html: `
+              <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaec; border-radius: 8px; overflow: hidden;">
+                <div style="background-color: #0f172a; padding: 20px; text-align: center;">
+                  <h1 style="color: #ffffff; margin: 0; font-size: 24px;">¡Tu cuenta ha sido reactivada!</h1>
+                </div>
+                <div style="padding: 30px;">
+                  <p style="font-size: 16px;">Hola <strong>${persona.nombres}</strong>,</p>
+                  <p style="font-size: 16px;">Tu cuenta en Colombia Online ha sido reactivada exitosamente por un administrador.</p>
+                  <p style="font-size: 16px;"><strong>Tus credenciales de acceso son:</strong></p>
+                  <ul style="font-size: 16px; background: #f8fafc; padding: 15px 30px; border-radius: 6px;">
+                    <li><strong>Correo:</strong> ${usuario.email}</li>
+                    <li><strong>Contraseña:</strong> La contraseña asignada por el administrador</li>
+                  </ul>
+                  <p style="font-size: 16px;">Ya puedes iniciar sesión en la plataforma.</p>
+                </div>
+              </div>
+            `
+          });
+        } catch (mailErr) {
+          console.error('Error enviando correo de reactivación:', mailErr);
+        }
+
+        return success(res, usuario, 200);
       }
     }
 
