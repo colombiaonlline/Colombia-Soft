@@ -259,6 +259,7 @@ export function Step3Payment({ form, set, data, errors }: any) {
                   value={payReference}
                   onChange={(e) => setPayReference(e.target.value)}
                   placeholder="N° Comprobante, Transferencia..."
+                  maxLength={40}
                 />
               </FormField>
             </div>
@@ -281,9 +282,9 @@ export function Step3Payment({ form, set, data, errors }: any) {
 
         {/* Resumen de Estado de Cobro */}
         <div className="grid grid-cols-3 gap-3 pt-2 text-center">
-          <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+          <div className="bg-white dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Venta</p>
-            <p className="text-sm font-black text-slate-800">${totalSale.toLocaleString("es-CO")}</p>
+            <p className="text-sm font-black text-blue-600 dark:text-blue-400">${totalSale.toLocaleString("es-CO")}</p>
           </div>
           <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Abonado</p>

@@ -107,6 +107,7 @@ export default function SaleEditModal({
   const [newPayment, setNewPayment] = useState({
     amount: "",
     method: "Efectivo",
+    reference: "",
   });
   const [localStatus, setLocalStatus] = useState<string>("");
   const [localCreditDueDate, setLocalCreditDueDate] = useState<string>("");
@@ -167,16 +168,19 @@ export default function SaleEditModal({
       date: new Date().toISOString(),
       amount,
       method: newPayment.method,
+      reference: newPayment.reference,
     };
     setPayments(prev => [...prev, optimisticPayment]);
-    setNewPayment({ amount: "", method: "Efectivo" });
+    setNewPayment({ amount: "", method: "Efectivo", reference: "" });
 
     // Fire-and-forget: sync with server in background
-    onRegisterPayment(sale.id, amount, newPayment.method).then(result => {
+    onRegisterPayment(sale.id, amount, newPayment.method, newPayment.reference).then(result => {
       // Replace temp entry with real server data
       setPayments(prev => prev.map(p => p.id === tempId ? result.payment : p));
-    }).catch(() => {
+    }).catch((err) => {
       // Rollback on error
+      console.error(err);
+      alert("Error al registrar el abono: " + (err.response?.data?.message || err.message));
       setPayments(prev => prev.filter(p => p.id !== tempId));
     });
   };
@@ -433,6 +437,22 @@ export default function SaleEditModal({
                       ]}
                     />
                   </div>
+                  <div className="flex-1 w-full">
+                    <label className="text-xs font-bold text-gray-600 mb-1 block">
+                      Ref (Opcional)
+                    </label>
+                    <Input
+                      value={newPayment.reference}
+                      onChange={(e) =>
+                        setNewPayment({
+                          ...newPayment,
+                          reference: e.target.value,
+                        })
+                      }
+                      placeholder="N° Comprobante..."
+                      maxLength={40}
+                    />
+                  </div>
                   <Button
                     type="button"
                     onClick={handleAddPayment}
@@ -477,6 +497,7 @@ export default function SaleEditModal({
                           </span>
                           <span className="text-xs text-gray-500 font-medium">
                             {formatDate(p.date)} · {p.method}
+                            {p.reference && <span className="text-gray-400"> · Ref: {p.reference}</span>}
                           </span>
                         </div>
                       </div>
