@@ -12,7 +12,8 @@
     "db:seed": "node prisma/seed.js",
     "db:studio": "npx prisma studio",
     "db:reset": "npx prisma db push --force-reset && node prisma/seed.js",
-    "db:clear-sales": "node prisma/clearSales.js"
+    "db:clear-sales": "node prisma/clearSales.js",
+    "db:clear-users-clients": "node prisma/clearUsersAndClients.js"
   },
   "keywords": [
     "itea",
