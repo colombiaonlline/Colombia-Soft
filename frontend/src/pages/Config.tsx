@@ -218,7 +218,11 @@ export default function Config() {
           if (!formData.type) newErrors.type = 'Debe seleccionar un tipo de proveedor.';
           if (formData.email && formData.email.trim().length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Debe ingresar un correo electrónico válido.';
           if (formData.phone && formData.phone.trim().length > 0 && formData.phone.trim().length < 7) newErrors.phone = 'Debe ingresar un teléfono válido.';
-          if (!formData.website || !formData.website.startsWith('http')) newErrors.website = 'Debe ingresar un enlace de sitio web válido (que inicie con http:// o https://).';
+          if (formData.website && formData.website.trim().length > 0) {
+            if (!formData.website.startsWith('http')) {
+              newErrors.website = 'Debe ingresar un enlace de sitio web válido (que inicie con http:// o https://).';
+            }
+          }
           break;
         case 'airports':
           if (!formData.name || formData.name.trim().length === 0) newErrors.name = 'El nombre del aeropuerto es obligatorio.';

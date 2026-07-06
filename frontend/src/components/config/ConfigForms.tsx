@@ -201,7 +201,7 @@ export default function ConfigForms({ section, formData, setFormData, errors, se
               error={errors.phone} 
             />
           </FormField>
-          <FormField label="Enlace del Sitio Web (Link)" error={errors.website}>
+          <FormField label="Enlace del Sitio Web (Link) (Opcional)" error={errors.website}>
             <Input 
               value={formData.website || ''} 
               onChange={e => {
