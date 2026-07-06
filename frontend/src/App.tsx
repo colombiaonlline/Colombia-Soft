@@ -31,6 +31,12 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function AdminOrAsesorRoute({ children }: { children: React.ReactNode }) {
+  const { isAdmin, user } = useAuth();
+  if (!isAdmin && user?.role !== 'asesor') return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 function AppRoutes() {
   const { user } = useAuth();
 
@@ -45,7 +51,7 @@ function AppRoutes() {
         <Route path="responsables" element={<AdminRoute><Responsables /></AdminRoute>} />
         <Route path="itineraries" element={<Itineraries />} />
         <Route path="users" element={<AdminRoute><Users /></AdminRoute>} />
-        <Route path="config" element={<AdminRoute><Config /></AdminRoute>} />
+        <Route path="config" element={<AdminOrAsesorRoute><Config /></AdminOrAsesorRoute>} />
         <Route path="commissions" element={<CommissionAgents />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

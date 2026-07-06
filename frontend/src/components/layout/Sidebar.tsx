@@ -62,7 +62,10 @@ export function Sidebar({ isMobileOpen = false, onClose }: SidebarProps) {
 
   const filteredMainLinks = mainLinks.filter(link => canView(link.permission));
   const filteredAdminLinks = (adminLinks as any[]).filter(link => {
-    if (link.permission === 'users' || link.permission === 'config' || link.permission === 'responsables') {
+    if (link.permission === 'config') {
+      return isAdmin || user?.role === 'asesor';
+    }
+    if (link.permission === 'users' || link.permission === 'responsables') {
       return isAdmin;
     }
     return canView(link.permission);
@@ -129,7 +132,7 @@ export function Sidebar({ isMobileOpen = false, onClose }: SidebarProps) {
             ))}
           </ul>
 
-          {isAdmin && filteredAdminLinks.length > 0 && (
+          {(isAdmin || user?.role === 'asesor') && filteredAdminLinks.length > 0 && (
             <div className="mt-8">
               <div className={`px-4 py-2 transition-all duration-300 ${isExpanded ? "opacity-100" : "opacity-0 h-0 py-0"}`}>
                 <span className="text-[10px] font-bold text-[#9ca3af] uppercase tracking-[0.2em] whitespace-nowrap">

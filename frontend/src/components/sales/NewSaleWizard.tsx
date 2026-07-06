@@ -598,7 +598,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
                   if (!g.docType || g.docType.trim().length === 0) {
                     errors.push(`Integrante #${gIdx + 1}: Tipo de Documento es requerido`);
                   }
-                  if (!g.docNumber || g.docNumber.trim().length < 5 || g.docNumber.trim().length > 20) {
+                  if (!g.docNumber || g.docNumber.trim().length < 5 || g.docNumber.trim().length > 15) {
                     errors.push(`Integrante #${gIdx + 1}: Número de Documento (5-20 caracteres)`);
                   } else if (/[^a-zA-Z0-9]/.test(g.docNumber)) {
                     errors.push(`Integrante #${gIdx + 1}: Número de Documento debe ser alfanumérico`);
@@ -661,7 +661,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
               if (!mig.birthDate) errors.push("Fecha de Nacimiento (requerida)");
               if (!mig.nationality || mig.nationality.trim().length === 0 || mig.nationality.length > 30) errors.push("Nacionalidad (1-30 chars)");
               if (!mig.docType) errors.push("Tipo de Documento (requerido)");
-              if (!mig.docNumber || mig.docNumber.trim().length < 5 || mig.docNumber.length > 20) errors.push("Número de Documento (5-20 chars)");
+              if (!mig.docNumber || mig.docNumber.trim().length < 5 || mig.docNumber.length > 15) errors.push("Número de Documento (5-15 chars)");
               if (mig.docType === "Pasaporte" && !mig.passportExpiry) errors.push("Vencimiento de Documento (requerido)");
               if (!mig.destinationCountry || mig.destinationCountry.trim().length === 0) errors.push("País de Destino (requerido)");
               if (!mig.requestedDocType || mig.requestedDocType.trim().length === 0) errors.push("Trámite (requerido)");
@@ -945,7 +945,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
 
               if (!visa.docType) errors.push("Tipo de Documento (requerido)");
 
-              if (!visa.docNumber || visa.docNumber.trim().length < 5 || visa.docNumber.length > 20) {
+              if (!visa.docNumber || visa.docNumber.trim().length < 5 || visa.docNumber.length > 15) {
                 errors.push("Número de Documento (5-20 chars)");
               } else if (/[^a-zA-Z0-9]/.test(visa.docNumber)) {
                 errors.push("Número de Documento debe ser alfanumérico");
@@ -1302,7 +1302,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
                   if (!g.docType || g.docType.trim().length === 0) {
                     errors.push(`Integrante #${gIdx + 1}: Tipo de Documento es requerido`);
                   }
-                  if (!g.docNumber || g.docNumber.trim().length < 5 || g.docNumber.trim().length > 20) {
+                  if (!g.docNumber || g.docNumber.trim().length < 5 || g.docNumber.trim().length > 15) {
                     errors.push(`Integrante #${gIdx + 1}: Número de Documento (5-20 caracteres)`);
                   } else if (/[^a-zA-Z0-9]/.test(g.docNumber)) {
                     errors.push(`Integrante #${gIdx + 1}: Número de Documento debe ser alfanumérico`);
