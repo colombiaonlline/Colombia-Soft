@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Plus, 
   Pencil, 
@@ -304,7 +305,7 @@ export default function Config() {
   return (
     <div className="space-y-6 animate-fade-in relative">
       {/* Toast Notifications */}
-      {showSuccess && (
+      {showSuccess && createPortal(
         <div className="fixed top-20 right-6 z-[9999] bg-emerald-50 border border-emerald-200 text-emerald-700 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-in-right">
           <div className="bg-emerald-500 text-white rounded-full p-1">
             <TrendingUp size={18} />
@@ -313,9 +314,10 @@ export default function Config() {
             <p className="font-bold text-sm">Operación Exitosa</p>
             <p className="text-xs opacity-90">{successMessage}</p>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-      {showError && (
+      {showError && createPortal(
         <div className="fixed top-32 right-6 z-[9999] bg-rose-50 border border-rose-200 text-rose-700 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-in-right">
           <div className="bg-rose-500 text-white rounded-full p-1">
             <AlertCircle size={18} />
@@ -324,7 +326,8 @@ export default function Config() {
             <p className="font-bold text-sm">Error</p>
             <p className="text-xs opacity-90">{errorMessage}</p>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Dynamic Header */}
