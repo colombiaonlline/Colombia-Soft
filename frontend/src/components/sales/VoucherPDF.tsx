@@ -32,25 +32,25 @@ function FlightBlock({ ticket, idx, airportMap, baggageList }: { ticket: TicketD
   const mainLegs = ticket.legs && ticket.legs.length > 0 ? ticket.legs : [];
   const returnLeg = ticket.returnLeg ? [ticket.returnLeg] : [];
   const hasStopsField = (ticket.outboundStops && ticket.outboundStops.length > 0) || ticket.returnLeg || (ticket.returnStops && ticket.returnStops.length > 0);
-  
+
   const legsToRender = mainLegs.length > 0
     ? (hasStopsField
-        ? [
-            ...mainLegs,
-            ...(ticket.outboundStops || []),
-            ...returnLeg,
-            ...(ticket.returnStops || [])
-          ]
-        : mainLegs)
+      ? [
+        ...mainLegs,
+        ...(ticket.outboundStops || []),
+        ...returnLeg,
+        ...(ticket.returnStops || [])
+      ]
+      : mainLegs)
     : [{
-        origin: '—',
-        destination: '—',
-        flightNumber: ticket.flightNumber || '—',
-        seat: ticket.seatNumber || '—',
-        date: ticket.departureDate,
-        time: undefined,
-        arrivalDate: ticket.arrivalDate,
-      }];
+      origin: '—',
+      destination: '—',
+      flightNumber: ticket.flightNumber || '—',
+      seat: ticket.seatNumber || '—',
+      date: ticket.departureDate,
+      time: undefined,
+      arrivalDate: ticket.arrivalDate,
+    }];
 
   const formatTimeAMPM = (time24: string) => {
     if (!time24) return '—';
@@ -66,7 +66,7 @@ function FlightBlock({ ticket, idx, airportMap, baggageList }: { ticket: TicketD
     <div className="v-flight-block">
       <div className="v-flight-header">✈&nbsp;&nbsp;RECIBO DE TIQUETE ELECTRÓNICO</div>
       <div className="v-flight-notice">Hemos realizado las reservas requeridas y ya se encuentran emitidas. Agradecemos la compra realizada.</div>
-      
+
       {/* Flight table */}
       <table className="v-flight-table">
         <thead>
@@ -173,7 +173,7 @@ function FlightBlock({ ticket, idx, airportMap, baggageList }: { ticket: TicketD
                   <td style={{ padding: '12px', fontWeight: 'bold', color: '#000000' }}>
                     {p.name}
                     {p.esTitular && (
-                      <span style={{ marginLeft: '8px', padding: '2px 8px',  color: '#0369a1', borderRadius: '12px', fontSize: '9px', fontWeight: 'bold' }}>PASAJERO PRINCIPAL</span>
+                      <span style={{ marginLeft: '8px', padding: '2px 8px', color: '#0369a1', borderRadius: '12px', fontSize: '9px', fontWeight: 'bold' }}>PASAJERO PRINCIPAL</span>
                     )}
                   </td>
                   <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#000000' }}>{p.docNumber || '—'}</td>
@@ -199,21 +199,21 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
     day: '2-digit', month: '2-digit', year: 'numeric',
   });
 
-  const tickets     = sale.ticketData      || [];
-  const hotels      = sale.hotelData       || [];
-  const insurances  = sale.insuranceData   || [];
-  const plans       = sale.planData        || [];
-  const checkIns    = sale.checkInData     || [];
-  const migrations  = sale.migrationData   || [];
-  const simCards    = sale.simCardData     || [];
-  const carRentals  = sale.carRentalData   || [];
-  const fincas      = sale.fincaData       || [];
-  const tours       = sale.tourData        || [];
-  const conventions = sale.conventionData  || [];
-  const restaurants = sale.restaurantData  || [];
-  const visas       = sale.visaData        || [];
-  const passports   = sale.passportData    || [];
-  const pets        = sale.petServiceData  || [];
+  const tickets = sale.ticketData || [];
+  const hotels = sale.hotelData || [];
+  const insurances = sale.insuranceData || [];
+  const plans = sale.planData || [];
+  const checkIns = sale.checkInData || [];
+  const migrations = sale.migrationData || [];
+  const simCards = sale.simCardData || [];
+  const carRentals = sale.carRentalData || [];
+  const fincas = sale.fincaData || [];
+  const tours = sale.tourData || [];
+  const conventions = sale.conventionData || [];
+  const restaurants = sale.restaurantData || [];
+  const visas = sale.visaData || [];
+  const passports = sale.passportData || [];
+  const pets = sale.petServiceData || [];
 
   const hasOtherProducts = [hotels, insurances, plans, checkIns, migrations, simCards, carRentals, fincas, tours, conventions, restaurants, visas, passports, pets].some(a => a.length > 0);
   const hasAnyProduct = tickets.length > 0 || hasOtherProducts;
@@ -231,7 +231,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
             <strong>Colombia Online</strong>
             <br />
             NIT: 902062715-5<br />
-            
+
             Dirección: Carrera 65A 13-157 Medellin, Aeropuerto Olaya Herrera, Local 146<br />
             Teléfono: +57 (312) 633 99 19<br />
             <strong>Fecha de Impresión:</strong> {currentDate}<br />
@@ -248,11 +248,11 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
           <div className="v-tb-item">
             <span className="v-tb-label">FORMA DE PAGO</span>
             <span className="v-tb-value">
-              {sale.paymentMethod 
-                ? sale.paymentMethod 
-                : (sale.payments && sale.payments.length > 0 
-                    ? (sale.payments.length > 1 ? 'Mixto' : sale.payments[0].method) 
-                    : '—')}
+              {sale.paymentMethod
+                ? sale.paymentMethod
+                : (sale.payments && sale.payments.length > 0
+                  ? (sale.payments.length > 1 ? 'Mixto' : sale.payments[0].method)
+                  : '—')}
             </span>
           </div>
           <div className="v-tb-item">
@@ -335,16 +335,16 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
                       <DataCell label="Nombre del Plan / Paquete" value={plan.planName || plan.packageName} highlight />
                       <DataCell label="Proveedor / Operador" value={plan.supplier} />
                       <DataCell label="Tipo de Paquete" value="Por Proveedor" />
-                      <DataCell 
-                        label="Lista de Pasajeros / Huéspedes" 
-                        value={(plan.guests || []).map((g: any) => `${g.name} (${g.docType || 'DOC'}: ${g.docNumber})`).join(', ') || '—'} 
-                        fullWidth={true} 
+                      <DataCell
+                        label="Lista de Pasajeros / Huéspedes"
+                        value={(plan.guests || []).map((g: any) => `${g.name} (${g.docType || 'DOC'}: ${g.docNumber})`).join(', ') || '—'}
+                        fullWidth={true}
                       />
                       {plan.observations && (
-                        <DataCell 
-                          label="Observaciones" 
-                          value={plan.observations} 
-                          fullWidth={true} 
+                        <DataCell
+                          label="Observaciones"
+                          value={plan.observations}
+                          fullWidth={true}
                         />
                       )}
                     </>
@@ -353,7 +353,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
                       <DataCell label="Nombre del Plan / Paquete" value={plan.planName || plan.packageName} highlight />
                       <DataCell label="Hotel Incluido" value={plan.hotelName} />
                       <DataCell label="Proveedor / Operador" value={plan.supplier} />
-                      
+
                       <DataCell label="Fecha Inicio Viaje" value={plan.startDate ? formatDate(plan.startDate) : null} />
                       <DataCell label="Fecha Fin Viaje" value={plan.endDate ? formatDate(plan.endDate) : null} />
                       <DataCell label="Pasajeros (Resumen)" value={`${plan.adultsCount ?? 0} adulto(s) / ${plan.childrenCount ?? 0} niño(s)`} />
@@ -374,17 +374,17 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
                       <DataCell label="Llegada Vuelo Regreso" value={plan.flightReturnArrivalDate ? formatDateTime(plan.flightReturnArrivalDate) : null} />
                       <DataCell label="" value={<span />} />
 
-                      <DataCell 
-                        label="Lista de Pasajeros / Huéspedes" 
-                        value={(plan.guests || []).map((g: any) => `${g.name} (${g.docType || 'DOC'}: ${g.docNumber})`).join(', ') || '—'} 
-                        fullWidth={true} 
+                      <DataCell
+                        label="Lista de Pasajeros / Huéspedes"
+                        value={(plan.guests || []).map((g: any) => `${g.name} (${g.docType || 'DOC'}: ${g.docNumber})`).join(', ') || '—'}
+                        fullWidth={true}
                       />
 
                       {plan.observations && (
-                        <DataCell 
-                          label="Observaciones" 
-                          value={plan.observations} 
-                          fullWidth={true} 
+                        <DataCell
+                          label="Observaciones"
+                          value={plan.observations}
+                          fullWidth={true}
                         />
                       )}
                     </>
@@ -508,10 +508,10 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
                   <DataCell label="Punto de Recogida" value={tour.pickupPoint} />
                   <DataCell label="Idioma Guía" value={tour.guideLanguage} />
                   <DataCell label="Transporte" value={tour.needsTransport ? 'Incluido' : 'No requiere'} />
-                  <DataCell 
-                    label="Integrantes del Tour" 
-                    value={(tour.guests || []).map((g: any) => `${g.name} (${g.docType || 'DOC'}: ${g.docNumber})`).join(', ') || tour.passengerName} 
-                    fullWidth={true} 
+                  <DataCell
+                    label="Integrantes del Tour"
+                    value={(tour.guests || []).map((g: any) => `${g.name} (${g.docType || 'DOC'}: ${g.docNumber})`).join(', ') || tour.passengerName}
+                    fullWidth={true}
                   />
                   {tour.observations && (
                     <DataCell label="Toures" value={tour.observations} fullWidth={true} />
@@ -631,7 +631,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
         {/* ══ FOOTNOTES ═══════════════════════════════════════════════ */}
         <div className="v-footnotes">
           Orden <strong>#{formatSaleId(sale.id)}</strong>
-          
+
         </div>
 
         {/* ══ PAYMENT ═════════════════════════════════════════════════ */}
@@ -642,11 +642,11 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
             <div className="v-payment-row">
               <label>Forma de Pago:</label>
               <span>
-                {sale.paymentMethod 
-                  ? sale.paymentMethod 
-                  : (sale.payments && sale.payments.length > 0 
-                      ? (sale.payments.length > 1 ? 'Mixto' : sale.payments[0].method) 
-                      : '—')}
+                {sale.paymentMethod
+                  ? sale.paymentMethod
+                  : (sale.payments && sale.payments.length > 0
+                    ? (sale.payments.length > 1 ? 'Mixto' : sale.payments[0].method)
+                    : '—')}
               </span>
             </div>
             <div className="v-endorsements">⚠ LOS SERVICIOS ESTÁN SUJETOS A LAS POLÍTICAS DE CADA PROVEEDOR</div>
