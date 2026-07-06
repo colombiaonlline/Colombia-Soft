@@ -18,7 +18,7 @@ const ROLE_DEFAULT_PERMISSIONS = {
     itineraries: { view: 'own', edit: false },
     commissions: { view: false, create: false, edit: false, delete: false },
     users: { view: true },
-    config: { view: true },
+    config: { view: true, edit: true },
   },
   freelancer: {
     dashboard: { view: 'own' },
@@ -27,7 +27,7 @@ const ROLE_DEFAULT_PERMISSIONS = {
     itineraries: { view: 'own', edit: false },
     commissions: { view: false, create: false, edit: false, delete: false },
     users: { view: true },
-    config: { view: true },
+    config: { view: true, edit: true },
   },
 };
 
