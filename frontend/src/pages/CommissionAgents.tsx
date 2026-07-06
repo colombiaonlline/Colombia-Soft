@@ -116,18 +116,8 @@ export default function CommissionAgents() {
 
   const validateDocNumber = (value: string, docType: string): string => {
     if (!value.trim()) return "El número de documento es obligatorio";
-    const typeUpper = docType ? docType.toUpperCase() : "";
-    if (typeUpper === "PASAPORTE" || typeUpper === "PP" || typeUpper === "PAS") {
-      if (value.length < 9 || value.length > 12) return "El pasaporte debe tener entre 9 y 12 caracteres";
-      if (!/^[a-zA-Z0-9]+$/.test(value)) return "El pasaporte solo debe contener caracteres alfanuméricos";
-    } else if (typeUpper === "NIT" || typeUpper === "RUT") {
-      if (value.length !== 11) return "El NIT/RUT debe tener exactamente 11 caracteres (9 dígitos + guion + 1 dígito)";
-      if (!/^\d{9}-\d{1}$/.test(value)) return "El NIT/RUT debe tener formato 9 dígitos - guion - 1 dígito de verificación (ej: 123456789-0)";
-    } else if (typeUpper === "CC") {
-      if (value.length < 8 || value.length > 10) return "La cédula de ciudadanía debe tener entre 8 y 10 dígitos";
-      if (!/^\d+$/.test(value)) return "La cédula de ciudadanía solo debe contener números";
-    } else if (value.length > 15) {
-      return "El documento no puede exceder 15 caracteres";
+    if (value.length < 5 || value.length > 15) {
+      return "El documento debe tener entre 5 y 15 caracteres";
     }
     // Duplicate check against existing agents
     const isDuplicate = (data.commissionAgents || []).some(

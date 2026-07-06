@@ -134,27 +134,8 @@ export default function Users() {
         if (!value.trim()) {
           errorMsg = "El número de documento es obligatorio";
         } else {
-          const typeUpper = formData.docType ? formData.docType.toUpperCase() : "";
-          if (typeUpper === "PASAPORTE" || typeUpper === "PP" || typeUpper === "PAS") {
-            if (value.length < 9 || value.length > 12) {
-              errorMsg = "El pasaporte debe tener entre 9 y 12 caracteres";
-            } else if (!/^[a-zA-Z0-9]+$/.test(value)) {
-              errorMsg = "El pasaporte solo debe contener caracteres alfanuméricos";
-            }
-          } else if (typeUpper === "NIT" || typeUpper === "RUT") {
-            if (value.length !== 11) {
-              errorMsg = "El NIT/RUT debe tener exactamente 11 caracteres (9 dígitos + guion + 1 dígito)";
-            } else if (!/^\d{9}-\d{1}$/.test(value)) {
-              errorMsg = "El NIT/RUT debe tener formato 9 dígitos - guion - 1 dígito de verificación (ej: 123456789-0)";
-            }
-          } else if (typeUpper === "CC") {
-            if (value.length < 8 || value.length > 10) {
-              errorMsg = "La cédula de ciudadanía debe tener entre 8 y 10 dígitos";
-            } else if (!/^\d+$/.test(value)) {
-              errorMsg = "La cédula de ciudadanía solo debe contener números";
-            }
-          } else if (value.length > 15) {
-            errorMsg = "El documento no puede exceder 15 caracteres";
+          if (value.length < 5 || value.length > 15) {
+            errorMsg = "El documento debe tener entre 5 y 15 caracteres";
           }
         }
 
@@ -354,27 +335,8 @@ export default function Users() {
     if (!formData.docNumber.trim()) {
       newErrors.docNumber = "El número de documento es obligatorio";
     } else {
-      const typeUpper = formData.docType ? formData.docType.toUpperCase() : "";
-      if (typeUpper === "PASAPORTE" || typeUpper === "PP" || typeUpper === "PAS") {
-        if (formData.docNumber.length < 9 || formData.docNumber.length > 12) {
-          newErrors.docNumber = "El pasaporte debe tener entre 9 y 12 caracteres";
-        } else if (!/^[a-zA-Z0-9]+$/.test(formData.docNumber)) {
-          newErrors.docNumber = "El pasaporte solo debe contener caracteres alfanuméricos";
-        }
-      } else if (typeUpper === "NIT" || typeUpper === "RUT") {
-        if (formData.docNumber.length !== 11) {
-          newErrors.docNumber = "El NIT/RUT debe tener exactamente 11 caracteres (9 dígitos + guion + 1 dígito)";
-        } else if (!/^\d{9}-\d{1}$/.test(formData.docNumber)) {
-          newErrors.docNumber = "El NIT/RUT debe tener formato 9 dígitos - guion - 1 dígito de verificación (ej: 123456789-0)";
-        }
-      } else if (typeUpper === "CC") {
-        if (formData.docNumber.length < 8 || formData.docNumber.length > 10) {
-          newErrors.docNumber = "La cédula de ciudadanía debe tener entre 8 y 10 dígitos";
-        } else if (!/^\d+$/.test(formData.docNumber)) {
-          newErrors.docNumber = "La cédula de ciudadanía solo debe contener números";
-        }
-      } else if (formData.docNumber.length > 15) {
-        newErrors.docNumber = "El documento no puede exceder 15 caracteres";
+      if (formData.docNumber.length < 5 || formData.docNumber.length > 15) {
+        newErrors.docNumber = "El documento debe tener entre 5 y 15 caracteres";
       }
     }
 
