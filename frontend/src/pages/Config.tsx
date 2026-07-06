@@ -267,7 +267,8 @@ export default function Config() {
       setTimeout(() => setShowSuccess(false), 3000);
       setIsModalOpen(false);
     } catch (err: any) {
-      setErrorMessage(err?.response?.data?.message || 'Error al guardar. Verifica los datos e intenta de nuevo.');
+      const apiMsg = err?.response?.data?.error?.message || err?.response?.data?.message;
+      setErrorMessage(apiMsg || 'Error al guardar. Verifica los datos e intenta de nuevo.');
       setShowError(true);
       setTimeout(() => setShowError(false), 3000);
     } finally {
