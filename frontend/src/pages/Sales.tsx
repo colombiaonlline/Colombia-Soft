@@ -588,6 +588,7 @@ export default function Sales() {
         <NewSaleWizard
           onClose={() => setIsWizardOpen(false)}
           onSuccess={(msg) => {
+            fetchSales();
             setSuccessMessage(msg);
             setShowSuccess(true);
             setShowConfetti(true);
