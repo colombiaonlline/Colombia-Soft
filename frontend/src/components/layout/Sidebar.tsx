@@ -65,8 +65,11 @@ export function Sidebar({ isMobileOpen = false, onClose }: SidebarProps) {
     if (link.permission === 'config') {
       return isAdmin || user?.role === 'asesor';
     }
-    if (link.permission === 'users' || link.permission === 'responsables') {
+    if (link.permission === 'users') {
       return isAdmin;
+    }
+    if (link.permission === 'responsables') {
+      return isAdmin || user?.role === 'asesor';
     }
     return canView(link.permission);
   });
