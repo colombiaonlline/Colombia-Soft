@@ -34,7 +34,7 @@ export function Step2Products({ form, set, data, errors, toggleProduct, actions 
     openForm
   } = actions;
 
-  const client = data.clients.find((c: any) => c.name === form.clientId);
+  const client = data.clients.find((c: any) => c.name === form.clientId) || (form.clientId ? { name: form.clientId } : undefined);
 
   const mainProducts = SALE_PRODUCTS.filter((p) =>
     ["tiqueteria", "hoteleria", "seguros_viaje", "planes"].includes(p.id)

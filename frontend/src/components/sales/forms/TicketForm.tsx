@@ -505,21 +505,25 @@ export function TicketForm({
 
   React.useEffect(() => {
     const pax = ticket.passengers || ((ticket as any).passengerInfo ? [{ ...(ticket as any).passengerInfo, esTitular: true, asiento: '', nroReserva: '', nroTiquete: '' }] : []);
-    if (pax.length === 0) {
-      onChange({
-        passengers: [{
-          name: mainClient?.name || mainClient ? `${mainClient.firstName} ${mainClient.lastName || ''}`.trim() : '',
-          docType: mainClient?.docType || '',
-          docNumber: mainClient?.docNumber || '',
-          birthDate: mainClient?.birthDate ? mainClient.birthDate.split('T')[0] : '',
-          esTitular: true,
-          asiento: '',
-          nroReserva: '',
-          nroTiquete: ''
-        }]
-      });
+    const isFirstPaxEmpty = pax.length === 1 && !pax[0].name && !pax[0].docNumber;
+    
+    if (pax.length === 0 || isFirstPaxEmpty) {
+      if (mainClient) {
+        onChange({
+          passengers: [{
+            name: mainClient?.name || mainClient ? `${mainClient.firstName || ''} ${mainClient.lastName || ''}`.trim() : '',
+            docType: mainClient?.docType || '',
+            docNumber: mainClient?.docNumber || '',
+            birthDate: mainClient?.birthDate ? mainClient.birthDate.split('T')[0] : '',
+            esTitular: true,
+            asiento: pax[0]?.asiento || '',
+            nroReserva: pax[0]?.nroReserva || '',
+            nroTiquete: pax[0]?.nroTiquete || ''
+          }]
+        });
+      }
     }
-  }, [ticket.passengers, (ticket as any).passengerInfo, mainClient]);
+  }, [mainClient]);
 
   // Obtener fecha y hora actual en la zona horaria local para la validación de min
   const minDateTime = (() => {

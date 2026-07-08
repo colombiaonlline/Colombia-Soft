@@ -1211,7 +1211,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
     if (!activeForm || activeIdx === null) return null;
 
     const product = SALE_PRODUCTS.find((p) => p.id === activeForm);
-    const client = data.clients.find((c: any) => c.name === form.clientId);
+    const client = data.clients.find((c: any) => c.name === form.clientId) || (form.clientId ? { name: form.clientId } : undefined);
 
     return (
       <form 
