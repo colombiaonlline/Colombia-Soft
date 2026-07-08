@@ -48,7 +48,7 @@ function AppRoutes() {
         <Route path="stats" element={<StatsView />} />
         <Route path="sales" element={<Sales />} />
         <Route path="clients" element={<Clients />} />
-        <Route path="responsables" element={<AdminRoute><Responsables /></AdminRoute>} />
+        <Route path="responsables" element={<AdminOrAsesorRoute><Responsables /></AdminOrAsesorRoute>} />
         <Route path="itineraries" element={<Itineraries />} />
         <Route path="users" element={<AdminRoute><Users /></AdminRoute>} />
         <Route path="config" element={<AdminOrAsesorRoute><Config /></AdminOrAsesorRoute>} />
