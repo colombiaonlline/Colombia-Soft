@@ -5,20 +5,15 @@ const auth = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
 const paginate = require('../middleware/paginate');
 
-const requireAdmin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
-    return next();
-  }
-  return res.status(403).json({ success: false, error: 'Acceso denegado: Solo administradores' });
-};
-
 router.use(auth);
-router.use(requireAdmin);
 
+// View is public for all authenticated users (to load dropdowns)
 router.get('/', paginate, controller.list);
-router.post('/', controller.create);
 router.get('/:id', controller.getById);
-router.put('/:id', controller.update);
-router.delete('/:id', controller.delete);
+
+// Create, edit, delete require admin or config edit permissions
+router.post('/', authorize('config', 'edit'), controller.create);
+router.put('/:id', authorize('config', 'edit'), controller.update);
+router.delete('/:id', authorize('config', 'edit'), controller.delete);
 
 module.exports = router;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   User,
   Package,
@@ -99,6 +99,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -1634,12 +1635,15 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
     if (!validateStep(3)) {
       return;
     }
-    if (isSubmitting) return;
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
     const client = data.clients.find((c: any) => c.name === form.clientId);
     if (!client) {
       setErrors({ ...errors, clientId: "El cliente no es válido" });
       setStep(1);
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
       return;
     }
 
@@ -1731,6 +1735,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
       const errMsg = err?.response?.data?.error?.message || "Ocurrió un error interno en el servidor al registrar la venta. Por favor, asegúrese de reiniciar el servidor backend local para cargar los nuevos módulos de base de datos.";
       alert(`Error al registrar venta: ${errMsg}`);
     } finally {
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   };

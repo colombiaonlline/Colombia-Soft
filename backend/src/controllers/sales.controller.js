@@ -1603,7 +1603,7 @@ exports.create = async (req, res, next) => {
                 const frontendUrl = process.env.FRONTEND_URL || 'https://www.itea-colombiaonline.com';
                 const logoUrl = `${frontendUrl}/colombiaonline-logo.jpeg`;
                 
-                const result = await emailService.sendEmail({
+                emailService.sendEmail({
                   to: clientEmail,
                   subject: `Tu voucher de ${handler.nombreServicio} - Orden #${formattedSaleId} | Colombia Online`,
                   html: `
@@ -1620,10 +1620,13 @@ exports.create = async (req, res, next) => {
                     </div>
                   `,
                   attachments: attachments
+                }).then(result => {
+                  console.log(`[VOUCHER] sendEmail result:`, JSON.stringify(result));
+                }).catch(err => {
+                  console.error('[ERROR] Sending voucher email:', err.message);
                 });
-                console.log(`[VOUCHER] sendEmail result:`, JSON.stringify(result));
               } catch (err) {
-                console.error('[ERROR] Sending voucher email:', err.message);
+                console.error('[ERROR] Preparing voucher email:', err.message);
               }
             }
           }
