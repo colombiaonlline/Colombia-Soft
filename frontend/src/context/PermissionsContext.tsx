@@ -22,8 +22,10 @@ function buildPermissionsFromApiPermisos(permisos: { modulo: string; accion: str
     dashboard: { view: 'none' },
     sales: { view: 'none', create: false, edit: false },
     clients: { view: 'none', create: false, edit: false },
+    responsables: { view: 'all', create: true, edit: true },
     itineraries: { view: 'none', edit: false },
     commissions: { view: false, create: false, edit: false, delete: false },
+    config: { view: true, edit: true }
   };
 
   for (const { modulo, accion, valor } of permisos) {
