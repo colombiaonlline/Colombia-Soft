@@ -39,7 +39,7 @@ import LoadingScreen from "../components/ui/LoadingScreen";
 export default function Sales() {
   const { data, addSale, updateSale, voidSale, registerCreditPayment, deleteSalePayment, updateReviewStatus, salesLoading, fetchSales, fetchClients } = useData();
   const { user, isAdmin } = useAuth();
-  const { canCreate, canEdit } = usePermissions();
+  const { canCreate, canEdit, permissions } = usePermissions();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [isSiigoModalOpen, setIsSiigoModalOpen] = useState(false);
@@ -71,7 +71,8 @@ export default function Sales() {
   const [endDate, setEndDate] = useState("");
 
   const filteredSales = useMemo(() => {
-    const list = isAdmin ? data.sales : data.sales.filter((s) => s.asesorId === user?.id);
+    const canViewAll = isAdmin || (permissions.sales as any)?.view === 'all';
+    const list = canViewAll ? data.sales : data.sales.filter((s) => s.asesorId === user?.id);
     return list.filter((sale) => {
       // 1. Text Search Filter (client name, status, asesor, commissionAgent, id)
       const query = searchTerm.toLowerCase().trim();
@@ -97,7 +98,7 @@ export default function Sales() {
 
       return matchesText && matchesStatus && matchesDate;
     }).sort((a, b) => b.id - a.id);
-  }, [data.sales, isAdmin, user?.id, searchTerm, statusFilter, startDate, endDate]);
+  }, [data.sales, isAdmin, permissions.sales, user?.id, searchTerm, statusFilter, startDate, endDate]);
 
   // Lazy Load Fetch
   useEffect(() => {
@@ -509,8 +510,9 @@ export default function Sales() {
                 </div>
               }
             >
-              Lista de Ventas {isAdmin ? "(Todas)" : "(Mis Ventas)"}
-            </CardHeader>
+              <h2 className="text-xl font-bold text-slate-800">
+              Lista de Ventas {(isAdmin || (permissions.sales as any)?.view === 'all') ? "(Todas)" : "(Mis Ventas)"}
+            </h2></CardHeader>
 
             {/* Skeleton de carga — solo se muestra en el primer fetch sin caché */}
             {salesLoading && filteredSales.length === 0 ? (
