@@ -56,3 +56,5 @@ test_email.js
 
 # Scripts de limpieza de datos local
 prisma/clear*.js
+scripts/
+

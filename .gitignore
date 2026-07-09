@@ -42,6 +42,8 @@ backend/uploads/*
 !backend/uploads/.gitkeep
 backend/prisma/*.db
 backend/prisma/*.db-journal
+backend/scripts/
+
 
 # ==========================================
 # Frontend Specific
