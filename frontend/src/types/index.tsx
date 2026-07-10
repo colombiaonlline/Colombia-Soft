@@ -69,7 +69,8 @@ export function normalizeRolePermissions(perms: Partial<RolePermissions>, baseTe
       for (const key of Object.keys(dst)) {
         if (src[key] !== undefined) {
           const val = src[key];
-          if (key === 'view' && SCOPED_VIEW_MODULES.includes(mod)) {
+          const scopedModules = ['dashboard', 'sales', 'clients', 'responsables', 'itineraries'];
+          if ((key === 'view' || key === 'edit') && scopedModules.includes(mod)) {
             dst[key] = val === true ? 'all' : val === false ? 'none' : val;
           } else {
             dst[key] = typeof val === 'string' ? val !== 'none' && val !== 'false' : !!val;
