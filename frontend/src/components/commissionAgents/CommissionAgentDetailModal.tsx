@@ -143,7 +143,7 @@ export default function CommissionAgentDetailModal({ isOpen, onClose, agent, age
                           <th className="p-3 font-semibold">ID / Fecha</th>
                           <th className="p-3 font-semibold">Venta Total</th>
                           <th className="p-3 font-semibold">Comisión</th>
-                          <th className="p-3 font-semibold text-right">Liquidada</th>
+                          <th className="p-3 font-semibold text-right">Estado</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
@@ -158,11 +158,7 @@ export default function CommissionAgentDetailModal({ isOpen, onClose, agent, age
                               <span className="font-semibold text-amber-600 dark:text-amber-400">{formatCurrency(s.commissionAgentNetPayment || 0)}</span>
                             </td>
                             <td className="p-3 text-right">
-                               {s.isSettled ? (
-                                 <Badge variant="active" className="!bg-green-100 !text-green-700">Sí</Badge>
-                               ) : (
-                                 <Badge variant="inactive" className="!bg-amber-100 !text-amber-700">No</Badge>
-                               )}
+                              <Badge variant={s.status}>{s.status.toUpperCase()}</Badge>
                             </td>
                           </tr>
                         ))}
