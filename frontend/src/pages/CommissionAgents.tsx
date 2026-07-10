@@ -26,6 +26,7 @@ import { DatePicker } from "../components/sales/forms/TicketForm";
 import { useData } from "../context/DataContext";
 import { usePermissions } from "../context/PermissionsContext";
 import { formatCurrency, capitalizeName, todayStr } from "../utils/formatters";
+import CommissionAgentDetailModal from "../components/commissionAgents/CommissionAgentDetailModal";
 import StatCard from "../components/ui/StatCard";
 import LoadingScreen from "../components/ui/LoadingScreen";
 
@@ -38,6 +39,7 @@ export default function CommissionAgents() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettleModalOpen, setIsSettleModalOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState<any>(null);
+  const [viewAgent, setViewAgent] = useState<any>(null);
   const [selectedAgent, setSelectedAgent] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<"agents" | "settlements" | "history">("agents");
   const [formData, setFormData] = useState<any>({});
@@ -68,6 +70,10 @@ export default function CommissionAgents() {
     setSuccessMessage(msg);
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 3000);
+  };
+
+  const handleViewAgent = (agent: any) => {
+    setViewAgent(agent);
   };
 
   // Calcular acumulados (solo ventas no liquidadas)
@@ -350,6 +356,9 @@ export default function CommissionAgents() {
                             </div>
                           </div>
                           <div className="flex flex-col gap-1 relative z-10">
+                             <button onClick={() => handleViewAgent(agent)} className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Ver Detalle">
+                                <Eye size={16} />
+                             </button>
                              {canEdit('commissions') && (
                                <button onClick={() => handleOpenModal(agent)} className="p-2 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors">
                                   <Pencil size={16} />
@@ -823,6 +832,14 @@ export default function CommissionAgents() {
           </p>
         </div>
       </Modal>
+
+      {/* Detail Modal */}
+      <CommissionAgentDetailModal
+        isOpen={!!viewAgent}
+        onClose={() => setViewAgent(null)}
+        agent={viewAgent}
+        agentSales={viewAgent ? (data.sales || []).filter(s => s.commissionAgentId?.toString() === viewAgent.id.toString()) : []}
+      />
     </div>
   );
 }
