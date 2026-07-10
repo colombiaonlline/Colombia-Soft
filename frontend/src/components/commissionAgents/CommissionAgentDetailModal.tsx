@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Modal } from '../ui/Modal';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
-import { Wallet, Info, FileText } from 'lucide-react';
+import { Input } from '../ui/Input';
+import { Wallet, Info, FileText, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import { CommissionAgent, Sale } from '../../types';
 
@@ -15,6 +16,21 @@ interface CommissionAgentDetailModalProps {
 
 export default function CommissionAgentDetailModal({ isOpen, onClose, agent, agentSales }: CommissionAgentDetailModalProps) {
   const [activeTab, setActiveTab] = useState<'info' | 'sales'>('info');
+  const [salesSearchTerm, setSalesSearchTerm] = useState('');
+  const [salesCurrentPage, setSalesCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const filteredSales = agentSales.filter((s) => {
+    if (!salesSearchTerm) return true;
+    const searchLower = salesSearchTerm.toLowerCase();
+    return (
+      s.id.toString().includes(searchLower) ||
+      (s.status || '').toLowerCase().includes(searchLower)
+    );
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredSales.length / itemsPerPage));
+  const currentSales = filteredSales.slice((salesCurrentPage - 1) * itemsPerPage, salesCurrentPage * itemsPerPage);
 
   if (!agent) return null;
 
@@ -23,10 +39,12 @@ export default function CommissionAgentDetailModal({ isOpen, onClose, agent, age
       isOpen={isOpen}
       onClose={() => {
         setActiveTab('info');
+        setSalesSearchTerm('');
+        setSalesCurrentPage(1);
         onClose();
       }}
       title={`Detalle: ${agent.name}`}
-      size="md"
+      size="lg"
       footer={<Button variant="outline" onClick={onClose}>Cerrar</Button>}
     >
       <div className="space-y-4">
@@ -101,40 +119,88 @@ export default function CommissionAgentDetailModal({ isOpen, onClose, agent, age
           )}
 
           {activeTab === 'sales' && (
-            <div>
-              {agentSales.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-left bg-gray-50 dark:bg-slate-800 text-xs text-gray-500 dark:text-slate-400 uppercase">
-                        <th className="p-2 font-semibold">ID / Fecha</th>
-                        <th className="p-2 font-semibold">Venta Total</th>
-                        <th className="p-2 font-semibold">Comisión</th>
-                        <th className="p-2 font-semibold text-right">Liquidada</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
-                      {agentSales.map(s => (
-                        <tr key={s.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/50">
-                          <td className="p-2">
-                            <span className="font-mono text-gray-500 dark:text-slate-400 block">#{s.id.toString().padStart(4, '0')}</span>
-                            <span className="text-xs text-gray-400">{formatDate(s.date)}</span>
-                          </td>
-                          <td className="p-2 font-semibold text-gray-700 dark:text-gray-300">{formatCurrency(s.total)}</td>
-                          <td className="p-2">
-                            <span className="font-semibold text-amber-600 dark:text-amber-400">{formatCurrency(s.commissionAgentNetPayment || 0)}</span>
-                          </td>
-                          <td className="p-2 text-right">
-                             {s.isSettled ? (
-                               <Badge variant="active" className="!bg-green-100 !text-green-700">Sí</Badge>
-                             ) : (
-                               <Badge variant="inactive" className="!bg-amber-100 !text-amber-700">No</Badge>
-                             )}
-                          </td>
+            <div className="flex flex-col h-full">
+              {/* Buscador */}
+              <div className="mb-4 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                <Input
+                  className="pl-9 h-10 text-sm"
+                  placeholder="Buscar por ID de venta..."
+                  value={salesSearchTerm}
+                  onChange={(e) => {
+                    setSalesSearchTerm(e.target.value);
+                    setSalesCurrentPage(1); // Reset page on search
+                  }}
+                />
+              </div>
+
+              {filteredSales.length > 0 ? (
+                <div className="flex flex-col flex-1">
+                  <div className="overflow-x-auto border border-gray-100 dark:border-slate-700 rounded-lg">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left bg-gray-50 dark:bg-slate-800 text-xs text-gray-500 dark:text-slate-400 uppercase border-b border-gray-100 dark:border-slate-700">
+                          <th className="p-3 font-semibold">ID / Fecha</th>
+                          <th className="p-3 font-semibold">Venta Total</th>
+                          <th className="p-3 font-semibold">Comisión</th>
+                          <th className="p-3 font-semibold text-right">Liquidada</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
+                        {currentSales.map(s => (
+                          <tr key={s.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-800/50">
+                            <td className="p-3">
+                              <span className="font-mono font-bold text-gray-700 dark:text-slate-300 block">#{s.id.toString().padStart(4, '0')}</span>
+                              <span className="text-xs text-gray-400">{formatDate(s.date)}</span>
+                            </td>
+                            <td className="p-3 font-semibold text-gray-700 dark:text-gray-300">{formatCurrency(s.total)}</td>
+                            <td className="p-3">
+                              <span className="font-semibold text-amber-600 dark:text-amber-400">{formatCurrency(s.commissionAgentNetPayment || 0)}</span>
+                            </td>
+                            <td className="p-3 text-right">
+                               {s.isSettled ? (
+                                 <Badge variant="active" className="!bg-green-100 !text-green-700">Sí</Badge>
+                               ) : (
+                                 <Badge variant="inactive" className="!bg-amber-100 !text-amber-700">No</Badge>
+                               )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Paginación */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-4 border-t border-gray-100 dark:border-slate-700 pt-4">
+                      <span className="text-xs text-gray-500">
+                        Mostrando {(salesCurrentPage - 1) * itemsPerPage + 1} - {Math.min(salesCurrentPage * itemsPerPage, filteredSales.length)} de {filteredSales.length} ventas
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => setSalesCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={salesCurrentPage === 1}
+                        >
+                          <ChevronLeft size={16} />
+                        </Button>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 w-10 text-center">
+                          {salesCurrentPage} / {totalPages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => setSalesCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={salesCurrentPage === totalPages}
+                        >
+                          <ChevronRight size={16} />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-8">
