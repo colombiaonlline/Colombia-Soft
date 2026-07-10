@@ -229,9 +229,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
         api.getRolePermissions('asesor').catch(() => null),
         api.getRolePermissions('freelancer').catch(() => null),
       ]);
+      // Los permisos del rol ya vienen procesados por parseValor en el backend.
+      // NO pasar por normalizeRolePermissions porque convierte 'all'/'own' a boolean.
       const resolvedRolePermissions = {
-        asesor: asesorPerms ? normalizeRolePermissions(asesorPerms) : emptyData.config.rolePermissions.asesor,
-        freelancer: freelancerPerms ? normalizeRolePermissions(freelancerPerms) : emptyData.config.rolePermissions.freelancer,
+        asesor: (asesorPerms as RolePermissions | null) ?? emptyData.config.rolePermissions.asesor,
+        freelancer: (freelancerPerms as RolePermissions | null) ?? emptyData.config.rolePermissions.freelancer,
       };
       if (configAll && Object.keys(configAll).length > 0) {
         saveConfigCache({
@@ -645,15 +647,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const updateRolePermissions = async (role: 'asesor' | 'freelancer', permissions: RolePermissions) => {
-    const normalized = normalizeRolePermissions(permissions);
-    await api.updateRolePermissions(role, normalized as any);
+    await api.updateRolePermissions(role, permissions as any);
     setData(prev => ({
       ...prev,
       config: {
         ...prev.config,
         rolePermissions: {
           ...prev.config.rolePermissions,
-          [role]: normalized
+          [role]: permissions
         }
       }
     }));

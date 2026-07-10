@@ -117,8 +117,9 @@ exports.getById = async (req, res, next) => {
       customPermissions: usuario.permisosUsuario.length > 0 ? usuario.permisosUsuario.reduce((acc, pu) => {
         if (!acc[pu.permiso.modulo]) acc[pu.permiso.modulo] = {};
         const val = pu.valor || 'true';
-        const isScopedView = pu.permiso.accion === 'view' && ['dashboard','sales','clients'].includes(pu.permiso.modulo);
-        acc[pu.permiso.modulo][pu.permiso.accion] = isScopedView
+        const scopedModules = ['dashboard', 'sales', 'clients', 'responsables', 'itineraries'];
+        const isScoped = (pu.permiso.accion === 'view' || pu.permiso.accion === 'edit') && scopedModules.includes(pu.permiso.modulo);
+        acc[pu.permiso.modulo][pu.permiso.accion] = isScoped
           ? (val === 'own' || val === 'all' || val === 'none' ? val : 'all')
           : (val === 'true' || val === true);
         return acc;

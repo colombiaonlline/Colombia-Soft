@@ -215,6 +215,21 @@ export default function Users() {
     ]).finally(() => setIsLoading(false));
   }, [fetchUsers, fetchSales]);
 
+  // Sincronizar los permisos de edición cuando llegan del backend
+  // (el estado inicial puede haberse montado antes de que fetchConfig terminara)
+  useEffect(() => {
+    if (!isPermissionsModalOpen) {
+      // Solo sincronizar la vista de permisos globales, no cuando hay un modal de usuario abierto
+      const rolePerms = editingRole === 'asesor'
+        ? data.config.rolePermissions?.asesor
+        : data.config.rolePermissions?.freelancer;
+      if (rolePerms && !selectedUserForPermissions) {
+        setEditingUserPermissions(rolePerms);
+      }
+    }
+  }, [data.config.rolePermissions, editingRole]);
+
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
