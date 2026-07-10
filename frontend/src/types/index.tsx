@@ -23,36 +23,36 @@ export interface User {
 
 export interface RolePermissions {
   dashboard: { view: "all" | "own" | "none" };
-  sales: { view: "all" | "own" | "none"; create: boolean; edit: boolean };
-  clients: { view: "all" | "own" | "none"; create: boolean; edit: boolean };
-  responsables: { view: "all" | "own" | "none"; create: boolean; edit: boolean };
-  itineraries: { view: "all" | "own" | "none"; edit: boolean };
+  sales: { view: "all" | "own" | "none"; create: boolean; edit: "all" | "own" | "none" };
+  clients: { view: "all" | "own" | "none"; create: boolean; edit: "all" | "own" | "none" };
+  responsables: { view: "all" | "own" | "none"; create: boolean; edit: "all" | "own" | "none" };
+  itineraries: { view: "all" | "own" | "none"; edit: "all" | "own" | "none" };
   commissions: { view: boolean; create: boolean; edit: boolean; delete: boolean };
 }
 
 export const DEFAULT_ASESOR_PERMISSIONS: RolePermissions = {
   dashboard: { view: "own" },
-  sales: { view: "own", create: true, edit: true },
-  clients: { view: "own", create: true, edit: true },
-  responsables: { view: "own", create: true, edit: true },
-  itineraries: { view: "own", edit: false },
+  sales: { view: "own", create: true, edit: "own" },
+  clients: { view: "own", create: true, edit: "own" },
+  responsables: { view: "own", create: true, edit: "own" },
+  itineraries: { view: "own", edit: "none" },
   commissions: { view: false, create: false, edit: false, delete: false },
 };
 export const DEFAULT_FREELANCER_PERMISSIONS: RolePermissions = {
   dashboard: { view: "own" },
-  sales: { view: "own", create: true, edit: true },
-  clients: { view: "own", create: true, edit: true },
-  responsables: { view: "own", create: true, edit: true },
-  itineraries: { view: "own", edit: false },
+  sales: { view: "own", create: true, edit: "own" },
+  clients: { view: "own", create: true, edit: "own" },
+  responsables: { view: "own", create: true, edit: "own" },
+  itineraries: { view: "own", edit: "none" },
   commissions: { view: false, create: false, edit: false, delete: false },
 };
 
 export const ADMIN_PERMISSIONS: RolePermissions = {
   dashboard: { view: "all" },
-  sales: { view: "all", create: true, edit: true },
-  clients: { view: "all", create: true, edit: true },
-  responsables: { view: "all", create: true, edit: true },
-  itineraries: { view: "all", edit: true },
+  sales: { view: "all", create: true, edit: "all" },
+  clients: { view: "all", create: true, edit: "all" },
+  responsables: { view: "all", create: true, edit: "all" },
+  itineraries: { view: "all", edit: "all" },
   commissions: { view: true, create: true, edit: true, delete: true },
 };
 

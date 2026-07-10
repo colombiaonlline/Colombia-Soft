@@ -10,7 +10,7 @@ const MODULE_ACTIONS = {
   commissions: ['view', 'create', 'edit', 'delete'],
 };
 
-const SCOPED_VIEW_MODULES = ['dashboard', 'sales', 'clients'];
+const SCOPED_MODULES = ['dashboard', 'sales', 'clients', 'responsables', 'itineraries'];
 
 const DEFAULT_ROLE_VALUES = {
   asesor: {
@@ -30,7 +30,7 @@ const DEFAULT_ROLE_VALUES = {
 };
 
 function parseValor(accion, modulo, valor, role) {
-  if (accion === 'view' && SCOPED_VIEW_MODULES.includes(modulo)) {
+  if ((accion === 'view' || accion === 'edit') && SCOPED_MODULES.includes(modulo)) {
     // El dashboard NUNCA puede ser 'all' para no-admins.
     // Clientes y ventas sí pueden ser configurados como 'all'.
     if (valor === 'all') {
@@ -42,6 +42,7 @@ function parseValor(accion, modulo, valor, role) {
       // Para dashboard, 'true' = 'own'; para otros módulos, 'true' = 'all'
       return modulo === 'dashboard' ? 'own' : 'all';
     }
+    if (valor === 'false') return 'none';
     return 'none';
   }
   // boolean value

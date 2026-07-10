@@ -20,29 +20,33 @@ const PermissionsContext = createContext<PermissionsContextType | undefined>(und
 function buildPermissionsFromApiPermisos(permisos: { modulo: string; accion: string; valor?: string }[]): RolePermissions {
   const base: any = {
     dashboard: { view: 'none' },
-    sales: { view: 'none', create: false, edit: false },
-    clients: { view: 'none', create: false, edit: false },
-    responsables: { view: 'all', create: true, edit: true },
-    itineraries: { view: 'none', edit: false },
+    sales: { view: 'none', create: false, edit: 'none' },
+    clients: { view: 'none', create: false, edit: 'none' },
+    responsables: { view: 'all', create: true, edit: 'all' },
+    itineraries: { view: 'none', edit: 'none' },
     commissions: { view: false, create: false, edit: false, delete: false },
     config: { view: true, edit: true }
   };
 
   for (const { modulo, accion, valor } of permisos) {
     if (!base[modulo]) continue;
-    if (valor !== undefined) {
-      if (valor === 'true') {
-        if (modulo === 'itineraries' && accion === 'view') base[modulo][accion] = 'all';
-        else base[modulo][accion] = true;
-      }
-      else if (valor === 'false') {
-        if (modulo === 'itineraries' && accion === 'view') base[modulo][accion] = 'none';
-        else base[modulo][accion] = false;
-      }
+    
+    // Si la propiedad requiere boolean pero recibimos string true/false
+    if (typeof base[modulo][accion] === 'boolean' || ['create', 'delete'].includes(accion)) {
+      if (valor === 'true') base[modulo][accion] = true;
+      else if (valor === 'false') base[modulo][accion] = false;
+      else if (valor === undefined) base[modulo][accion] = true;
       else base[modulo][accion] = valor;
     } else {
-      if (['dashboard', 'sales', 'clients', 'itineraries'].includes(modulo) && accion === 'view') base[modulo].view = 'all';
-      else if (base[modulo][accion] !== undefined) base[modulo][accion] = true;
+      // Si la propiedad requiere all/own/none (view o edit)
+      if (valor === undefined) {
+        if (accion === 'view') base[modulo].view = 'all';
+        if (accion === 'edit') base[modulo].edit = 'all';
+      } else {
+        if (valor === 'true') base[modulo][accion] = 'all';
+        else if (valor === 'false') base[modulo][accion] = 'none';
+        else base[modulo][accion] = valor;
+      }
     }
   }
 
@@ -95,7 +99,7 @@ export function PermissionsProvider({
     if ('edit' in perm) {
       const editVal = perm.edit;
       if (typeof editVal === 'boolean') return editVal;
-      return editVal !== 'none';
+      return editVal === 'all' || editVal === 'own';
     }
     return false;
   };

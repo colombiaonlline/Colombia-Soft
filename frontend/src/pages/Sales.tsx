@@ -132,7 +132,10 @@ export default function Sales() {
     if (!canEdit("sales")) return false;
     // Solo permitir edición si NO está pagada ni anulada
     if (sale.status === "pagado" || sale.status === "anulado") return false;
-    if (isAdmin) return true;
+    
+    const editScope = (permissions.sales as any).edit;
+    if (isAdmin || editScope === 'all') return true;
+    
     return sale.asesorId === user?.id;
   };
 
