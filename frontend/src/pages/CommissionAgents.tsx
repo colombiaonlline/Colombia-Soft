@@ -32,7 +32,7 @@ import StatCard from "../components/ui/StatCard";
 import LoadingScreen from "../components/ui/LoadingScreen";
 
 export default function CommissionAgents() {
-  const { data, addCommissionAgent, updateCommissionAgent, deleteCommissionAgent, settleCommissions, refreshSettlements, fetchCommissionAgents, fetchSettlements } = useData();
+  const { data, addCommissionAgent, updateCommissionAgent, deleteCommissionAgent, settleCommissions, refreshSettlements, fetchCommissionAgents, fetchSettlements, fetchSales } = useData();
   const { canCreate, canEdit, canDelete } = usePermissions();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -63,9 +63,10 @@ export default function CommissionAgents() {
   useEffect(() => {
     Promise.all([
       fetchCommissionAgents(),
-      fetchSettlements()
+      fetchSettlements(),
+      fetchSales()
     ]).finally(() => setIsLoading(false));
-  }, [fetchCommissionAgents, fetchSettlements]);
+  }, [fetchCommissionAgents, fetchSettlements, fetchSales]);
 
   const notifySuccess = (msg: string) => {
     setSuccessMessage(msg);
