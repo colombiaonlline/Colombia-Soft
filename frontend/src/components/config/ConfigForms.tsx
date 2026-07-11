@@ -437,6 +437,7 @@ export default function ConfigForms({ section, formData, setFormData, errors, se
                   <ArrowRight size={12} className="text-primary" /> Trayectos de Ida
                 </h5>
                 <Button 
+                  type="button"
                   variant="outline" 
                   size="sm" 
                   className="h-7 text-[10px]"
@@ -617,7 +618,6 @@ export default function ConfigForms({ section, formData, setFormData, errors, se
                   options={[
                     { value: "", label: "Seleccionar tipo..." },
                     { value: "hotel", label: "Hotel" },
-                    { value: "hotel_turistico", label: "Hotel Turístico" },
                     { value: "resort", label: "Resort / Todo Incluido" },
                     { value: "boutique", label: "Hotel Boutique" },
                     { value: "apartamento", label: "Apartamento / AirBnB" },
