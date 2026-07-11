@@ -59,7 +59,7 @@ function deleteCache(key: string): void {
 export function saveConfigCache(config: Record<string, any>): void {
   // Guardamos solo las listas de catálogos, excluyendo permisos de rol si estuviesen presentes
   const cacheData = { ...config };
-  delete cacheData.rolePermissions; // Los permisos de roles siempre deben consultarse frescos
+  delete cacheData.rolePermissions; // Los permisos de roles se guardan por separado
   writeCache(getCacheKey('itea_config_cache'), cacheData);
 }
 
@@ -70,3 +70,34 @@ export function loadConfigCache(): Record<string, any[]> | null {
 export function invalidateConfigCache(): void {
   deleteCache(getCacheKey('itea_config_cache'));
 }
+
+// ---------- Cache específico para permisos de rol (sin TTL corto) ----------
+const ROLE_PERMS_TTL_MS = 60 * 60 * 1000; // 1 hora
+
+export function saveRolePermissionsCache(rolePermissions: { asesor: any; freelancer: any }): void {
+  try {
+    const entry = { data: rolePermissions, timestamp: Date.now() };
+    localStorage.setItem('itea_role_perms_cache', JSON.stringify(entry));
+  } catch {}
+}
+
+export function loadRolePermissionsCache(): { asesor: any; freelancer: any } | null {
+  try {
+    const raw = localStorage.getItem('itea_role_perms_cache');
+    if (!raw) return null;
+    const entry = JSON.parse(raw);
+    const age = Date.now() - entry.timestamp;
+    if (age > ROLE_PERMS_TTL_MS) {
+      localStorage.removeItem('itea_role_perms_cache');
+      return null;
+    }
+    return entry.data;
+  } catch {
+    return null;
+  }
+}
+
+export function invalidateRolePermissionsCache(): void {
+  localStorage.removeItem('itea_role_perms_cache');
+}
+

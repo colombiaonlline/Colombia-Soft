@@ -23,6 +23,8 @@ import {
   saveConfigCache,
   loadConfigCache,
   invalidateConfigCache,
+  saveRolePermissionsCache,
+  loadRolePermissionsCache,
 } from '../utils/configCache';
 
 // Limpiar caché de permisos de rol si quedó de versiones anteriores
@@ -109,10 +111,14 @@ const emptyData: AppData = {
     cards: [], paymentMethods: [], documentTypes: [],
     airlines: [], suppliers: [], airports: [],
     baggage: [], packages: [],
-    rolePermissions: {
-      asesor: { dashboard: { view: 'own' }, sales: { view: 'own', create: true, edit: true }, clients: { view: 'own', create: true, edit: false }, responsables: { view: 'own', create: true, edit: true }, itineraries: { view: 'own', edit: false }, commissions: { view: false, create: false, edit: false, delete: false } },
-      freelancer: { dashboard: { view: 'own' }, sales: { view: 'own', create: true, edit: true }, clients: { view: 'own', create: true, edit: false }, responsables: { view: 'own', create: true, edit: true }, itineraries: { view: 'own', edit: false }, commissions: { view: false, create: false, edit: false, delete: false } },
-    },
+    rolePermissions: (() => {
+      const cached = loadRolePermissionsCache();
+      if (cached) return cached;
+      return {
+        asesor: { dashboard: { view: 'own' }, sales: { view: 'own', create: true, edit: 'own' }, clients: { view: 'own', create: true, edit: 'own' }, responsables: { view: 'own', create: true, edit: 'own' }, itineraries: { view: 'own', edit: 'none' }, commissions: { view: false, create: false, edit: false, delete: false } },
+        freelancer: { dashboard: { view: 'own' }, sales: { view: 'own', create: true, edit: 'own' }, clients: { view: 'own', create: true, edit: 'own' }, responsables: { view: 'own', create: true, edit: 'own' }, itineraries: { view: 'own', edit: 'none' }, commissions: { view: false, create: false, edit: false, delete: false } },
+      };
+    })(),
   },
   salesHistory: [],
 };
@@ -235,6 +241,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         asesor: (asesorPerms as RolePermissions | null) ?? emptyData.config.rolePermissions.asesor,
         freelancer: (freelancerPerms as RolePermissions | null) ?? emptyData.config.rolePermissions.freelancer,
       };
+      // Guardar los permisos de rol en cache persistente para que estén disponibles al recargar
+      saveRolePermissionsCache(resolvedRolePermissions);
       if (configAll && Object.keys(configAll).length > 0) {
         saveConfigCache({
           cards: configAll.cards || [],
@@ -297,12 +305,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
     // Al iniciar sesión o cambiar de usuario, cargar inmediatamente su caché específico
     // Esto evita mostrar datos del usuario anterior (ej: admin a asesor)
     const cachedConfig = loadConfigCache();
+    const cachedRolePerms = loadRolePermissionsCache();
     setData(prev => ({
       ...emptyData,
       sales: (loadSalesCache() as Sale[]) || [],
       clients: (loadClientsCache() as Client[]) || [],
       users: (loadUsersCache() as User[]) || [],
-      config: { ...emptyData.config, ...(cachedConfig || {}) },
+      config: {
+        ...emptyData.config,
+        ...(cachedConfig || {}),
+        // Cargar permisos de rol desde cache dedicado (sobrescribe emptyData defaults)
+        rolePermissions: cachedRolePerms ?? emptyData.config.rolePermissions,
+      },
     }));
     setDashboardData(loadDashboardCache());
     setDashboardLoading(!loadDashboardCache());
@@ -648,16 +662,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const updateRolePermissions = async (role: 'asesor' | 'freelancer', permissions: RolePermissions) => {
     await api.updateRolePermissions(role, permissions as any);
-    setData(prev => ({
-      ...prev,
-      config: {
-        ...prev.config,
-        rolePermissions: {
-          ...prev.config.rolePermissions,
-          [role]: permissions
+    setData(prev => {
+      const newRolePermissions = {
+        ...prev.config.rolePermissions,
+        [role]: permissions
+      };
+      // Persistir en cache para que sobreviva el logout/login
+      saveRolePermissionsCache(newRolePermissions);
+      return {
+        ...prev,
+        config: {
+          ...prev.config,
+          rolePermissions: newRolePermissions
         }
-      }
-    }));
+      };
+    });
   };
 
   return (
