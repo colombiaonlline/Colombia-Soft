@@ -31,7 +31,7 @@ exports.dashboard = async (req, res, next) => {
 
     const aggregatesSql = `
       SELECT
-        COUNT(*)::int as "totalOperations",
+        COUNT(CASE WHEN status != 'anulado' THEN 1 END)::int as "totalOperations",
         COALESCE(SUM(CASE WHEN status = 'pagado' THEN ta_total WHEN status = 'abonado' AND monto_total > 0 THEN (ta_total * (COALESCE(monto_pagado_credito, 0) / monto_total)) ELSE 0 END), 0) as "totalRevenue",
         COALESCE(SUM(CASE WHEN status IN ('credito', 'abonado') THEN (monto_total - COALESCE(monto_pagado_credito, 0)) ELSE 0 END), 0) as "pendingBalance",
         COUNT(CASE WHEN status IN ('credito', 'abonado') THEN 1 END)::int as "pendingCount",
@@ -39,8 +39,8 @@ exports.dashboard = async (req, res, next) => {
         COALESCE(SUM(CASE WHEN status = 'pagado' THEN monto_total ELSE 0 END), 0) as "paids",
         COALESCE(SUM(CASE WHEN status = 'credito' THEN monto_total ELSE 0 END), 0) as "credits",
         COALESCE(SUM(CASE WHEN status = 'abonado' THEN monto_total ELSE 0 END), 0) as "partPaids",
-        COALESCE(SUM(CASE WHEN EXTRACT(YEAR FROM creado_at) = ${currentYear} THEN monto_total ELSE 0 END), 0) as "currentYearSales",
-        COALESCE(SUM(CASE WHEN EXTRACT(YEAR FROM creado_at) = ${currentYear - 1} THEN monto_total ELSE 0 END), 0) as "prevYearSales",
+        COALESCE(SUM(CASE WHEN EXTRACT(YEAR FROM creado_at) = ${currentYear} AND status != 'anulado' THEN monto_total ELSE 0 END), 0) as "currentYearSales",
+        COALESCE(SUM(CASE WHEN EXTRACT(YEAR FROM creado_at) = ${currentYear - 1} AND status != 'anulado' THEN monto_total ELSE 0 END), 0) as "prevYearSales",
         COALESCE(SUM(CASE WHEN status IN ('credito', 'abonado') AND monto_total > 0 THEN (costo_proveedor_total * ((monto_total - COALESCE(monto_pagado_credito, 0)) / monto_total)) ELSE 0 END), 0) as "creditProveedores",
         COALESCE(SUM(CASE WHEN status IN ('credito', 'abonado') AND monto_total > 0 THEN (ta_total * ((monto_total - COALESCE(monto_pagado_credito, 0)) / monto_total)) ELSE 0 END), 0) as "creditTa"
       FROM ventas
@@ -64,7 +64,7 @@ exports.dashboard = async (req, res, next) => {
         by: ['categoria'],
         _sum: { subtotal: true },
         _count: true,
-        where: { venta: { ...where, deletedAt: null } }
+        where: { venta: { ...where, deletedAt: null, status: { not: 'anulado' } } }
       }),
       prisma.clientes.count({ where: clientsWhere }),
       prisma.clientes.count({ where: { ...clientsWhere, persona: { status: 'active' } } }),
@@ -89,7 +89,7 @@ exports.dashboard = async (req, res, next) => {
         EXTRACT(MONTH FROM creado_at)::int as month,
         COALESCE(SUM(monto_total), 0) as total
       FROM ventas
-      WHERE deleted_at IS NULL ${userConditionTrend}
+      WHERE deleted_at IS NULL AND status != 'anulado' ${userConditionTrend}
         AND EXTRACT(YEAR FROM creado_at) IN (${currentYear}, ${currentYear - 1})
       GROUP BY 1, 2
       ORDER BY 1 ASC, 2 ASC
