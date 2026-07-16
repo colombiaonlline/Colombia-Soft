@@ -2,8 +2,8 @@ const { error } = require('../utils/apiResponse');
 
 const ADMIN_PERMISSIONS = {
   dashboard: { view: 'all' },
-  sales: { view: 'all', create: true, edit: true },
-  clients: { view: 'all', create: true, edit: true },
+  sales: { view: 'all', create: true, edit: true, delete: true },
+  clients: { view: 'all', create: true, edit: true, delete: true },
   itineraries: { view: 'all', edit: true },
   commissions: { view: true, create: true, edit: true, delete: true },
   users: { view: true, create: true, edit: true, delete: true },
@@ -13,8 +13,8 @@ const ADMIN_PERMISSIONS = {
 const ROLE_DEFAULT_PERMISSIONS = {
   asesor: {
     dashboard: { view: 'own' },
-    sales: { view: 'own', create: true, edit: true },
-    clients: { view: 'own', create: true, edit: true },
+    sales: { view: 'own', create: true, edit: true, delete: false },
+    clients: { view: 'own', create: true, edit: true, delete: false },
     itineraries: { view: 'own', edit: false },
     commissions: { view: false, create: false, edit: false, delete: false },
     users: { view: true },
@@ -22,8 +22,8 @@ const ROLE_DEFAULT_PERMISSIONS = {
   },
   freelancer: {
     dashboard: { view: 'own' },
-    sales: { view: 'own', create: true, edit: true },
-    clients: { view: 'own', create: true, edit: true },
+    sales: { view: 'own', create: true, edit: true, delete: false },
+    clients: { view: 'own', create: true, edit: true, delete: false },
     itineraries: { view: 'own', edit: false },
     commissions: { view: false, create: false, edit: false, delete: false },
     users: { view: true },

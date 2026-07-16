@@ -347,10 +347,12 @@ export default function Sales() {
       setTimeout(() => setShowSuccess(false), 3000);
       setVoidConfirm(null);
       setVoidReason("");
-    } catch {
-      setSuccessMessage(`Error al anular la venta #${voidConfirm.id}`);
+    } catch (err: any) {
+      console.error('Error in voidSale:', err);
+      const msg = err?.response?.data?.message || err?.response?.data?.error?.message || `Error al anular la venta #${voidConfirm.id}`;
+      setSuccessMessage(`❌ ${msg}`);
       setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
+      setTimeout(() => setShowSuccess(false), 4000);
     } finally {
       setIsVoiding(false);
     }
