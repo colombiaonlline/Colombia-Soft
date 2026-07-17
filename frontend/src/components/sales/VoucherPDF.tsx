@@ -199,21 +199,41 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
     day: '2-digit', month: '2-digit', year: 'numeric',
   });
 
-  const tickets = sale.ticketData || [];
-  const hotels = sale.hotelData || [];
-  const insurances = sale.insuranceData || [];
-  const plans = sale.planData || [];
-  const checkIns = sale.checkInData || [];
-  const migrations = sale.migrationData || [];
-  const simCards = sale.simCardData || [];
-  const carRentals = sale.carRentalData || [];
-  const fincas = sale.fincaData || [];
-  const tours = sale.tourData || [];
-  const conventions = sale.conventionData || [];
-  const restaurants = sale.restaurantData || [];
-  const visas = sale.visaData || [];
-  const passports = sale.passportData || [];
-  const pets = sale.petServiceData || [];
+  const tickets = (sale.ticketData || []).filter((t: any) => !t.parentDetalleId);
+  const hotels = (sale.hotelData || []).filter((h: any) => !h.parentDetalleId);
+  const insurances = (sale.insuranceData || []).filter((i: any) => !i.parentDetalleId);
+  const plans = (sale.planData || []).filter((p: any) => !p.parentDetalleId);
+  const checkIns = (sale.checkInData || []).filter((c: any) => !c.parentDetalleId);
+  const migrations = (sale.migrationData || []).filter((m: any) => !m.parentDetalleId);
+  const simCards = (sale.simCardData || []).filter((s: any) => !s.parentDetalleId);
+  const carRentals = (sale.carRentalData || []).filter((c: any) => !c.parentDetalleId);
+  const fincas = (sale.fincaData || []).filter((f: any) => !f.parentDetalleId);
+  const tours = (sale.tourData || []).filter((t: any) => !t.parentDetalleId);
+  const conventions = (sale.conventionData || []).filter((c: any) => !c.parentDetalleId);
+  const restaurants = (sale.restaurantData || []).filter((r: any) => !r.parentDetalleId);
+  const visas = (sale.visaData || []).filter((v: any) => !v.parentDetalleId);
+  const passports = (sale.passportData || []).filter((p: any) => !p.parentDetalleId);
+  const pets = (sale.petServiceData || []).filter((p: any) => !p.parentDetalleId);
+
+  const getChildrenForPlan = (planId: string) => {
+    if (!planId) return [];
+    return [
+      ...(sale.ticketData || []).map(item => ({ ...item, _type: 'ticket' })),
+      ...(sale.hotelData || []).map(item => ({ ...item, _type: 'hotel' })),
+      ...(sale.insuranceData || []).map(item => ({ ...item, _type: 'insurance' })),
+      ...(sale.checkInData || []).map(item => ({ ...item, _type: 'checkin' })),
+      ...(sale.migrationData || []).map(item => ({ ...item, _type: 'migration' })),
+      ...(sale.simCardData || []).map(item => ({ ...item, _type: 'simcard' })),
+      ...(sale.carRentalData || []).map(item => ({ ...item, _type: 'carRental' })),
+      ...(sale.fincaData || []).map(item => ({ ...item, _type: 'finca' })),
+      ...(sale.tourData || []).map(item => ({ ...item, _type: 'tour' })),
+      ...(sale.conventionData || []).map(item => ({ ...item, _type: 'convention' })),
+      ...(sale.restaurantData || []).map(item => ({ ...item, _type: 'restaurant' })),
+      ...(sale.visaData || []).map(item => ({ ...item, _type: 'visa' })),
+      ...(sale.passportData || []).map(item => ({ ...item, _type: 'passport' })),
+      ...(sale.petServiceData || []).map(item => ({ ...item, _type: 'pet' }))
+    ].filter((item: any) => item.parentDetalleId === planId);
+  };
 
   const hasOtherProducts = [hotels, insurances, plans, checkIns, migrations, simCards, carRentals, fincas, tours, conventions, restaurants, visas, passports, pets].some(a => a.length > 0);
   const hasAnyProduct = tickets.length > 0 || hasOtherProducts;
@@ -358,20 +378,20 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
                       <DataCell label="Fecha Fin Viaje" value={plan.endDate ? formatDate(plan.endDate) : null} />
                       <DataCell label="Pasajeros (Resumen)" value={`${plan.adultsCount ?? 0} adulto(s) / ${plan.childrenCount ?? 0} niño(s)`} />
 
-                      <DataCell label="Aerolínea" value={(plan as any).airlineName || plan.airline} />
-                      <DataCell label="N° Vuelo" value={plan.flightNumber} />
+                      <DataCell label={plan.transportType === 'Terrestre' ? "Empresa de Transporte" : "Aerolínea"} value={(plan as any).airlineName || plan.airline} />
+                      <DataCell label={plan.transportType === 'Terrestre' ? "Placa / Vehículo" : "N° Vuelo"} value={plan.flightNumber} />
                       <DataCell label="Localizador / N° Reserva" value={plan.reservationNumber} />
 
-                      <DataCell label="N° Tiquete" value={plan.ticketNumber} />
+                      <DataCell label={plan.transportType === 'Terrestre' ? "Tiquete / Puesto" : "N° Tiquete"} value={plan.ticketNumber} />
                       <DataCell label="N° Confirmación" value={plan.confirmationNumber} />
                       <DataCell label="" value={<span />} />
 
-                      <DataCell label="Fecha Salida Vuelo (Ida)" value={plan.flightDepartureDate ? formatDateTime(plan.flightDepartureDate) : null} />
-                      <DataCell label="Llegada Vuelo Ida" value={plan.flightDepartureArrivalDate ? formatDateTime(plan.flightDepartureArrivalDate) : null} />
+                      <DataCell label={plan.transportType === 'Terrestre' ? "Fecha Salida (Ida)" : "Fecha Salida Vuelo (Ida)"} value={plan.flightDepartureDate ? formatDateTime(plan.flightDepartureDate) : null} />
+                      <DataCell label={plan.transportType === 'Terrestre' ? "Llegada Destino (Ida)" : "Llegada Vuelo Ida"} value={plan.flightDepartureArrivalDate ? formatDateTime(plan.flightDepartureArrivalDate) : null} />
                       <DataCell label="" value={<span />} />
 
-                      <DataCell label="Fecha Regreso Vuelo (Regreso)" value={plan.flightReturnDate ? formatDateTime(plan.flightReturnDate) : null} />
-                      <DataCell label="Llegada Vuelo Regreso" value={plan.flightReturnArrivalDate ? formatDateTime(plan.flightReturnArrivalDate) : null} />
+                      <DataCell label={plan.transportType === 'Terrestre' ? "Fecha Salida (Regreso)" : "Fecha Regreso Vuelo (Regreso)"} value={plan.flightReturnDate ? formatDateTime(plan.flightReturnDate) : null} />
+                      <DataCell label={plan.transportType === 'Terrestre' ? "Llegada Origen (Regreso)" : "Llegada Vuelo Regreso"} value={plan.flightReturnArrivalDate ? formatDateTime(plan.flightReturnArrivalDate) : null} />
                       <DataCell label="" value={<span />} />
 
                       <DataCell
@@ -390,6 +410,67 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
                     </>
                   )}
                 </div>
+
+                {getChildrenForPlan(plan.detalleVentaId).length > 0 && (
+                  <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#0f172a', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{color: '#3b82f6'}}>↳</span> SERVICIOS ADICIONALES VINCULADOS
+                    </div>
+                    {getChildrenForPlan(plan.detalleVentaId).map((child: any, cidx: number, arr: any[]) => {
+                      if (child._type === 'tour') {
+                        return (
+                          <div key={`child-${cidx}`} style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '10px', padding: '8px 0', borderBottom: cidx < arr.length - 1 ? '1px dashed #cbd5e1' : 'none' }}>
+                            <div style={{ flex: '1 1 15%' }}>
+                              <strong style={{display: 'block', color: '#475569'}}>TOUR / ACTIVIDAD</strong>
+                              <span style={{color: '#0f172a', fontWeight: 'bold'}}>{child.selectedTour || child.tourNombre || '—'}</span>
+                            </div>
+                            <div style={{ flex: '1 1 20%' }}>
+                              <strong style={{display: 'block', color: '#475569'}}>PASAJEROS</strong>
+                              <span style={{color: '#0f172a'}}>
+                                {child.guests?.length > 0 ? child.guests.map((g: any) => g.name).join(', ') : (child.passengerName || '—')}
+                              </span>
+                            </div>
+                            <div style={{ flex: '1 1 12%' }}>
+                              <strong style={{display: 'block', color: '#475569'}}>IDIOMA GUÍA</strong>
+                              <span style={{color: '#0f172a'}}>{child.guideLanguage || '—'}</span>
+                            </div>
+                            <div style={{ flex: '1 1 20%' }}>
+                              <strong style={{display: 'block', color: '#475569'}}>PUNTO DE ENCUENTRO</strong>
+                              <span style={{color: '#0f172a'}}>{child.pickupPoint || '—'}</span>
+                            </div>
+                            <div style={{ flex: '1 1 20%' }}>
+                              <strong style={{display: 'block', color: '#475569'}}>OBSERVACIONES</strong>
+                              <span style={{color: '#0f172a'}}>{child.observations || '—'}</span>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div key={`child-${cidx}`} style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '10px', padding: '8px 0', borderBottom: cidx < arr.length - 1 ? '1px dashed #cbd5e1' : 'none' }}>
+                          <div style={{ flex: '1 1 20%' }}>
+                            <strong style={{display: 'block', color: '#475569'}}>SERVICIO</strong>
+                            <span style={{color: '#0f172a', fontWeight: 'bold'}}>
+                              {child.selectedTour || child.hotelName || child.airlineName || child.vehicleCategory || child.insuranceType || child.tipoTramiteMigratorio || child.planDatos || child.fincaName || child.reservationName || child._type.toUpperCase() || 'Servicio Extra'}
+                            </span>
+                          </div>
+                          <div style={{ flex: '1 1 20%' }}>
+                            <strong style={{display: 'block', color: '#475569'}}>PROVEEDOR</strong>
+                            <span style={{color: '#0f172a'}}>{child.supplier || '—'}</span>
+                          </div>
+                          <div style={{ flex: '1 1 20%' }}>
+                            <strong style={{display: 'block', color: '#475569'}}>FECHA</strong>
+                            <span style={{color: '#0f172a'}}>{child.preferredDate || child.startDate || child.checkInDate || child.date ? formatDate(child.preferredDate || child.startDate || child.checkInDate || child.date) : '—'}</span>
+                          </div>
+                          <div style={{ flex: '1 1 20%' }}>
+                            <strong style={{display: 'block', color: '#475569'}}>RESERVA / LOCALIZADOR</strong>
+                            <span style={{color: '#0f172a'}}>{child.reservationNumber || child.ticketNumber || '—'}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </React.Fragment>
             ))}
           </ProductCard>
