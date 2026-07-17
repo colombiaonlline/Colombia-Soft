@@ -43,6 +43,7 @@ const SECTION_MAP = {
         airline: r.paqueteVuelo[0].aerolinea?.nombre || null,
         route: r.paqueteVuelo[0].nroVuelo || null,
         flightMode: r.paqueteVuelo[0].modoVuelo || 'round_trip',
+        transportType: r.paqueteVuelo[0].tipoTransporte || 'Aéreo',
         baggagePlan: r.paqueteVuelo[0].planEquipaje || '',
         legs: r.paqueteVuelo[0].trayectos?.legs || undefined,
         returnLeg: r.paqueteVuelo[0].trayectos?.returnLeg || undefined
@@ -202,6 +203,7 @@ const createPackageRelations = async (tx, paqueteId, body) => {
         aerolineaId,
         nroVuelo: body.flight.route || null,
         modoVuelo: body.flight.flightMode || 'round_trip',
+        tipoTransporte: body.flight.transportType || 'Aéreo',
         planEquipaje: body.flight.baggagePlan || null,
         trayectos: body.flight.legs || body.flight.returnLeg ? {
           legs: body.flight.legs || [],

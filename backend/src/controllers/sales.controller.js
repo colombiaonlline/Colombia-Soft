@@ -391,6 +391,7 @@ const PRODUCT_TRANSFORMS = {
       observations: p.observaciones,
       guests: passengers.map(p => ({ name: p.nombreCompleto, docType: String(p.tipoDocumento || ''), docNumber: p.nroDocumento || '' })),
       packageType: p.tipoPaquete || 'own',
+      transportType: p.tipoTransporte || 'Aéreo',
       supplier: d.proveedor?.nombre || null,
       supplierCost: d.costoProveedor || 0,
       ta: d.ta || 0
@@ -694,7 +695,13 @@ exports.getById = async (req, res, next) => {
       const passengers = mapPassengers(d);
       const handler = PRODUCT_TRANSFORMS[d.categoria];
       if (handler) {
-        handler(d, passengers, (resultMap[d.categoria] = resultMap[d.categoria] || []), venta);
+        const arr = resultMap[d.categoria] = resultMap[d.categoria] || [];
+        const prevLength = arr.length;
+        handler(d, passengers, arr, venta);
+        if (arr.length > prevLength) {
+          arr[arr.length - 1].parentDetalleId = d.parentDetalleId;
+          arr[arr.length - 1].detalleVentaId = d.id; // Also useful to return the actual detail ID
+        }
       }
     }
 
@@ -849,7 +856,8 @@ const PRODUCT_HANDLERS = {
         menoresCount: d.childrenCount || 0,
         numeroConfirmacion: d.confirmationNumber || null,
         observaciones: d.observations || null,
-        tipoPaquete: d.packageType || 'own'
+        tipoPaquete: d.packageType || 'own',
+        tipoTransporte: d.transportType || 'Aéreo'
       };
     }
   },
@@ -1097,8 +1105,11 @@ async function resolveAirlineId(prisma, airline) {
   if (!airline) return null;
   const id = parseInt(airline);
   if (!isNaN(id)) return id;
-  const match = await prisma.aerolineas.findFirst({ where: { nombre: airline } });
-  return match?.id || null;
+  let match = await prisma.aerolineas.findFirst({ where: { nombre: airline } });
+  if (!match) {
+    match = await prisma.aerolineas.create({ data: { nombre: airline, codigoIata: null } });
+  }
+  return match.id;
 }
 
 async function resolveSupplierId(prisma, supplier, cache) {
@@ -1329,7 +1340,19 @@ exports.create = async (req, res, next) => {
         }
       }
 
+      const crypto = require('crypto');
       const detalleVentasData = [];
+
+      // Pre-generate UUIDs for all items to allow linking parent/child in a single nested write
+      for (const field of Object.keys(PRODUCT_HANDLERS)) {
+        if (Array.isArray(data[field])) {
+          for (let item of data[field]) {
+            if (item && Object.keys(item).length > 0) {
+              item._generatedId = crypto.randomUUID();
+            }
+          }
+        }
+      }
 
       for (const [field, handler] of Object.entries(PRODUCT_HANDLERS)) {
         const items = Array.isArray(data[field]) ? data[field] : [];
@@ -1364,7 +1387,17 @@ exports.create = async (req, res, next) => {
             }
           }
 
+          let parentDetalleId = null;
+          if (item.linkedToPlanIndex !== undefined && item.linkedToPlanIndex !== null) {
+            const parentPlan = data['planData']?.[item.linkedToPlanIndex];
+            if (parentPlan && parentPlan._generatedId) {
+              parentDetalleId = parentPlan._generatedId;
+            }
+          }
+
           const detalleObj = {
+            id: item._generatedId,
+            parentDetalleId,
             categoria: handler.category,
             nombreServicio: handler.nombreServicio,
             subtotal: (item.supplierCost || 0) + (item.ta || 0),

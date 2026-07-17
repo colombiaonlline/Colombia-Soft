@@ -234,6 +234,8 @@ export interface HotelData {
 }
 
 export interface PlanData {
+  detalleVentaId?: string;
+  parentDetalleId?: string;
   planName: string;
   hotelName: string;
   supplierCost: number;
@@ -261,6 +263,7 @@ export interface PlanData {
   airline: string;
   guests: GuestInfo[];
   packageType?: 'own' | 'supplier';
+  transportType?: 'Aéreo' | 'Terrestre';
   voucher?: { name: string; base64: string };
   vouchers?: Array<{ name: string; base64: string }>;
   sendVoucher?: boolean;

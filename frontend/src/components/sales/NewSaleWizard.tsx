@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Loader2,
   AlertCircle,
+  Link2,
 } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useData } from "../../context/DataContext";
@@ -226,6 +227,61 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
       setActiveForm(type);
       setActiveIdx(idx);
     },
+  };
+
+  const getCurrentItemLinkedPlanIndex = () => {
+    if (!activeForm || activeIdx === null || activeForm === 'planes') return '';
+    let targetKey: string | null = null;
+    switch (activeForm) {
+      case "tiqueteria": targetKey = "tickets"; break;
+      case "hoteleria": targetKey = "hotels"; break;
+      case "seguros_viaje": targetKey = "insurances"; break;
+      case "checkin": targetKey = "checkIns"; break;
+      case "documentacion_migratoria": targetKey = "migrations"; break;
+      case "simcard": targetKey = "simCards"; break;
+      case "renta_vehiculos": targetKey = "carRentals"; break;
+      case "renta_fincas": targetKey = "fincas"; break;
+      case "tours": targetKey = "tours"; break;
+      case "centros_convencion": targetKey = "conventions"; break;
+      case "restaurantes": targetKey = "restaurants"; break;
+      case "visa": targetKey = "visas"; break;
+      case "pasaporte": targetKey = "passports"; break;
+      case "servicio_mascotas": targetKey = "petServices"; break;
+    }
+    if (targetKey) {
+      const items = (form as any)[targetKey];
+      const currentItem = items?.[activeIdx];
+      return currentItem?.linkedToPlanIndex !== undefined && currentItem?.linkedToPlanIndex !== null ? String(currentItem.linkedToPlanIndex) : '';
+    }
+    return '';
+  };
+
+  const setCurrentItemLinkedPlanIndex = (val: string) => {
+    if (!activeForm || activeIdx === null || activeForm === 'planes') return;
+    let targetKey: string | null = null;
+    switch (activeForm) {
+      case "tiqueteria": targetKey = "tickets"; break;
+      case "hoteleria": targetKey = "hotels"; break;
+      case "seguros_viaje": targetKey = "insurances"; break;
+      case "checkin": targetKey = "checkIns"; break;
+      case "documentacion_migratoria": targetKey = "migrations"; break;
+      case "simcard": targetKey = "simCards"; break;
+      case "renta_vehiculos": targetKey = "carRentals"; break;
+      case "renta_fincas": targetKey = "fincas"; break;
+      case "tours": targetKey = "tours"; break;
+      case "centros_convencion": targetKey = "conventions"; break;
+      case "restaurantes": targetKey = "restaurants"; break;
+      case "visa": targetKey = "visas"; break;
+      case "pasaporte": targetKey = "passports"; break;
+      case "servicio_mascotas": targetKey = "petServices"; break;
+    }
+    if (targetKey) {
+      const items = [...((form as any)[targetKey] || [])];
+      if (items[activeIdx]) {
+        items[activeIdx] = { ...items[activeIdx], linkedToPlanIndex: val === '' ? null : Number(val) };
+        setForm(prev => ({ ...prev, [targetKey!]: items }));
+      }
+    }
   };
 
   useEffect(() => {
@@ -532,25 +588,33 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
                 if (plan.adultsCount === undefined || plan.adultsCount < 0 || plan.adultsCount > 999) errors.push("Adultos (0-999)");
                 if (plan.childrenCount === undefined || plan.childrenCount < 0 || plan.childrenCount > 999) errors.push("Menores (0-999)");
                 if (!plan.flightNumber || plan.flightNumber.trim().length === 0) {
-                  errors.push("Número de Vuelo (requerido)");
-                } else if (plan.flightNumber.length > 8) {
-                  errors.push("Número de Vuelo (máx 8 caracteres)");
-                } else if (!/^[A-Z0-9]+$/.test(plan.flightNumber)) {
-                  errors.push("Número de Vuelo (debe ser alfanumérico en mayúsculas sin espacios ni caracteres especiales)");
+                  errors.push(plan.transportType === 'Terrestre' ? "Placa / Vehículo (requerido)" : "Número de Vuelo (requerido)");
+                } else if (plan.transportType !== 'Terrestre') {
+                  if (plan.flightNumber.length > 12) {
+                    errors.push("Número de Vuelo (máx 12 caracteres)");
+                  } else if (!/^[A-Z0-9-]+$/.test(plan.flightNumber)) {
+                    errors.push("Número de Vuelo (debe ser alfanumérico en mayúsculas)");
+                  }
                 }
-                if (!plan.ticketNumber || plan.ticketNumber.trim().length === 0) {
-                  errors.push("Número de Tiquete (requerido)");
-                } else if (plan.ticketNumber.length < 13 || plan.ticketNumber.length > 14) {
-                  errors.push("Número de Tiquete (mínimo 13 y máximo 14 dígitos)");
-                } else if (!/^\d+$/.test(plan.ticketNumber)) {
-                  errors.push("Número de Tiquete (debe ser estrictamente numérico)");
+                
+                if (plan.transportType !== 'Terrestre') {
+                  if (!plan.ticketNumber || plan.ticketNumber.trim().length === 0) {
+                    errors.push("Número de Tiquete (requerido)");
+                  } else if (plan.ticketNumber.length < 13 || plan.ticketNumber.length > 20) {
+                    errors.push("Número de Tiquete (mínimo 13 y máximo 20 dígitos)");
+                  } else if (!/^\d+$/.test(plan.ticketNumber)) {
+                    errors.push("Número de Tiquete (debe ser estrictamente numérico)");
+                  }
                 }
+                
                 if (!plan.confirmationNumber || plan.confirmationNumber.trim().length === 0) {
                   errors.push("Confirmación (requerido)");
-                } else if (plan.confirmationNumber.length !== 6) {
-                  errors.push("Confirmación (debe tener exactamente 6 caracteres)");
-                } else if (!/^[A-Z0-9]+$/.test(plan.confirmationNumber)) {
-                  errors.push("Confirmación (debe ser alfanumérico en mayúsculas sin espacios ni caracteres especiales)");
+                } else if (plan.transportType !== 'Terrestre') {
+                  if (plan.confirmationNumber.length !== 6) {
+                    errors.push("Confirmación (debe tener exactamente 6 caracteres)");
+                  } else if (!/^[A-Z0-9-]+$/.test(plan.confirmationNumber)) {
+                    errors.push("Confirmación (debe ser alfanumérico en mayúsculas)");
+                  }
                 }
                 if (!plan.supplier || plan.supplier.trim().length === 0) errors.push("Proveedor (requerido)");
 
@@ -1231,27 +1295,33 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
                 if (plan.childrenCount === undefined || plan.childrenCount < 0 || plan.childrenCount > 999) errors.push("Menores (0-999)");
                 
                 if (!plan.flightNumber || plan.flightNumber.trim().length === 0) {
-                  errors.push("Número de Vuelo (requerido)");
-                } else if (plan.flightNumber.length > 8) {
-                  errors.push("Número de Vuelo (máx 8 caracteres)");
-                } else if (!/^[A-Z0-9]+$/.test(plan.flightNumber)) {
-                  errors.push("Número de Vuelo (debe ser alfanumérico en mayúsculas sin espacios ni caracteres especiales)");
+                  errors.push(plan.transportType === 'Terrestre' ? "Placa / Vehículo (requerido)" : "Número de Vuelo (requerido)");
+                } else if (plan.transportType !== 'Terrestre') {
+                  if (plan.flightNumber.length > 12) {
+                    errors.push("Número de Vuelo (máx 12 caracteres)");
+                  } else if (!/^[A-Z0-9-]+$/.test(plan.flightNumber)) {
+                    errors.push("Número de Vuelo (debe ser alfanumérico en mayúsculas)");
+                  }
                 }
                 
-                if (!plan.ticketNumber || plan.ticketNumber.trim().length === 0) {
-                  errors.push("Número de Tiquete (requerido)");
-                } else if (plan.ticketNumber.length < 13 || plan.ticketNumber.length > 14) {
-                  errors.push("Número de Tiquete (mínimo 13 y máximo 14 dígitos)");
-                } else if (!/^\d+$/.test(plan.ticketNumber)) {
-                  errors.push("Número de Tiquete (debe ser estrictamente numérico)");
+                if (plan.transportType !== 'Terrestre') {
+                  if (!plan.ticketNumber || plan.ticketNumber.trim().length === 0) {
+                    errors.push("Número de Tiquete (requerido)");
+                  } else if (plan.ticketNumber.length < 13 || plan.ticketNumber.length > 20) {
+                    errors.push("Número de Tiquete (mínimo 13 y máximo 20 dígitos)");
+                  } else if (!/^\d+$/.test(plan.ticketNumber)) {
+                    errors.push("Número de Tiquete (debe ser estrictamente numérico)");
+                  }
                 }
                 
                 if (!plan.confirmationNumber || plan.confirmationNumber.trim().length === 0) {
                   errors.push("Confirmación (requerido)");
-                } else if (plan.confirmationNumber.length !== 6) {
-                  errors.push("Confirmación (debe tener exactamente 6 caracteres)");
-                } else if (!/^[A-Z0-9]+$/.test(plan.confirmationNumber)) {
-                  errors.push("Confirmación (debe ser alfanumérico en mayúsculas sin espacios ni caracteres especiales)");
+                } else if (plan.transportType !== 'Terrestre') {
+                  if (plan.confirmationNumber.length !== 6) {
+                    errors.push("Confirmación (debe tener exactamente 6 caracteres)");
+                  } else if (!/^[A-Z0-9-]+$/.test(plan.confirmationNumber)) {
+                    errors.push("Confirmación (debe ser alfanumérico en mayúsculas)");
+                  }
                 }
                 
                 if (!plan.flightDepartureDate) errors.push("Fecha Ida (requerido)");
@@ -1384,7 +1454,30 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
 
         {/* Sub-form Content */}
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-8 bg-gray-light/30 dark:bg-slate-900/50">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-3xl mx-auto space-y-6">
+
+            {activeForm !== "planes" && form.plans.length > 0 && (
+              <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm animate-fade-in mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Link2 size={16} className="text-primary" />
+                  <h4 className="text-sm font-bold text-gray-800">Vincular a Paquete</h4>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">Si este servicio pertenece a un paquete de esta misma venta, selecciónalo aquí para agruparlos.</p>
+                <select 
+                  className="w-full text-sm p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+                  value={getCurrentItemLinkedPlanIndex()}
+                  onChange={e => setCurrentItemLinkedPlanIndex(e.target.value)}
+                >
+                  <option value="">-- No vincular a ningún paquete --</option>
+                  {form.plans.map((p, idx) => (
+                    <option key={idx} value={idx}>
+                      Paquete #{idx + 1}: {p.planName || p.packageName || 'Sin nombre'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
         {(() => {
           switch (activeForm) {
             case "tiqueteria":

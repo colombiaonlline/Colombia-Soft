@@ -396,6 +396,10 @@ model DetalleVenta {
   destino               String?
   observaciones         String?
   creadoAt              DateTime?      @default(now()) @map("creado_at")
+  parentDetalleId       String?        @map("parent_detalle_id")
+
+  parentDetalle      DetalleVenta?      @relation("DetalleVentaHierarchy", fields: [parentDetalleId], references: [id])
+  childDetalles      DetalleVenta[]     @relation("DetalleVentaHierarchy")
 
   pasajerosDetalle   PasajerosDetalle[]
   prodTiqueteria     ProdTiqueteria?
@@ -522,6 +526,7 @@ model PaqueteVuelo {
   aerolinea   Aerolineas? @relation(fields: [aerolineaId], references: [id])
   nroVuelo    String?    @map("nro_vuelo")
   modoVuelo   FlightMode? @default(round_trip) @map("modo_vuelo")
+  tipoTransporte String?   @default("Aéreo") @map("tipo_transporte")
   trayectos   Json?
   planEquipaje String?   @map("plan_equipaje")
 
@@ -666,6 +671,7 @@ model ProdPlanes {
   checkinStatusIda CheckinStatus?     @default(pendiente) @map("checkin_status_ida")
   checkinStatusRegreso CheckinStatus? @default(pendiente) @map("checkin_status_regreso")
   tipoPaquete      String?            @default("own") @map("tipo_paquete")
+  tipoTransporte   String?            @default("Aéreo") @map("tipo_transporte")
 
   @@map("prod_planes")
 }
