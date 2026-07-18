@@ -28,6 +28,7 @@ export default function Itineraries() {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
   const [checkinSearch, setCheckinSearch] = useState('');
+  const [checkinPage, setCheckinPage] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -36,6 +37,10 @@ export default function Itineraries() {
   const [selectedFlightForCheckin, setSelectedFlightForCheckin] = useState<Flight | null>(null);
   const [checkinFiles, setCheckinFiles] = useState<File[]>([]);
   const [isSending, setIsSending] = useState(false);
+
+  useEffect(() => {
+    setCheckinPage(1);
+  }, [checkinSearch]);
 
   const getFlightStatus = (flight: Flight) => {
     if (flight.checkin === 'realizado') {
@@ -62,11 +67,26 @@ export default function Itineraries() {
   }, [data.flights]);
 
   const filteredPending = useMemo(() => {
-    return pendingCheckins.filter(f => 
-      f.passenger.toLowerCase().includes(checkinSearch.toLowerCase()) ||
-      f.route.toLowerCase().includes(checkinSearch.toLowerCase())
-    );
+    const searchLower = checkinSearch.toLowerCase().trim();
+    return pendingCheckins.filter(f => {
+      const formattedSaleId = f.saleId ? `#${f.saleId.toString().padStart(4, '0')}` : '';
+      const rawSaleId = f.saleId ? f.saleId.toString() : '';
+      return (
+        f.passenger.toLowerCase().includes(searchLower) ||
+        f.route.toLowerCase().includes(searchLower) ||
+        formattedSaleId.toLowerCase().includes(searchLower) ||
+        rawSaleId.includes(searchLower)
+      );
+    });
   }, [pendingCheckins, checkinSearch]);
+
+  const checkinsPerPage = 10;
+  const totalCheckinPages = Math.ceil(filteredPending.length / checkinsPerPage);
+  
+  const paginatedPending = useMemo(() => {
+    const startIndex = (checkinPage - 1) * checkinsPerPage;
+    return filteredPending.slice(startIndex, startIndex + checkinsPerPage);
+  }, [filteredPending, checkinPage]);
 
   // Cliente vinculado al vuelo seleccionado en el modal (memoizado)
   const modalClient = useMemo(() =>
@@ -477,75 +497,117 @@ export default function Itineraries() {
                 }>
                   Pasajeros Pendientes
                 </CardHeader>
-                <CardBody className="p-0">
+                 <CardBody className="p-0">
                   {filteredPending.length > 0 ? (
-                    <div className="divide-y divide-gray-border">
-                      {filteredPending.map(flight => {
-                        const { isVencido, isUrgente } = getFlightStatus(flight);
-                        const client = data.clients.find(c => c.name === flight.passenger);
+                    <>
+                      <div className="divide-y divide-gray-border">
+                        {paginatedPending.map(flight => {
+                          const { isVencido, isUrgente } = getFlightStatus(flight);
+                          const client = data.clients.find(c => c.name === flight.passenger);
 
-                        return (
-                          <div key={flight.id} className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-colors ${isVencido ? 'opacity-85' : ''}`}>
-                            <div className="flex items-start gap-4">
-                              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0 ${
-                                isVencido 
-                                  ? 'bg-gray-100 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-400 dark:text-slate-400' 
-                                  : isUrgente 
-                                    ? 'bg-red-50 dark:bg-red-950/40 border-red-100 dark:border-red-900/40 text-red-500 dark:text-red-400 animate-pulse' 
-                                    : flight.source === 'plan' 
-                                      ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-100 dark:border-emerald-900/40 text-emerald-500 dark:text-emerald-400' 
-                                      : 'bg-blue-50 dark:bg-blue-950/40 border-blue-100 dark:border-blue-900/40 text-blue-500 dark:text-blue-400'
-                              }`}>
-                                {flight.source === 'plan' ? (
-                                  <Package size={24} />
-                                ) : (
-                                  <Plane size={24} className={flight.type === 'regreso' ? 'rotate-180' : ''} />
-                                )}
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <span className="font-bold text-primary dark:text-white truncate">{flight.passenger}</span>
-                                  {client && (
-                                    <span className="text-[10px] bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 px-1.5 py-0.5 rounded border border-gray-200 dark:border-slate-700">
-                                      {client.docType}: {client.docNumber}
-                                    </span>
-                                  )}
-                                  {isVencido ? (
-                                    <Badge variant="danger" className="text-[10px] py-0 bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-400 border border-red-200 dark:border-red-900/50">VENCIDO</Badge>
-                                  ) : isUrgente ? (
-                                    <Badge variant="danger" className="text-[10px] py-0 bg-red-500/10 dark:bg-red-500/20 text-red-500 dark:text-red-400 border-transparent">URGENTE</Badge>
-                                  ) : null}
-                                  {flight.source === 'plan' && flight.additionalPassengers && flight.additionalPassengers > 0 ? (
-                                    <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-900/50">
-                                      +{flight.additionalPassengers} acompañantes
-                                    </span>
-                                  ) : null}
-                                </div>
-                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-slate-400 mt-1">
-                                  <span className="flex items-center gap-1"><Filter size={12} /> {flight.route}</span>
-                                  <span className="flex items-center gap-1"><Clock size={12} /> {formatDate(flight.date)} - {flight.time}</span>
-                                  <span className="font-medium text-primary/60 dark:text-slate-500">{flight.airline}</span>
-                                  {flight.reservationNumber && (
-                                    <span className="bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded font-mono text-[10px] border border-blue-150 dark:border-blue-900/50 font-semibold">
-                                      Reserva: {flight.reservationNumber}
-                                    </span>
+                          return (
+                            <div key={flight.id} className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-colors ${isVencido ? 'opacity-85' : ''}`}>
+                              <div className="flex items-start gap-4">
+                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0 ${
+                                  isVencido 
+                                    ? 'bg-gray-100 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-400 dark:text-slate-400' 
+                                    : isUrgente 
+                                      ? 'bg-red-50 dark:bg-red-950/40 border-red-100 dark:border-red-900/40 text-red-500 dark:text-red-400 animate-pulse' 
+                                      : flight.source === 'plan' 
+                                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-100 dark:border-emerald-900/40 text-emerald-500 dark:text-emerald-400' 
+                                        : 'bg-blue-50 dark:bg-blue-950/40 border-blue-100 dark:border-blue-900/40 text-blue-500 dark:text-blue-400'
+                                }`}>
+                                  {flight.source === 'plan' ? (
+                                    <Package size={24} />
+                                  ) : (
+                                    <Plane size={24} className={flight.type === 'regreso' ? 'rotate-180' : ''} />
                                   )}
                                 </div>
+                                <div className="min-w-0">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="font-bold text-primary dark:text-white truncate">{flight.passenger}</span>
+                                    {client && (
+                                      <span className="text-[10px] bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 px-1.5 py-0.5 rounded border border-gray-200 dark:border-slate-700">
+                                        {client.docType}: {client.docNumber}
+                                      </span>
+                                    )}
+                                    {isVencido ? (
+                                      <Badge variant="danger" className="text-[10px] py-0 bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-400 border border-red-200 dark:border-red-900/50">VENCIDO</Badge>
+                                    ) : isUrgente ? (
+                                      <Badge variant="danger" className="text-[10px] py-0 bg-red-500/10 dark:bg-red-500/20 text-red-500 dark:text-red-400 border-transparent">URGENTE</Badge>
+                                    ) : null}
+                                    {flight.source === 'plan' && flight.additionalPassengers && flight.additionalPassengers > 0 ? (
+                                      <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-900/50">
+                                        +{flight.additionalPassengers} acompañantes
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-slate-400 mt-1">
+                                    <span className="flex items-center gap-1"><Filter size={12} /> {flight.route}</span>
+                                    <span className="flex items-center gap-1"><Clock size={12} /> {formatDate(flight.date)} - {flight.time}</span>
+                                    <span className="font-medium text-primary/60 dark:text-slate-500">{flight.airline}</span>
+                                    {flight.reservationNumber && (
+                                      <span className="bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded font-mono text-[10px] border border-blue-150 dark:border-blue-900/50 font-semibold">
+                                        Reserva: {flight.reservationNumber}
+                                      </span>
+                                    )}
+                                    {flight.saleId && (
+                                      <span className="bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 px-1.5 py-0.5 rounded font-mono text-[10px] border border-gray-200 dark:border-slate-700 font-bold">
+                                        Venta: #{flight.saleId.toString().padStart(4, '0')}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
+                              {canEditItinerary('itineraries') && (
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => handleMarkCheckin(flight.id, flight.passenger)}
+                                  className="shadow-md shadow-primary/10 w-full sm:w-auto justify-center"
+                                >
+                                  <UserCheck size={16} /> Realizar Check-in
+                                </Button>
+                              )}
                             </div>
-                            {canEditItinerary('itineraries') && (
-                              <Button 
-                                size="sm" 
-                                onClick={() => handleMarkCheckin(flight.id, flight.passenger)}
-                                className="shadow-md shadow-primary/10 w-full sm:w-auto justify-center"
-                              >
-                                <UserCheck size={16} /> Realizar Check-in
-                              </Button>
-                            )}
+                          );
+                        })}
+                      </div>
+
+                      {totalCheckinPages > 1 && (
+                        <div className="flex items-center justify-between p-4 border-t border-gray-border dark:border-slate-700 bg-gray-50/50 dark:bg-slate-800/30">
+                          <p className="text-xs text-gray-500 dark:text-slate-400">
+                            Mostrando <span className="font-semibold text-gray-900 dark:text-white">{((checkinPage - 1) * checkinsPerPage) + 1}</span> a{' '}
+                            <span className="font-semibold text-gray-900 dark:text-white">
+                              {Math.min(checkinPage * checkinsPerPage, filteredPending.length)}
+                            </span>{' '}
+                            de <span className="font-semibold text-gray-900 dark:text-white">{filteredPending.length}</span> registros
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCheckinPage(prev => Math.max(prev - 1, 1))}
+                              disabled={checkinPage === 1}
+                              className="!p-1.5"
+                            >
+                              <ChevronLeft size={16} />
+                            </Button>
+                            <span className="text-xs text-gray-600 dark:text-slate-400 font-medium">
+                              Pág. {checkinPage} de {totalCheckinPages}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCheckinPage(prev => Math.min(prev + 1, totalCheckinPages))}
+                              disabled={checkinPage === totalCheckinPages}
+                              className="!p-1.5"
+                            >
+                              <ChevronRight size={16} />
+                            </Button>
                           </div>
-                        );
-                      })}
-                    </div>
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <div className="flex flex-col items-center justify-center p-12 text-gray-400 dark:text-slate-500">
                       <div className="w-16 h-16 bg-green-50 dark:bg-green-950/40 text-green-500 dark:text-green-400 rounded-full flex items-center justify-center mb-4">
