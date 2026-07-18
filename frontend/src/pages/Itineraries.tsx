@@ -641,7 +641,14 @@ export default function Itineraries() {
           <div className="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/40 rounded-lg">
             <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">Pasajero:</p>
             <div className="flex items-center justify-between">
-              <p className="text-sm font-bold text-gray-900 dark:!text-[#ffffff]">{selectedFlightForCheckin?.passenger}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-bold text-gray-900 dark:!text-[#ffffff]">{selectedFlightForCheckin?.passenger}</p>
+                {selectedFlightForCheckin?.saleId && (
+                  <span className="text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-850/80 font-mono font-bold" title="Número de Venta">
+                    #{selectedFlightForCheckin.saleId.toString().padStart(4, '0')}
+                  </span>
+                )}
+              </div>
               {modalClient && (
                 <span className="text-[10px] bg-white/50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-800/50 font-bold">
                   {modalClient.docType}: {modalClient.docNumber}

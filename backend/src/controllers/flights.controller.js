@@ -147,7 +147,8 @@ exports.list = async (req, res, next) => {
           seat: null,
           reservationNumber,
           ticketNumber,
-          source: 'ticket'
+          source: 'ticket',
+          saleId: venta?.id
         });
       }
     }
@@ -235,7 +236,8 @@ exports.list = async (req, res, next) => {
               flightNumber: p.nroVuelo || '',
               seat: null,
               reservationNumber: p.nroReserva || '',
-              source: 'plan'
+              source: 'plan',
+              saleId: venta.id
             });
           }
         }
@@ -263,7 +265,8 @@ exports.list = async (req, res, next) => {
               flightNumber: p.nroVuelo || '',
               seat: null,
               reservationNumber: p.nroReserva || '',
-              source: 'plan'
+              source: 'plan',
+              saleId: venta.id
             });
           }
         }

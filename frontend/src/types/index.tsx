@@ -602,6 +602,7 @@ export interface Flight {
   reservationNumber?: string;
   source?: "ticket" | "plan";
   additionalPassengers?: number;
+  saleId?: number;
 }
 
 export interface CommissionAgent {
