@@ -63,7 +63,9 @@ export default function Itineraries() {
 
   // Estadísticas y filtros
   const pendingCheckins = useMemo(() => {
-    return data.flights.filter(f => f.checkin === 'pendiente').sort((a, b) => a.date.localeCompare(b.date));
+    return data.flights
+      .filter(f => f.checkin === 'pendiente')
+      .sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time));
   }, [data.flights]);
 
   const filteredPending = useMemo(() => {
