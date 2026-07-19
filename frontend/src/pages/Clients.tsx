@@ -322,9 +322,9 @@ export default function Clients() {
 
     const filtered = clientsToFilter.filter(client => {
       const matchesSearch =
-        client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.docNumber.includes(searchTerm) ||
-        client.email.toLowerCase().includes(searchTerm.toLowerCase());
+        (client.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (client.docNumber || '').includes(searchTerm) ||
+        (client.email || '').toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
