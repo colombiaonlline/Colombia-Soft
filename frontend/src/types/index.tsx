@@ -33,7 +33,7 @@ export interface RolePermissions {
 export const DEFAULT_ASESOR_PERMISSIONS: RolePermissions = {
   dashboard: { view: "own" },
   sales: { view: "own", create: true, edit: "own" },
-  clients: { view: "own", create: true, edit: "own" },
+  clients: { view: "all", create: true, edit: "own" },
   responsables: { view: "own", create: true, edit: "own" },
   itineraries: { view: "own", edit: "none" },
   commissions: { view: false, create: false, edit: false, delete: false },

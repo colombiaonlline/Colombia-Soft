@@ -13,8 +13,8 @@ const ADMIN_PERMISSIONS = {
 const ROLE_DEFAULT_PERMISSIONS = {
   asesor: {
     dashboard: { view: 'own' },
-    sales: { view: 'own', create: true, edit: true, delete: false },
-    clients: { view: 'own', create: true, edit: true, delete: false },
+    sales: { view: 'own', create: true, edit: true },
+    clients: { view: 'all', create: true, edit: true },
     itineraries: { view: 'own', edit: false },
     commissions: { view: false, create: false, edit: false, delete: false },
     users: { view: true },
