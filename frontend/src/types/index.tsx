@@ -17,7 +17,6 @@ export interface User {
   createdAt?: string;
   lastLogin?: string;
   avatar?: string | null;
-  customPermissions?: RolePermissions;
   permisos?: { modulo: string; accion: string }[];
 }
 
@@ -25,35 +24,39 @@ export interface RolePermissions {
   dashboard: { view: "all" | "own" | "none" };
   sales: { view: "all" | "own" | "none"; create: boolean; edit: "all" | "own" | "none" };
   clients: { view: "all" | "own" | "none"; create: boolean; edit: "all" | "own" | "none" };
-  responsables: { view: "all" | "own" | "none"; create: boolean; edit: "all" | "own" | "none" };
+  responsables: { view: "all" | "own" | "none"; create: boolean; edit: "all" | "own" | "none"; delete: boolean };
   itineraries: { view: "all" | "own" | "none"; edit: "all" | "own" | "none" };
   commissions: { view: boolean; create: boolean; edit: boolean; delete: boolean };
+  config: { view: boolean; create: boolean; edit: boolean };
 }
 
 export const DEFAULT_ASESOR_PERMISSIONS: RolePermissions = {
   dashboard: { view: "own" },
   sales: { view: "own", create: true, edit: "own" },
   clients: { view: "all", create: true, edit: "own" },
-  responsables: { view: "own", create: true, edit: "own" },
+  responsables: { view: "own", create: true, edit: "own", delete: false },
   itineraries: { view: "own", edit: "none" },
   commissions: { view: false, create: false, edit: false, delete: false },
+  config: { view: true, create: false, edit: true },
 };
 export const DEFAULT_FREELANCER_PERMISSIONS: RolePermissions = {
   dashboard: { view: "own" },
   sales: { view: "own", create: true, edit: "own" },
   clients: { view: "own", create: true, edit: "own" },
-  responsables: { view: "own", create: true, edit: "own" },
+  responsables: { view: "own", create: true, edit: "own", delete: false },
   itineraries: { view: "own", edit: "none" },
   commissions: { view: false, create: false, edit: false, delete: false },
+  config: { view: true, create: false, edit: true },
 };
 
 export const ADMIN_PERMISSIONS: RolePermissions = {
   dashboard: { view: "all" },
   sales: { view: "all", create: true, edit: "all" },
   clients: { view: "all", create: true, edit: "all" },
-  responsables: { view: "all", create: true, edit: "all" },
+  responsables: { view: "all", create: true, edit: "all", delete: true },
   itineraries: { view: "all", edit: "all" },
   commissions: { view: true, create: true, edit: true, delete: true },
+  config: { view: true, create: true, edit: true },
 };
 
 const SCOPED_VIEW_MODULES = ['dashboard', 'sales', 'clients', 'responsables', 'itineraries'];

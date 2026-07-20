@@ -78,7 +78,6 @@ interface DataContextType {
   addUser: (user: Omit<User, 'id'>) => Promise<User>;
   updateUser: (id: number, user: Partial<User>) => Promise<void>;
   deleteUser: (id: number) => Promise<void>;
-  updateUserPermissions: (id: number, permissions: RolePermissions) => Promise<void>;
   addClient: (client: Omit<Client, 'id'>) => Promise<Client>;
   updateClient: (id: number, client: Partial<Client>) => Promise<void>;
   toggleClientStatus: (id: number) => Promise<void>;
@@ -360,14 +359,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
       invalidateUsersCache();
       return { ...prev, users: prev.users.filter(u => u.id !== id) };
     });
-  };
-
-  const updateUserPermissions = async (id: number, permissions: RolePermissions) => {
-    await api.updateUserPermissions(id, permissions as any);
-    setData(prev => ({
-      ...prev,
-      users: prev.users.map(u => u.id === id ? { ...u, customPermissions: permissions } : u)
-    }));
   };
 
   const addClient = async (client: Omit<Client, 'id'>): Promise<Client> => {
@@ -698,7 +689,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
       addUser,
       updateUser,
       deleteUser,
-      updateUserPermissions,
       addClient,
       updateClient,
       toggleClientStatus,

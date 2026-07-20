@@ -6,8 +6,10 @@ const MODULE_ACTIONS = {
   dashboard: ['view'],
   sales: ['view', 'create', 'edit'],
   clients: ['view', 'create', 'edit'],
+  responsables: ['view', 'create', 'edit', 'delete'],
   itineraries: ['view', 'edit'],
   commissions: ['view', 'create', 'edit', 'delete'],
+  config: ['view', 'create', 'edit'],
 };
 
 const SCOPED_MODULES = ['dashboard', 'sales', 'clients', 'responsables', 'itineraries'];
@@ -15,17 +17,21 @@ const SCOPED_MODULES = ['dashboard', 'sales', 'clients', 'responsables', 'itiner
 const DEFAULT_ROLE_VALUES = {
   asesor: {
     dashboard: { view: 'own' },
-    sales: { view: 'own', create: 'true', edit: 'true' },
-    clients: { view: 'own', create: 'true', edit: 'true' },
+    sales: { view: 'own', create: 'true', edit: 'own' },
+    clients: { view: 'all', create: 'true', edit: 'own' },
+    responsables: { view: 'own', create: 'true', edit: 'own', delete: 'false' },
     itineraries: { view: 'true', edit: 'false' },
     commissions: { view: 'false', create: 'false', edit: 'false', delete: 'false' },
+    config: { view: 'true', create: 'false', edit: 'true' },
   },
   freelancer: {
     dashboard: { view: 'own' },
-    sales: { view: 'own', create: 'true', edit: 'true' },
-    clients: { view: 'own', create: 'true', edit: 'true' },
+    sales: { view: 'own', create: 'true', edit: 'own' },
+    clients: { view: 'own', create: 'true', edit: 'own' },
+    responsables: { view: 'own', create: 'true', edit: 'own', delete: 'false' },
     itineraries: { view: 'true', edit: 'false' },
     commissions: { view: 'false', create: 'false', edit: 'false', delete: 'false' },
+    config: { view: 'true', create: 'false', edit: 'true' },
   },
 };
 
@@ -71,7 +77,7 @@ exports.getPermissions = async (req, res, next) => {
     });
 
     // Start with default structure for all modules the role can configure
-    const MODULES = ['dashboard', 'sales', 'clients', 'itineraries', 'commissions'];
+    const MODULES = ['dashboard', 'sales', 'clients', 'responsables', 'itineraries', 'commissions', 'config'];
     const defaults = DEFAULT_ROLE_VALUES[role] || DEFAULT_ROLE_VALUES.asesor;
     const grouped = {};
 

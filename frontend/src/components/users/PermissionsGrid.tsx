@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, ShoppingBag, Users as UsersGroup, Map, Lock, Settings, Coins } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users as UsersGroup, Map, Lock, Settings, Coins, UserCheck, Database } from 'lucide-react';
 import { RolePermissions } from '../../types';
 
 interface PermissionsGridProps {
@@ -27,8 +27,10 @@ export default function PermissionsGrid({ permissions, onChange }: PermissionsGr
   const modules: { id: keyof RolePermissions, label: string, icon: React.ReactNode }[] = [
     { id: 'sales', label: 'Ventas', icon: <ShoppingBag size={18} /> },
     { id: 'clients', label: 'Clientes', icon: <UsersGroup size={18} /> },
+    { id: 'responsables', label: 'Responsables', icon: <UserCheck size={18} /> },
     { id: 'itineraries', label: 'Itinerarios', icon: <Map size={18} /> },
-    { id: 'commissions', label: 'Comisionistas', icon: <Coins size={18} /> }
+    { id: 'commissions', label: 'Comisionistas', icon: <Coins size={18} /> },
+    { id: 'config', label: 'Gestión Interna', icon: <Database size={18} /> }
   ];
 
   return (

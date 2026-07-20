@@ -77,7 +77,6 @@ export function PermissionsProvider({
       ? (data.config.rolePermissions?.freelancer || DEFAULT_FREELANCER_PERMISSIONS)
       : (data.config.rolePermissions?.asesor || DEFAULT_ASESOR_PERMISSIONS);
 
-    if (user.customPermissions) return normalizeRolePermissions(user.customPermissions, defaultPerms);
 
     return defaultPerms;
   }, [user, data.config.rolePermissions]);

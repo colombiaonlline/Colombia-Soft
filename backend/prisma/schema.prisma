@@ -124,7 +124,6 @@ model Permisos {
   descripcion String?
 
   permisosRol    PermisosRol[]
-  permisosUsuario PermisosUsuario[]
 
   @@map("permisos")
 }
@@ -221,7 +220,6 @@ model Usuarios {
   ultimoLogin  DateTime?  @map("ultimo_login")
   creadoAt     DateTime   @default(now()) @map("creado_at")
 
-  permisosUsuario PermisosUsuario[]
   sesiones        Sesiones[]
   logs            LogsUsuarios[]
   ventas          Ventas[]        @relation("ventas_asesor")
@@ -229,19 +227,6 @@ model Usuarios {
   paquetesCreados Paquetes[]      @relation("paquete_creado_por")
 
   @@map("usuarios")
-}
-
-model PermisosUsuario {
-  id         Int      @id @default(autoincrement())
-  usuarioId  Int      @map("usuario_id")
-  usuario    Usuarios @relation(fields: [usuarioId], references: [id])
-  permisoId  Int      @map("permiso_id")
-  permiso    Permisos @relation(fields: [permisoId], references: [id])
-  permitido  Boolean  @default(true)
-  valor      String   @default("true") @map("valor")
-
-  @@unique([usuarioId, permisoId])
-  @@map("permisos_usuario")
 }
 
 model Sesiones {

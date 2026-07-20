@@ -63,7 +63,6 @@ export default function Users() {
     updateUser,
     deleteUser,
     updateRolePermissions,
-    updateUserPermissions,
     fetchUsers,
     fetchSales,
   } = useData();
@@ -185,8 +184,7 @@ export default function Users() {
     setIsDetailOpen(true);
   };
 
-  const [selectedUserForPermissions, setSelectedUserForPermissions] =
-    useState<User | null>(null);
+
   const [editingUserPermissions, setEditingUserPermissions] =
     useState<RolePermissions>(
       data.config.rolePermissions?.asesor || DEFAULT_ASESOR_PERMISSIONS,
@@ -218,14 +216,11 @@ export default function Users() {
   // Sincronizar los permisos de edición cuando llegan del backend
   // (el estado inicial puede haberse montado antes de que fetchConfig terminara)
   useEffect(() => {
-    if (!isPermissionsModalOpen) {
-      // Solo sincronizar la vista de permisos globales, no cuando hay un modal de usuario abierto
-      const rolePerms = editingRole === 'asesor'
-        ? data.config.rolePermissions?.asesor
-        : data.config.rolePermissions?.freelancer;
-      if (rolePerms && !selectedUserForPermissions) {
-        setEditingUserPermissions(rolePerms);
-      }
+    const rolePerms = editingRole === 'asesor'
+      ? data.config.rolePermissions?.asesor
+      : data.config.rolePermissions?.freelancer;
+    if (rolePerms) {
+      setEditingUserPermissions(rolePerms);
     }
   }, [data.config.rolePermissions, editingRole]);
 
@@ -484,58 +479,7 @@ export default function Users() {
     }
   };
 
-  const handleOpenPermissions = (user: User) => {
-    setSelectedUserForPermissions(user);
-    const defaultPerms =
-      user.role === "admin"
-        ? ADMIN_PERMISSIONS
-        : user.role === "freelancer"
-          ? data.config.rolePermissions.freelancer
-          : data.config.rolePermissions.asesor;
-    setEditingUserPermissions(
-      user.customPermissions
-        ? normalizeRolePermissions(user.customPermissions, defaultPerms)
-        : defaultPerms
-    );
-    setIsPermissionsModalOpen(true);
-  };
 
-  const handleSaveUserPermissions = async () => {
-    if (!selectedUserForPermissions) return;
-    setIsSaving(true);
-    try {
-      const defaultPerms =
-        selectedUserForPermissions.role === "admin"
-          ? ADMIN_PERMISSIONS
-          : selectedUserForPermissions.role === "freelancer"
-            ? data.config.rolePermissions.freelancer
-            : data.config.rolePermissions.asesor;
-
-      const diffPermissions: any = {};
-      for (const mod in editingUserPermissions) {
-        for (const act in (editingUserPermissions as any)[mod]) {
-          const editedVal = (editingUserPermissions as any)[mod][act];
-          const defaultVal = (defaultPerms as any)[mod][act];
-          if (editedVal !== defaultVal) {
-            if (!diffPermissions[mod]) diffPermissions[mod] = {};
-            diffPermissions[mod][act] = editedVal;
-          }
-        }
-      }
-
-      await updateUserPermissions(selectedUserForPermissions.id, diffPermissions);
-      setSuccessMessage(`Permisos de ${selectedUserForPermissions.name} actualizados`);
-      setShowSuccess(true);
-      setIsPermissionsModalOpen(false);
-      setTimeout(() => setShowSuccess(false), 3000);
-    } catch (err: any) {
-      setErrorMessage(err?.response?.data?.message || "Error al guardar permisos");
-      setShowError(true);
-      setTimeout(() => setShowError(false), 3000);
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   const handleSaveRolePermissions = async () => {
     setIsSaving(true);
@@ -787,14 +731,7 @@ export default function Users() {
                     >
                       <Pencil size={14} />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleOpenPermissions(user)}
-                      title="Permisos"
-                    >
-                      <Key size={14} />
-                    </Button>
+
                     <Button
                       variant="outline"
                       size="sm"
@@ -876,8 +813,7 @@ export default function Users() {
               <AlertCircle className="text-amber-500 dark:text-amber-400 shrink-0" size={20} />
               <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
                 Aquí defines los permisos predeterminados. Los cambios aplicarán
-                a todos los usuarios del rol seleccionado que no tengan permisos
-                personalizados.
+                a todos los usuarios del rol seleccionado.
               </p>
             </div>
             <div className="flex gap-4 mb-6">
@@ -1107,44 +1043,6 @@ export default function Users() {
             />
           </FormField>
         </div>
-      </Modal>
-
-      <Modal
-        isOpen={isPermissionsModalOpen}
-        onClose={() => setIsPermissionsModalOpen(false)}
-        title={`Permisos: ${selectedUserForPermissions?.name}`}
-        size="lg"
-        footer={
-          <>
-            <Button
-              variant="outline"
-              onClick={() => setIsPermissionsModalOpen(false)}
-              disabled={isSaving}
-            >
-              Cancelar
-            </Button>
-            <Button onClick={handleSaveUserPermissions} disabled={isSaving}>
-              {isSaving ? "Guardando..." : "Actualizar Permisos"}
-            </Button>
-          </>
-        }
-      >
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-xl flex gap-3">
-          <ShieldCheck className="text-blue-500 shrink-0" size={24} />
-          <div>
-            <p className="text-sm font-bold text-blue-900">
-              Configuración Personalizada
-            </p>
-            <p className="text-xs text-blue-700">
-              Estos permisos sobrescriben la configuración global para este
-              usuario específico.
-            </p>
-          </div>
-        </div>
-        <PermissionsGrid
-          permissions={editingUserPermissions}
-          onChange={setEditingUserPermissions}
-        />
       </Modal>
 
       <Modal

@@ -37,8 +37,7 @@ async function auth(req, res, next) {
           include: {
             permisosRol: { include: { permiso: true } }
           }
-        },
-        permisosUsuario: { include: { permiso: true } }
+        }
       }
     });
 
@@ -57,11 +56,6 @@ async function auth(req, res, next) {
         modulo: pr.permiso.modulo,
         accion: pr.permiso.accion,
         valor: pr.valor
-      })),
-      permisosUsuario: usuario.permisosUsuario.filter(pu => pu.permitido).map(pu => ({
-        modulo: pu.permiso.modulo,
-        accion: pu.permiso.accion,
-        valor: pu.valor
       }))
     };
 

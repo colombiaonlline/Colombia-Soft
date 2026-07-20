@@ -93,8 +93,7 @@ exports.getById = async (req, res, next) => {
       where: { id: parseInt(req.params.id) },
       include: {
         persona: { include: { tipoDocumento: true } },
-        rol: true,
-        permisosUsuario: { include: { permiso: true }, where: { permitido: true } }
+        rol: true
       }
     });
     if (!usuario) return error(res, 'Usuario no encontrado', 404);
@@ -112,18 +111,7 @@ exports.getById = async (req, res, next) => {
       avatar: usuario.persona.avatarUrl,
       birthDate: usuario.persona.birthDate,
       lastLogin: usuario.ultimoLogin,
-      createdAt: usuario.creadoAt,
-      
-      customPermissions: usuario.permisosUsuario.length > 0 ? usuario.permisosUsuario.reduce((acc, pu) => {
-        if (!acc[pu.permiso.modulo]) acc[pu.permiso.modulo] = {};
-        const val = pu.valor || 'true';
-        const scopedModules = ['dashboard', 'sales', 'clients', 'responsables', 'itineraries'];
-        const isScoped = (pu.permiso.accion === 'view' || pu.permiso.accion === 'edit') && scopedModules.includes(pu.permiso.modulo);
-        acc[pu.permiso.modulo][pu.permiso.accion] = isScoped
-          ? (val === 'own' || val === 'all' || val === 'none' ? val : 'all')
-          : (val === 'true' || val === true);
-        return acc;
-      }, {}) : undefined
+      createdAt: usuario.creadoAt
     });
   } catch (err) {
     next(err);
@@ -436,43 +424,7 @@ exports.remove = async (req, res, next) => {
   }
 };
 
-exports.updatePermissions = async (req, res, next) => {
-  try {
-    const id = parseInt(req.params.id);
-    const { permissions } = req.body;
 
-    await prisma.permisosUsuario.deleteMany({ where: { usuarioId: id } });
-
-    for (const [modulo, accs] of Object.entries(permissions)) {
-      for (const [accion, value] of Object.entries(accs)) {
-        const encoded = value === 'all' || value === 'own' || value === 'none' ? value
-          : value === true || value === 'true' ? 'true'
-          : value === false || value === 'false' ? 'false'
-          : String(value);
-
-        // Buscar o crear el registro en el catálogo de permisos
-        let permiso = await prisma.permisos.findFirst({ where: { modulo, accion } });
-        if (!permiso) {
-          permiso = await prisma.permisos.create({
-            data: { modulo, accion, descripcion: `${modulo} - ${accion}` }
-          });
-        }
-
-        await prisma.permisosUsuario.create({
-          data: { usuarioId: id, permisoId: permiso.id, permitido: true, valor: encoded }
-        });
-      }
-    }
-
-    // Invalidar caché de autenticación del usuario para que en la próxima petición
-    // se recarguen sus permisos actualizados desde la BD
-    AUTH_CACHE.delete(id);
-
-    success(res, { message: 'Permisos actualizados' });
-  } catch (err) {
-    next(err);
-  }
-};
 
 exports.uploadAvatar = async (req, res, next) => {
   try {

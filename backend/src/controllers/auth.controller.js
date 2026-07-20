@@ -19,8 +19,7 @@ exports.login = async (req, res, next) => {
       where: { email: email.toLowerCase() },
       include: {
         persona: { include: { tipoDocumento: true } },
-        rol: { include: { permisosRol: { include: { permiso: true } } } },
-        permisosUsuario: { include: { permiso: true } }
+        rol: { include: { permisosRol: { include: { permiso: true } } } }
       }
     });
 
@@ -54,13 +53,9 @@ exports.login = async (req, res, next) => {
       data: { ultimoLogin: new Date() }
     });
 
-    let permisos = usuario.rol.permisosRol.map(pr => ({
+    const permisos = usuario.rol.permisosRol.map(pr => ({
       modulo: pr.permiso.modulo, accion: pr.permiso.accion, valor: pr.valor
     }));
-    const userPermisos = usuario.permisosUsuario
-      .filter(pu => pu.permitido)
-      .map(pu => ({ modulo: pu.permiso.modulo, accion: pu.permiso.accion, valor: pu.valor }));
-    permisos = [...permisos, ...userPermisos];
 
     const maxAge = remember ? 1000 * 60 * 60 * 24 * 7 : 1000 * 60 * 60 * 24;
     res.cookie('token', token, {
@@ -121,18 +116,13 @@ exports.me = async (req, res, next) => {
       where: { id: req.user.id },
       include: {
         persona: { include: { tipoDocumento: true } },
-        rol: { include: { permisosRol: { include: { permiso: true } } } },
-        permisosUsuario: { include: { permiso: true } }
+        rol: { include: { permisosRol: { include: { permiso: true } } } }
       }
     });
 
-    let permisos = usuario.rol.permisosRol.map(pr => ({
+    const permisos = usuario.rol.permisosRol.map(pr => ({
       modulo: pr.permiso.modulo, accion: pr.permiso.accion, valor: pr.valor
     }));
-    const userPermisos = usuario.permisosUsuario
-      .filter(pu => pu.permitido)
-      .map(pu => ({ modulo: pu.permiso.modulo, accion: pu.permiso.accion, valor: pu.valor }));
-    permisos = [...permisos, ...userPermisos];
 
     success(res, {
       id: usuario.id,

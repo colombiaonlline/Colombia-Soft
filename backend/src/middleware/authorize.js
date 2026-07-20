@@ -2,32 +2,35 @@ const { error } = require('../utils/apiResponse');
 
 const ADMIN_PERMISSIONS = {
   dashboard: { view: 'all' },
-  sales: { view: 'all', create: true, edit: true, delete: true },
-  clients: { view: 'all', create: true, edit: true, delete: true },
-  itineraries: { view: 'all', edit: true },
+  sales: { view: 'all', create: true, edit: 'all', delete: true },
+  clients: { view: 'all', create: true, edit: 'all', delete: true },
+  responsables: { view: 'all', create: true, edit: 'all', delete: true },
+  itineraries: { view: 'all', edit: 'all' },
   commissions: { view: true, create: true, edit: true, delete: true },
   users: { view: true, create: true, edit: true, delete: true },
-  config: { view: true, edit: true },
+  config: { view: true, create: true, edit: true },
 };
 
 const ROLE_DEFAULT_PERMISSIONS = {
   asesor: {
     dashboard: { view: 'own' },
-    sales: { view: 'own', create: true, edit: true },
-    clients: { view: 'all', create: true, edit: true },
-    itineraries: { view: 'own', edit: false },
+    sales: { view: 'own', create: true, edit: 'own' },
+    clients: { view: 'all', create: true, edit: 'own' },
+    responsables: { view: 'own', create: true, edit: 'own', delete: false },
+    itineraries: { view: 'own', edit: 'none' },
     commissions: { view: false, create: false, edit: false, delete: false },
     users: { view: true },
-    config: { view: true, edit: true },
+    config: { view: true, create: false, edit: true },
   },
   freelancer: {
     dashboard: { view: 'own' },
-    sales: { view: 'own', create: true, edit: true, delete: false },
-    clients: { view: 'own', create: true, edit: true, delete: false },
-    itineraries: { view: 'own', edit: false },
+    sales: { view: 'own', create: true, edit: 'own', delete: false },
+    clients: { view: 'own', create: true, edit: 'own', delete: false },
+    responsables: { view: 'own', create: true, edit: 'own', delete: false },
+    itineraries: { view: 'own', edit: 'none' },
     commissions: { view: false, create: false, edit: false, delete: false },
     users: { view: true },
-    config: { view: true, edit: true },
+    config: { view: true, create: false, edit: true },
   },
 };
 
@@ -43,29 +46,17 @@ function getEffectivePermissions(user) {
     for (const pr of user.permisosRol) {
       const mod = permissions[pr.modulo];
       if (mod && pr.accion in mod) {
-        const currentVal = mod[pr.accion];
-        if (typeof currentVal === 'boolean') {
-          mod[pr.accion] = pr.valor === 'true' || pr.valor === true;
-        } else {
+        const SCOPED_MODULES = ['dashboard', 'sales', 'clients', 'responsables', 'itineraries'];
+        if ((pr.accion === 'view' || pr.accion === 'edit') && SCOPED_MODULES.includes(pr.modulo)) {
           mod[pr.accion] = ['all', 'own', 'none'].includes(pr.valor) ? pr.valor : 'own';
+        } else {
+          mod[pr.accion] = pr.valor === 'true' || pr.valor === true;
         }
       }
     }
   }
 
-  if (user.permisosUsuario) {
-    for (const pu of user.permisosUsuario) {
-      const mod = permissions[pu.modulo];
-      if (mod && pu.accion in mod) {
-        const currentVal = mod[pu.accion];
-        if (typeof currentVal === 'boolean') {
-          mod[pu.accion] = pu.valor === 'true' || pu.valor === true;
-        } else {
-          mod[pu.accion] = ['all', 'own', 'none'].includes(pu.valor) ? pu.valor : 'own';
-        }
-      }
-    }
-  }
+
 
   // Regla de negocio: los no-admin nunca pueden tener scope 'all' en el dashboard.
   // Los módulos de ventas y clientes SÍ son configurables por rol.
