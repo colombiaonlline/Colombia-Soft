@@ -271,7 +271,6 @@ export default function Sales() {
       const canvas = await html2canvas(pageElements[i], {
         scale: 2,
         useCORS: true,
-        allowTaint: true,
         logging: false,
         backgroundColor: '#ffffff',
       });

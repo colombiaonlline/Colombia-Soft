@@ -665,6 +665,10 @@ exports.getById = async (req, res, next) => {
 
     if (!venta) return error(res, 'Venta no encontrada', 404);
 
+    if (req.permissionScope === 'own' && venta.usuarioId !== req.user.id) {
+      return error(res, 'No tiene permisos para acceder a esta venta', 403);
+    }
+
     // 2. Consultar en paralelo únicamente los detalles específicos de productos presentes
     const detalleVentas = await Promise.all(
       detalleVentasBase.map(async (d) => {
