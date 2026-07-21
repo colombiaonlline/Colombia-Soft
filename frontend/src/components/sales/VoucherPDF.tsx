@@ -250,10 +250,10 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
           <div className="v-header-right">
             <strong>Colombia Online</strong>
             <br />
-            NIT: 902062715-5<br />
+            NIT: 900383393-7<br />
 
             Dirección: Carrera 65A 13-157 Medellin, Aeropuerto Olaya Herrera, Local 146<br />
-            Teléfono: +57 (312) 633 99 19<br />
+            Teléfono: +57 (312) 875 15 89<br />
             <strong>Fecha de Impresión:</strong> {currentDate}<br />
             <strong>Fecha de Venta:</strong> {formatDate(sale.date)}
           </div>
