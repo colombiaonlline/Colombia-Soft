@@ -62,6 +62,7 @@ export default function Sales() {
   const [voucherFullSale, setVoucherFullSale] = useState<Sale | null>(null);
   const [isPdfGenerating, setIsPdfGenerating] = useState(false);
   const [isSendingVoucher, setIsSendingVoucher] = useState(false);
+  const [showVoucherTotal, setShowVoucherTotal] = useState(false);
   const voucherRef = useRef<HTMLDivElement>(null);
   const airportMap = useMemo(() => buildAirportMap(data.config.airports || []), [data.config.airports]);
 
@@ -732,7 +733,17 @@ export default function Sales() {
           <p className="text-gray-600 text-sm text-center">
             ¿Qué deseas hacer con el voucher de la venta <strong>#{voucherSale?.id}</strong>?
           </p>
-          <div className="flex flex-col gap-3 mt-4">
+          <label className="flex items-center gap-2 cursor-pointer select-none text-sm text-gray-700 px-1">
+            <input
+              type="checkbox"
+              checked={showVoucherTotal}
+              onChange={(e) => setShowVoucherTotal(e.target.checked)}
+              disabled={isSendingVoucher || isPdfGenerating}
+              className="w-4 h-4 accent-primary cursor-pointer"
+            />
+            Mostrar totales y precio final
+          </label>
+          <div className="flex flex-col gap-3 mt-2">
             <Button
               className="w-full bg-primary hover:bg-primary/90 text-white flex justify-center items-center gap-2"
               onClick={executeSendVoucher}
@@ -769,7 +780,7 @@ export default function Sales() {
       </Modal>
 
       {/* COMPONENTE OCULTO PARA GENERAR PDF - usa la venta completa cargada del API */}
-      <VoucherPDF ref={voucherRef} sale={voucherFullSale} airportMap={airportMap} baggageList={data.config.baggage} />
+      <VoucherPDF ref={voucherRef} sale={voucherFullSale} airportMap={airportMap} baggageList={data.config.baggage} showTotal={showVoucherTotal} />
     </div>
   );
 }

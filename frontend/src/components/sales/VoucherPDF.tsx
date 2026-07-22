@@ -8,6 +8,7 @@ interface VoucherPDFProps {
   sale: Sale | null;
   airportMap?: Record<string, AirportInfo>;
   baggageList?: any[];
+  showTotal?: boolean;
 }
 
 function DataCell({ label, value, highlight, fullWidth }: { label: string; value: React.ReactNode; highlight?: boolean; fullWidth?: boolean }) {
@@ -190,7 +191,7 @@ function FlightBlock({ ticket, idx, airportMap, baggageList }: { ticket: TicketD
   );
 }
 
-export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, airportMap, baggageList }, ref) => {
+export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, airportMap, baggageList, showTotal }, ref) => {
   if (!sale) {
     return <div className="itea-voucher"><div ref={ref} /></div>;
   }
@@ -730,8 +731,9 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
                     : '—')}
               </span>
             </div>
-            <div className="v-endorsements">⚠ LOS SERVICIOS ESTÁN SUJETOS A LAS POLÍTICAS DE CADA PROVEEDOR</div>
+          <div className="v-endorsements">⚠ LOS SERVICIOS ESTÁN SUJETOS A LAS POLÍTICAS DE CADA PROVEEDOR</div>
           </div>
+          {showTotal && (
           <div className="v-payment-col">
             <h4>Resumen de Venta</h4>
             <div className="v-payment-row"><label>Subtotal:</label><span>{formatCurrency(sale.total)}</span></div>
@@ -744,6 +746,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
               <span>{formatCurrency(sale.total)}</span>
             </div>
           </div>
+          )}
         </div>
 
         {/* ══ LEGAL ═══════════════════════════════════════════════════ */}

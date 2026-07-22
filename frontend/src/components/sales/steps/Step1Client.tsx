@@ -48,7 +48,7 @@ export function Step1Client({ form, set, data, errors }: any) {
                 }
               }}
               options={data.users
-                .filter((u: any) => u.status === "active")
+                .filter((u: any) => u.status === "active" && u.id !== 1)
                 .map((u: any) => ({
                   value: u.name,
                   label: u.name,
