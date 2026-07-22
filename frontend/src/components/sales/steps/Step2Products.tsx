@@ -11,6 +11,7 @@ import {
   INITIAL_CHECKIN, 
   INITIAL_MIGRATION, 
   INITIAL_SIMCARD, 
+  INITIAL_BAGGAGE,
   INITIAL_CAR_RENTAL, 
   INITIAL_FINCA, 
   INITIAL_TOUR, 
@@ -61,6 +62,7 @@ export function Step2Products({ form, set, data, errors, toggleProduct, actions 
       case "checkin": targetKey = "checkIns"; initialFn = INITIAL_CHECKIN; break;
       case "documentacion_migratoria": targetKey = "migrations"; initialFn = INITIAL_MIGRATION; break;
       case "simcard": targetKey = "simCards"; initialFn = INITIAL_SIMCARD; break;
+      case "equipaje": targetKey = "baggages"; initialFn = INITIAL_BAGGAGE; break;
       case "renta_vehiculos": targetKey = "carRentals"; initialFn = INITIAL_CAR_RENTAL; break;
       case "renta_fincas": targetKey = "fincas"; initialFn = INITIAL_FINCA; break;
       case "tours": targetKey = "tours"; initialFn = INITIAL_TOUR; break;
@@ -73,12 +75,19 @@ export function Step2Products({ form, set, data, errors, toggleProduct, actions 
 
     if (targetKey && initialFn) {
       const currentItems = (form as any)[targetKey] || [];
-      if (currentItems.length === 0) {
-        const newItem = initialFn(client);
-        set(targetKey, [newItem]);
-        openForm(productId, 0);
+      if (!isSelected) {
+        if (currentItems.length === 0) {
+          const newItem = initialFn(client);
+          set(targetKey, [newItem]);
+          openForm(productId, 0);
+        } else {
+          openForm(productId, 0);
+        }
       } else {
-        openForm(productId, 0);
+        const newItem = initialFn(client);
+        const nextItems = [...currentItems, newItem];
+        set(targetKey, nextItems);
+        openForm(productId, nextItems.length - 1);
       }
     }
   };
@@ -96,6 +105,7 @@ export function Step2Products({ form, set, data, errors, toggleProduct, actions 
         case "checkin": count = form.checkIns.length; break;
         case "documentacion_migratoria": count = form.migrations.length; break;
         case "simcard": count = form.simCards.length; break;
+        case "equipaje": count = form.baggages.length; break;
         case "renta_vehiculos": count = form.carRentals.length; break;
         case "renta_fincas": count = form.fincas.length; break;
         case "tours": count = form.tours.length; break;
@@ -175,7 +185,7 @@ export function Step2Products({ form, set, data, errors, toggleProduct, actions 
                     {product.label}
                   </h4>
                   <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-wider font-semibold">
-                    {selected ? 'Configurar' : 'Añadir servicio'}
+                    {selected ? 'Añadir otro' : 'Añadir servicio'}
                   </p>
                 </div>
               </div>
@@ -255,6 +265,7 @@ export function Step2Products({ form, set, data, errors, toggleProduct, actions 
                   case "checkin": itemsList = form.checkIns; targetKey = "checkIns"; break;
                   case "documentacion_migratoria": itemsList = form.migrations; targetKey = "migrations"; break;
                   case "simcard": itemsList = form.simCards; targetKey = "simCards"; break;
+                  case "equipaje": itemsList = form.baggages; targetKey = "baggages"; break;
                   case "renta_vehiculos": itemsList = form.carRentals; targetKey = "carRentals"; break;
                   case "renta_fincas": itemsList = form.fincas; targetKey = "fincas"; break;
                   case "tours": itemsList = form.tours; targetKey = "tours"; break;

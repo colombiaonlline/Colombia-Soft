@@ -207,6 +207,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
   const checkIns = (sale.checkInData || []).filter((c: any) => !c.parentDetalleId);
   const migrations = (sale.migrationData || []).filter((m: any) => !m.parentDetalleId);
   const simCards = (sale.simCardData || []).filter((s: any) => !s.parentDetalleId);
+  const baggages = (sale.baggageData || []).filter((b: any) => !b.parentDetalleId);
   const carRentals = (sale.carRentalData || []).filter((c: any) => !c.parentDetalleId);
   const fincas = (sale.fincaData || []).filter((f: any) => !f.parentDetalleId);
   const tours = (sale.tourData || []).filter((t: any) => !t.parentDetalleId);
@@ -225,6 +226,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
       ...(sale.checkInData || []).map(item => ({ ...item, _type: 'checkin' })),
       ...(sale.migrationData || []).map(item => ({ ...item, _type: 'migration' })),
       ...(sale.simCardData || []).map(item => ({ ...item, _type: 'simcard' })),
+      ...(sale.baggageData || []).map(item => ({ ...item, _type: 'baggage' })),
       ...(sale.carRentalData || []).map(item => ({ ...item, _type: 'carRental' })),
       ...(sale.fincaData || []).map(item => ({ ...item, _type: 'finca' })),
       ...(sale.tourData || []).map(item => ({ ...item, _type: 'tour' })),
@@ -236,7 +238,7 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
     ].filter((item: any) => item.parentDetalleId === planId);
   };
 
-  const hasOtherProducts = [hotels, insurances, plans, checkIns, migrations, simCards, carRentals, fincas, tours, conventions, restaurants, visas, passports, pets].some(a => a.length > 0);
+  const hasOtherProducts = [hotels, insurances, plans, checkIns, migrations, simCards, baggages, carRentals, fincas, tours, conventions, restaurants, visas, passports, pets].some(a => a.length > 0);
   const hasAnyProduct = tickets.length > 0 || hasOtherProducts;
 
   return (
@@ -530,6 +532,27 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
                   <DataCell label="Plan de Datos" value={sim.dataPlan} />
                   <DataCell label="Tipo de SIM" value={sim.simType ? <span className="v-badge v-badge-accent">{sim.simType}</span> : null} />
                   <DataCell label="Método de Entrega" value={sim.deliveryMethod} />
+                </div>
+              </React.Fragment>
+            ))}
+          </ProductCard>
+        )}
+
+        {/* ══ EQUIPAJE ════════════════════════════════════════════════ */}
+        {baggages.length > 0 && (
+          <ProductCard emoji="🧳" title="Equipaje">
+            {baggages.map((bag: any, i) => (
+              <React.Fragment key={`bag-${i}`}>
+                {i > 0 && <div className="v-item-divider" />}
+                <div className="v-data-grid">
+                  <DataCell label="Aerolínea" value={bag.aerolinea?.nombre || bag.airline} highlight />
+                  <DataCell label="Pasajero" value={bag.pasajeroNombre || bag.passengerName} />
+                  <DataCell label="Reserva / Vuelo" value={bag.nroReserva || bag.reservationNumber} />
+                  <DataCell label="Tipo Tarifa" value={bag.tipoTarifa || bag.fareType} />
+                  <DataCell label="Art. Personal" value={bag.articuloPersonal || bag.personalItem} />
+                  <DataCell label="Eq. Mano" value={bag.equipajeMano || bag.carryOn} />
+                  <DataCell label="Eq. Bodega" value={bag.equipajeBodega || bag.checkedBag} />
+                  {(bag.notas || bag.notes) && <DataCell label="Notas" value={bag.notas || bag.notes} />}
                 </div>
               </React.Fragment>
             ))}

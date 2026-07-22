@@ -132,6 +132,7 @@ exports.list = async (req, res, next) => {
           checkin: 'Check-in',
           migracion: 'Migración',
           simcard: 'SIM Card',
+          equipaje: 'Equipaje',
           autos: 'Renta de Auto',
           fincas: 'Finca',
           tours: 'Tour',
@@ -236,6 +237,7 @@ const PRODUCT_INCLUDES = {
   checkin: { prodCheckins: true },
   documentacion_migratoria: { prodMigracion: true },
   simcard: { prodSimcards: true },
+  equipaje: { prodEquipajes: { include: { aerolinea: true } } },
   renta_vehiculos: { prodAutos: true },
   renta_fincas: { prodFincas: true },
   tours: { prodTours: true },
@@ -440,15 +442,29 @@ const PRODUCT_TRANSFORMS = {
     if (!s) return;
     target.push({
       id: s.id,
-      passengerName: passengers.length > 0 ? passengers[0].nombreCompleto : null,
-      destinationCountry: s.paisDestino,
-      arrivalDate: s.fechaLlegada?.toISOString() || null,
-      tripDuration: s.duracionViaje,
-      dataPlan: s.planDatos,
-      simType: s.tipoSim,
-      deliveryMethod: s.metodoEntrega
-    ,
-      supplier: d.proveedor?.nombre || null,
+      paisDestino: s.pais_destino || s.paisDestino,
+      fechaLlegada: s.fecha_llegada || s.fechaLlegada,
+      duracionViaje: s.duracion_viaje || s.duracionViaje,
+      planDatos: s.plan_datos || s.planDatos,
+      tipoSim: s.tipo_sim || s.tipoSim,
+      metodoEntrega: s.metodo_entrega || s.metodoEntrega,
+      supplierCost: d.costo_proveedor || d.costoProveedor || 0,
+      ta: d.ta || 0
+    });
+  },
+  equipaje(d, passengers, target) {
+    const eq = d.prodEquipajes;
+    if (!eq) return;
+    target.push({
+      id: eq.id,
+      aerolinea: eq.aerolinea ? { nombre: eq.aerolinea.nombre, id: eq.aerolinea.id } : null,
+      nroReserva: eq.nroReserva,
+      pasajeroNombre: eq.pasajeroNombre,
+      tipoTarifa: eq.tipoTarifa,
+      articuloPersonal: eq.articuloPersonal,
+      equipajeMano: eq.equipajeMano,
+      equipajeBodega: eq.equipajeBodega,
+      notas: eq.notas,
       supplierCost: d.costoProveedor || 0,
       ta: d.ta || 0
     });
@@ -732,6 +748,7 @@ exports.getById = async (req, res, next) => {
           checkin: 'Check-in',
           migracion: 'Migración',
           simcard: 'SIM Card',
+          equipaje: 'Equipaje',
           autos: 'Renta de Auto',
           fincas: 'Finca',
           tours: 'Tour',
@@ -773,6 +790,7 @@ exports.getById = async (req, res, next) => {
       checkInData: resultMap.checkin || [],
       migrationData: resultMap.documentacion_migratoria || [],
       simCardData: resultMap.simcard || [],
+      baggageData: resultMap.equipaje || [],
       carRentalData: resultMap.renta_vehiculos || [],
       fincaData: resultMap.renta_fincas || [],
       tourData: resultMap.tours || [],
@@ -856,7 +874,7 @@ const PRODUCT_HANDLERS = {
         fechaLlegadaVuelo: d.flightDepartureArrivalDate ? new Date(d.flightDepartureArrivalDate) : null,
         fechaRegresoVuelo: d.flightReturnDate ? new Date(d.flightReturnDate) : null,
         fechaLlegadaRegresoVuelo: d.flightReturnArrivalDate ? new Date(d.flightReturnArrivalDate) : null,
-        adultosCount: d.adultsCount || 0,
+        adultsCount: d.adultsCount || 0,
         menoresCount: d.childrenCount || 0,
         numeroConfirmacion: d.confirmationNumber || null,
         observaciones: d.observations || null,
@@ -898,11 +916,26 @@ const PRODUCT_HANDLERS = {
     transform: (d, detalleId) => ({
       detalleVentaId: detalleId,
       paisDestino: d.destinationCountry || null,
-      fechaLlegada: d.arrivalDate ? new Date(d.arrivalDate) : null,
+      fechaLlegada: d.arrivalDate || null,
       duracionViaje: d.tripDuration || null,
       planDatos: d.dataPlan || null,
       tipoSim: d.simType || null,
       metodoEntrega: d.deliveryMethod || null
+    })
+  },
+  baggageData: {
+    category: 'equipaje', table: 'prodEquipajes',
+    nombreServicio: 'Equipaje',
+    transform: (d, detalleId) => ({
+      detalleVentaId: detalleId,
+      aerolineaId: d.airline ? parseInt(d.airline) : null,
+      nroReserva: d.reservationNumber || null,
+      pasajeroNombre: d.passengerName || null,
+      tipoTarifa: d.fareType || null,
+      articuloPersonal: d.personalItem || null,
+      equipajeMano: d.carryOn || null,
+      equipajeBodega: d.checkedBag || null,
+      notas: d.notes || null
     })
   },
   carRentalData: {
@@ -1374,7 +1407,7 @@ exports.create = async (req, res, next) => {
            const pasajerosDetalleData = [];
           if (personaId) {
             const hasPassengerInfo = item.passengers || item.passengerInfo || item.guests || item.passengerName || item.ownerName ||
-              ['checkin', 'documentacion_migratoria', 'simcard', 'tours', 'servicio_mascotas', 'renta_vehiculos'].includes(handler.category);
+              ['checkin', 'documentacion_migratoria', 'simcard', 'equipaje', 'tours', 'servicio_mascotas', 'renta_vehiculos'].includes(handler.category);
             
             if (hasPassengerInfo) {
               const passengers = item.passengers ? item.passengers : (item.passengerInfo ? [item.passengerInfo] : (item.guests || [{}]));
@@ -1709,6 +1742,7 @@ exports.create = async (req, res, next) => {
       checkInData: data.checkInData,
       migrationData: data.migrationData,
       simCardData: data.simCardData,
+      baggageData: data.baggageData,
       carRentalData: data.carRentalData,
       fincaData: data.fincaData,
       tourData: data.tourData,
@@ -1793,7 +1827,7 @@ exports.update = async (req, res, next) => {
       }
 
       const productFields = ['ticketData', 'hotelData', 'insuranceData', 'planData',
-        'checkInData', 'migrationData', 'simCardData', 'carRentalData',
+        'checkInData', 'migrationData', 'simCardData', 'baggageData', 'carRentalData',
         'fincaData', 'tourData', 'conventionData', 'restaurantData',
         'visaData', 'passportData', 'petServiceData'];
 
@@ -1853,7 +1887,7 @@ exports.update = async (req, res, next) => {
             const passengerName = item.passengerName || item.mainDriver || item.responsibleName || item.ownerName || item.fullName || item.reservationName || item.contactName;
             const docType = item.docType;
             const docNumber = item.docNumber || item.licenseNumber || item.passportNumber || item.idNumber;
-            if (passengerName || docNumber || ['checkin', 'documentacion_migratoria', 'simcard', 'tours', 'servicio_mascotas', 'renta_vehiculos'].includes(handler.category)) {
+            if (passengerName || docNumber || ['checkin', 'documentacion_migratoria', 'simcard', 'equipaje', 'tours', 'servicio_mascotas', 'renta_vehiculos'].includes(handler.category)) {
               const resolvedPid = await findOrCreatePersona(tx, passengerName, docType, docNumber, pid);
               passengersToCreate.push({
                 personaId: resolvedPid,
@@ -2262,6 +2296,7 @@ exports.sendVoucher = async (req, res, next) => {
       checkin: 'Servicio de Check-in',
       documentacion_migratoria: 'Documentación Migratoria',
       simcard: 'SIM Card Internacional',
+      equipaje: 'Equipaje',
       renta_vehiculos: 'Renta de Vehículo',
       renta_fincas: 'Renta de Finca',
       tours: 'Tour',

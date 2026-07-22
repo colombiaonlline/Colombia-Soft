@@ -402,6 +402,7 @@ model DetalleVenta {
   prodVisas          ProdVisas?
   prodPasaportes     ProdPasaportes?
   prodMascotas       ProdMascotas?
+  prodEquipajes      ProdEquipajes?
 
   @@map("detalle_venta")
   @@index([ventaId])
@@ -442,6 +443,7 @@ model Aerolineas {
   prodPlanes        ProdPlanes[]
   paqueteVuelo      PaqueteVuelo[]
   tramosVuelo       TramosVuelo[]  @relation("tramo_aerolinea")
+  prodEquipajes     ProdEquipajes[]
 
   @@map("aerolineas")
 }
@@ -795,6 +797,23 @@ model ProdEventos {
   nombreLugar         String?      @map("nombre_lugar") @db.VarChar(40)
 
   @@map("prod_eventos")
+}
+
+model ProdEquipajes {
+  id                  String       @id @default(uuid())
+  detalleVentaId      String       @unique @map("detalle_venta_id")
+  detalleVenta        DetalleVenta @relation(fields: [detalleVentaId], references: [id])
+  aerolineaId         Int?         @map("aerolinea_id")
+  aerolinea           Aerolineas?  @relation(fields: [aerolineaId], references: [id])
+  nroReserva          String?      @map("nro_reserva")
+  pasajeroNombre      String?      @map("pasajero_nombre")
+  tipoTarifa          String?      @map("tipo_tarifa")
+  articuloPersonal    String?      @map("articulo_personal")
+  equipajeMano        String?      @map("equipaje_mano")
+  equipajeBodega      String?      @map("equipaje_bodega")
+  notas               String?
+
+  @@map("prod_equipajes")
 }
 
 model ProdRestaurantes {

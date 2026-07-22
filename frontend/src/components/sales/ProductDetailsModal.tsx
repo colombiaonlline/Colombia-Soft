@@ -463,6 +463,25 @@ export default function ProductDetailsModal({ product, onClose, airportMap }: Pr
           </div>
         ));
 
+      case "Equipaje":
+        return product.data.map((item, idx) => (
+          <div key={idx} className="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
+            <h4 className="font-bold text-primary flex items-center gap-2 mb-3 pb-2 border-b">
+              <Luggage size={16} className="text-accent" /> Equipaje #{idx + 1}
+            </h4>
+            {renderGrid([
+              { label: "Aerolínea", value: item.aerolinea?.nombre || item.airline || "-" },
+              { label: "Pasajero", value: item.pasajeroNombre || item.passengerName || "-" },
+              { label: "Reserva/Vuelo", value: item.nroReserva || item.reservationNumber || "-" },
+              { label: "Tarifa", value: item.tipoTarifa || item.fareType || "-" },
+              { label: "Artículo Personal", value: item.articuloPersonal || item.personalItem || "-" },
+              { label: "Eq. de Mano", value: item.equipajeMano || item.carryOn || "-" },
+              { label: "Eq. Documentado", value: item.equipajeBodega || item.checkedBag || "-" },
+              { label: "Notas", value: item.notas || item.notes || "-" },
+            ])}
+          </div>
+        ));
+
       case "AlquilerAutos":
         return product.data.map((item, idx) => (
           <div key={idx} className="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-sm">
