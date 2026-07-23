@@ -37,6 +37,7 @@ import {
   PassportForm,
   PetServiceForm,
   TicketForm,
+  BaggageForm,
 } from "./forms";
 import {
   WizardFormData,
@@ -48,6 +49,7 @@ import {
   INITIAL_CHECKIN,
   INITIAL_MIGRATION,
   INITIAL_SIMCARD,
+  INITIAL_BAGGAGE,
   INITIAL_CAR_RENTAL,
   INITIAL_FINCA,
   INITIAL_TOUR,
@@ -239,6 +241,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
       case "checkin": targetKey = "checkIns"; break;
       case "documentacion_migratoria": targetKey = "migrations"; break;
       case "simcard": targetKey = "simCards"; break;
+      case "equipaje": targetKey = "baggages"; break;
       case "renta_vehiculos": targetKey = "carRentals"; break;
       case "renta_fincas": targetKey = "fincas"; break;
       case "tours": targetKey = "tours"; break;
@@ -266,6 +269,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
       case "checkin": targetKey = "checkIns"; break;
       case "documentacion_migratoria": targetKey = "migrations"; break;
       case "simcard": targetKey = "simCards"; break;
+      case "equipaje": targetKey = "baggages"; break;
       case "renta_vehiculos": targetKey = "carRentals"; break;
       case "renta_fincas": targetKey = "fincas"; break;
       case "tours": targetKey = "tours"; break;
@@ -313,6 +317,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
     form.checkIns.forEach(c => { calcSupplierCost += Number(c.supplierCost) || 0; calcTa += Number(c.ta) || 0; });
     form.migrations.forEach(m => { calcSupplierCost += Number(m.supplierCost) || 0; calcTa += Number(m.ta) || 0; });
     form.simCards.forEach(s => { calcSupplierCost += Number(s.supplierCost) || 0; calcTa += Number(s.ta) || 0; });
+    form.baggages.forEach(s => { calcSupplierCost += Number(s.supplierCost) || 0; calcTa += Number(s.ta) || 0; });
     form.carRentals.forEach(cr => { calcSupplierCost += Number(cr.supplierCost) || 0; calcTa += Number(cr.ta) || 0; });
     form.fincas.forEach(f => { calcSupplierCost += Number(f.supplierCost) || 0; calcTa += Number(f.ta) || 0; });
     form.tours.forEach(t => { calcSupplierCost += Number(t.supplierCost) || 0; calcTa += Number(t.ta) || 0; });
@@ -347,7 +352,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
     }
   }, [
     form.tickets, form.hotels, form.insurances, form.plans, form.checkIns,
-    form.migrations, form.simCards, form.carRentals, form.fincas, form.tours,
+    form.migrations, form.simCards, form.baggages, form.carRentals, form.fincas, form.tours,
     form.conventions, form.restaurants, form.visas, form.passports, form.petServices
   ]);
 
@@ -782,6 +787,29 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
             if (errors.length > 0) {
               triggerError(`El servicio de SIM Card #${i + 1} tiene errores: ${errors.join(", ")}`);
               errs.simCardValidation = "invalid";
+              break;
+            }
+          }
+        }
+      }
+
+      if (form.selectedProducts.includes("equipaje")) {
+        if (!form.baggages || form.baggages.length === 0) {
+          errs.products = "Debes configurar al menos un Equipaje";
+        } else {
+          for (let i = 0; i < form.baggages.length; i++) {
+            const bag = form.baggages[i];
+            const errors: string[] = [];
+            if (!bag) errors.push("Equipaje inválido");
+            else {
+              if (!bag.airline && !bag.airlineId) errors.push("Aerolínea (requerida)");
+              if (!bag.passengerName || bag.passengerName.trim().length === 0) errors.push("Nombre del pasajero (requerido)");
+              if (!bag.reservationNumber || bag.reservationNumber.trim().length === 0) errors.push("Número de reserva/vuelo (requerido)");
+            }
+
+            if (errors.length > 0) {
+              triggerError(`El servicio de Equipaje #${i + 1} tiene errores: ${errors.join(", ")}`);
+              errs.baggageValidation = "invalid";
               break;
             }
           }
@@ -1240,6 +1268,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
         case "checkin": targetKey = "checkIns"; break;
         case "documentacion_migratoria": targetKey = "migrations"; break;
         case "simcard": targetKey = "simCards"; break;
+        case "equipaje": targetKey = "baggages"; break;
         case "renta_vehiculos": targetKey = "carRentals"; break;
         case "renta_fincas": targetKey = "fincas"; break;
         case "tours": targetKey = "tours"; break;
@@ -1431,6 +1460,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
                 case "checkin": targetKey = "checkIns"; break;
                 case "documentacion_migratoria": targetKey = "migrations"; break;
                 case "simcard": targetKey = "simCards"; break;
+                case "equipaje": targetKey = "baggages"; break;
                 case "renta_vehiculos": targetKey = "carRentals"; break;
                 case "renta_fincas": targetKey = "fincas"; break;
                 case "tours": targetKey = "tours"; break;
@@ -1584,6 +1614,21 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
                     set("simCards", next);
                   }}
                   triggerError={triggerError}
+                />
+              );
+            case "equipaje":
+              return (
+                <BaggageForm
+                  baggage={form.baggages[activeIdx] || INITIAL_BAGGAGE(client)}
+                  client={client}
+                  airlines={data.config.airlines}
+                  suppliers={data.config.suppliers}
+                  paymentMethods={data.config.paymentMethods}
+                  onChange={(updates) => {
+                    const next = [...form.baggages];
+                    next[activeIdx] = { ...next[activeIdx], ...updates };
+                    set("baggages", next);
+                  }}
                 />
               );
             case "renta_vehiculos":
@@ -1787,6 +1832,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
       checkInData: form.checkIns.length > 0 ? form.checkIns : undefined,
       migrationData: form.migrations.length > 0 ? form.migrations : undefined,
       simCardData: form.simCards.length > 0 ? form.simCards : undefined,
+      baggageData: form.baggages.length > 0 ? form.baggages : undefined,
       carRentalData: form.carRentals.length > 0 ? form.carRentals : undefined,
       fincaData: form.fincas.length > 0 ? form.fincas : undefined,
       tourData: form.tours.length > 0 ? form.tours : undefined,
@@ -1812,7 +1858,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
       localStorage.removeItem(draftKey);
 
       const hasVouchersToSend = [
-        ...form.plans, ...form.checkIns, ...form.migrations, ...form.simCards, ...form.carRentals,
+        ...form.plans, ...form.checkIns, ...form.migrations, ...form.simCards, ...form.baggages, ...form.carRentals,
         ...form.fincas, ...form.tours, ...form.conventions, ...form.restaurants,
         ...form.visas, ...form.passports, ...form.petServices
       ].some(item => item.sendVoucher);
@@ -1927,6 +1973,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
                   case "checkin": targetKey = "checkIns"; break;
                   case "documentacion_migratoria": targetKey = "migrations"; break;
                   case "simcard": targetKey = "simCards"; break;
+                  case "equipaje": targetKey = "baggages"; break;
                   case "renta_vehiculos": targetKey = "carRentals"; break;
                   case "renta_fincas": targetKey = "fincas"; break;
                   case "tours": targetKey = "tours"; break;
@@ -2059,12 +2106,9 @@ function isItemEmpty(item: any, category: SaleProductId): boolean {
         !item.destinationCountry
       );
     case "simcard":
-      return (
-        !item.destinationCountry &&
-        !item.arrivalDate &&
-        !item.tripDuration &&
-        !item.dataPlan
-      );
+      return !item.passengerName && !item.destinationCountry && !item.supplierCost && !item.ta;
+    case "equipaje":
+      return !item.passengerName && !item.airline && !item.airlineId && !item.supplierCost && !item.ta && !item.reservationNumber;
     case "renta_vehiculos":
       return (
         !item.licenseNumber &&

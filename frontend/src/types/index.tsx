@@ -126,6 +126,7 @@ export type SaleProductId =
   | "checkin"
   | "documentacion_migratoria"
   | "simcard"
+  | "equipaje"
   | "renta_vehiculos"
   | "renta_fincas"
   | "tours"
@@ -167,6 +168,7 @@ export const SALE_PRODUCTS: SaleProductDef[] = [
     group: "other",
   },
   { id: "simcard", label: "SIM Card", icon: "LuSmartphone", group: "other" },
+  { id: "equipaje", label: "Equipaje", icon: "LuLuggage", group: "other" },
   {
     id: "renta_vehiculos",
     label: "Renta de Vehículos",
@@ -369,6 +371,24 @@ export interface SimCardData {
   ta?: number;
 }
 
+export interface BaggageData {
+  airline?: string;
+  airlineId?: number;
+  reservationNumber?: string;
+  passengerName?: string;
+  fareType?: string;
+  personalItem?: string;
+  carryOn?: string;
+  checkedBag?: string;
+  notes?: string;
+  supplierName?: string;
+  supplierCost?: number;
+  supplierPaymentMethod?: string;
+  ta?: number;
+  voucher?: { name: string; base64: string };
+  sendVoucher?: boolean;
+}
+
 export interface CarRentalData {
   mainDriver: string;
   licenseNumber: string;
@@ -562,6 +582,7 @@ export interface Sale {
   checkInData?: CheckInData[];
   migrationData?: MigrationData[];
   simCardData?: SimCardData[];
+  baggageData?: BaggageData[];
   carRentalData?: CarRentalData[];
   fincaData?: FincaData[];
   tourData?: TourData[];

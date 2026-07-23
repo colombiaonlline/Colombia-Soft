@@ -33,6 +33,7 @@ const PRODUCT_ICONS: Record<string, React.ReactNode> = {
   CheckIn: <Luggage size={16} className="text-primary" />,
   Migración: <FileInput size={16} className="text-primary" />,
   SimCard: <Smartphone size={16} className="text-primary" />,
+  Equipaje: <Luggage size={16} className="text-primary" />,
   AlquilerAutos: <Car size={16} className="text-primary" />,
   Finca: <TreePine size={16} className="text-primary" />,
   Tour: <Compass size={16} className="text-primary" />,
@@ -66,6 +67,7 @@ const isAlreadyFull = (sale: Sale | null): boolean => {
     sale.checkInData !== undefined ||
     sale.migrationData !== undefined ||
     sale.simCardData !== undefined ||
+    sale.baggageData !== undefined ||
     sale.carRentalData !== undefined ||
     sale.fincaData !== undefined ||
     sale.tourData !== undefined ||
@@ -135,6 +137,7 @@ export default function SaleDetailModal({
     { key: "checkInData", label: "CheckIn", summaryType: "checkin" },
     { key: "migrationData", label: "Migración", summaryType: "migracion" },
     { key: "simCardData", label: "SimCard", summaryType: "simcard" },
+    { key: "baggageData", label: "Equipaje", summaryType: "equipaje" },
     { key: "carRentalData", label: "AlquilerAutos", summaryType: "autos" },
     { key: "fincaData", label: "Finca", summaryType: "fincas" },
     { key: "tourData", label: "Tour", summaryType: "tours" },
