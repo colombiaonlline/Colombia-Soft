@@ -288,11 +288,20 @@ export default function Sales() {
   const executeDownloadPDF = async () => {
     if (!voucherSale) return;
     setIsPdfGenerating(true);
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     try {
       setSuccessMessage(`Generando voucher #${voucherSale.id}...`);
       setShowSuccess(true);
 
+      timeoutId = setTimeout(() => {
+        setErrorMessage("La descarga está tardando demasiado. Por favor, verifica tu conexión a internet o intenta nuevamente.");
+        setShowError(true);
+        setTimeout(() => setShowError(false), 8000);
+      }, 10000);
+
       const { doc } = await buildVoucherPdf(voucherSale);
+      if (timeoutId) clearTimeout(timeoutId);
+
       doc.save(`Voucher_Colombia Online_#${voucherSale.id}_${voucherSale.clientName.replace(/\s+/g, '_')}.pdf`);
 
       setSuccessMessage(`✅ Voucher descargado correctamente`);
@@ -300,6 +309,7 @@ export default function Sales() {
       setVoucherSale(null);
       setVoucherFullSale(null);
     } catch (err) {
+      if (timeoutId) clearTimeout(timeoutId);
       console.error(err);
       setSuccessMessage(`❌ Error al generar el PDF`);
       setTimeout(() => setShowSuccess(false), 3000);
@@ -311,27 +321,35 @@ export default function Sales() {
   const executeSendVoucher = async () => {
     if (!voucherSale) return;
     setIsSendingVoucher(true);
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     try {
       setSuccessMessage(`Generando voucher #${voucherSale.id}...`);
       setShowSuccess(true);
 
+      timeoutId = setTimeout(() => {
+        setErrorMessage("El proceso está tardando demasiado. Por favor, verifica tu conexión a internet o intenta nuevamente.");
+        setShowError(true);
+        setTimeout(() => setShowError(false), 8000);
+      }, 10000);
+
       const { doc } = await buildVoucherPdf(voucherSale);
+      if (timeoutId) clearTimeout(timeoutId);
 
       // Extraer base64 limpio (sin prefijo data URI)
-      const pdfBase64 = doc.output('datauristring').split(',')[1];
+      const dataUri = doc.output('datauristring');
+      const base64Data = dataUri.split(',')[1];
 
-      setSuccessMessage(`Enviando al cliente...`);
-      const result = await api.sendVoucher(voucherSale.id, pdfBase64);
+      await api.sendVoucher(voucherSale.id, { pdfBuffer: base64Data });
 
-      setSuccessMessage(`✅ Voucher enviado a ${result.email}`);
-      setTimeout(() => setShowSuccess(false), 4000);
+      setSuccessMessage(`✅ Voucher enviado correctamente`);
+      setTimeout(() => setShowSuccess(false), 3000);
       setVoucherSale(null);
       setVoucherFullSale(null);
-    } catch (err: any) {
+    } catch (err) {
+      if (timeoutId) clearTimeout(timeoutId);
       console.error(err);
-      const msg = err?.response?.data?.error?.message || 'Error al enviar el voucher';
-      setSuccessMessage(`❌ ${msg}`);
-      setTimeout(() => setShowSuccess(false), 4000);
+      setSuccessMessage(`❌ Error al enviar el voucher`);
+      setTimeout(() => setShowSuccess(false), 3000);
     } finally {
       setIsSendingVoucher(false);
     }

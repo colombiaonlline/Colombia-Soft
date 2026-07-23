@@ -86,15 +86,22 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
     const saved = localStorage.getItem(draftKey);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Si el borrador tiene al usuario desarrolladores (ID 1) como asesor,
+        // reemplazarlo con el usuario actual
+        if (!parsed.asesorId || String(parsed.asesorId) === '1') {
+          parsed.asesorId = user?.id ? String(user.id) : '';
+          parsed.asesorName = user?.name || '';
+        }
+        return parsed;
       } catch (e) {
         return INITIAL_FORM;
       }
     }
     return {
       ...INITIAL_FORM,
-      asesorId: user?.id ? String(user.id) : "",
-      asesorName: user?.name || "",
+      asesorId: user?.id ? String(user.id) : '',
+      asesorName: user?.name || '',
     };
   });
   const [showOtherProducts, setShowOtherProducts] = useState(false);

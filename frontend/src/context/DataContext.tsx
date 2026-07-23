@@ -29,6 +29,19 @@ import {
 
 // Limpiar caché de permisos de rol si quedó de versiones anteriores
 try { localStorage.removeItem('itea_role_permissions_cache'); } catch {}
+// Forzar recarga de clientes/ventas para que se traigan con el scope correcto
+// (necesario después de corrección de permisos de asesor)
+const CACHE_VERSION = 'v2';
+const cacheVersionKey = 'itea_cache_version';
+try {
+  if (localStorage.getItem(cacheVersionKey) !== CACHE_VERSION) {
+    // Limpiar cachés de todos los usuarios conocidos
+    Object.keys(localStorage)
+      .filter(k => k.includes('itea_clients_cache') || k.includes('itea_sales_cache'))
+      .forEach(k => localStorage.removeItem(k));
+    localStorage.setItem(cacheVersionKey, CACHE_VERSION);
+  }
+} catch {}
 
 type ConfigSection = 'cards' | 'paymentMethods' | 'documentTypes' | 'airlines' | 'suppliers' | 'airports' | 'baggage' | 'packages';
 
@@ -114,7 +127,7 @@ const emptyData: AppData = {
       const cached = loadRolePermissionsCache();
       if (cached) return cached;
       return {
-        asesor: { dashboard: { view: 'own' }, sales: { view: 'own', create: true, edit: 'own' }, clients: { view: 'own', create: true, edit: 'own' }, responsables: { view: 'own', create: true, edit: 'own' }, itineraries: { view: 'own', edit: 'none' }, commissions: { view: false, create: false, edit: false, delete: false } },
+        asesor: { dashboard: { view: 'own' }, sales: { view: 'all', create: true, edit: 'all' }, clients: { view: 'all', create: true, edit: 'all' }, responsables: { view: 'all', create: true, edit: 'all', delete: false }, itineraries: { view: 'all', edit: 'all' }, commissions: { view: false, create: false, edit: false, delete: false } },
         freelancer: { dashboard: { view: 'own' }, sales: { view: 'own', create: true, edit: 'own' }, clients: { view: 'own', create: true, edit: 'own' }, responsables: { view: 'own', create: true, edit: 'own' }, itineraries: { view: 'own', edit: 'none' }, commissions: { view: false, create: false, edit: false, delete: false } },
       };
     })(),

@@ -324,7 +324,9 @@ export default function Clients() {
       const matchesSearch =
         (client.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (client.docNumber || '').includes(searchTerm) ||
-        (client.email || '').toLowerCase().includes(searchTerm.toLowerCase());
+        (client.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (client.id && formatId(client.id).includes(searchTerm)) ||
+        (client.id && client.id.toString().includes(searchTerm));
       const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
       return matchesSearch && matchesStatus;
     });

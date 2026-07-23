@@ -1573,9 +1573,22 @@ exports.create = async (req, res, next) => {
 
       const metodoPagoId = await resolvePaymentMethodId(tx, data.paymentMethod, memCache);
 
+      // Cualquier rol puede seleccionar un asesor diferente si envía asesorId.
+      // Solo se bloquea el ID 1 (usuario de desarrolladores).
+      let finalAsesorId = req.user.id;
+      if (data.asesorId && parseInt(data.asesorId) !== req.user.id) {
+        finalAsesorId = parseInt(data.asesorId);
+      }
+      // Bloquear usuario desarrolladores (ID 1) como asesor de ventas
+      if (finalAsesorId === 1) {
+        const err = new Error('El usuario de desarrollo no puede ser asignado como asesor de una venta');
+        err.statusCode = 400;
+        throw err;
+      }
+
       const ventaCreateData = {
         clienteId: data.clientId,
-        usuarioId: req.user.id,
+        usuarioId: finalAsesorId,
         montoTotal: data.total || 0,
         costoProveedorTotal: data.supplierCost || 0,
         taTotal: data.ta || 0,
