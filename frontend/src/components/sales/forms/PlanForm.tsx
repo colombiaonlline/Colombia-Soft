@@ -215,9 +215,8 @@ export function PlanForm({ plan, onChange, data, triggerError, mainClient }: Pla
             Reservación y Transporte
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField label={<span>Número de Reservación <span className="text-red-500">*</span></span>}>
+            <FormField label={<span>Número de Reservación</span>}>
               <Input
-                required
                 value={plan.reservationNumber}
                 onChange={(e) => {
                   const cleaned = e.target.value.replace(/[^a-zA-Z0-9-]/g, "").toUpperCase();
@@ -227,9 +226,8 @@ export function PlanForm({ plan, onChange, data, triggerError, mainClient }: Pla
                 maxLength={20}
               />
             </FormField>
-            <FormField label={<span>{plan.transportType === 'Terrestre' ? 'Placa / Vehículo' : 'Número de Vuelo'} <span className="text-red-500">*</span></span>}>
+            <FormField label={<span>{plan.transportType === 'Terrestre' ? 'Placa / Vehículo' : 'Número de Vuelo'}</span>}>
               <Input
-                required
                 value={plan.flightNumber}
                 onChange={(e) => {
                   const cleaned = e.target.value.replace(/[^a-zA-Z0-9-]/g, "").toUpperCase().slice(0, 12);
@@ -239,9 +237,8 @@ export function PlanForm({ plan, onChange, data, triggerError, mainClient }: Pla
                 maxLength={12}
               />
             </FormField>
-            <FormField label={<span>{plan.transportType === 'Terrestre' ? 'Tiquete / Puesto' : 'Número de Tiquete'} {plan.transportType !== 'Terrestre' && <span className="text-red-500">*</span>}</span>}>
+            <FormField label={<span>{plan.transportType === 'Terrestre' ? 'Tiquete / Puesto' : 'Número de Tiquete'}</span>}>
               <Input
-                required={plan.transportType !== 'Terrestre'}
                 value={plan.ticketNumber}
                 onChange={(e) => {
                   const cleaned = plan.transportType === 'Terrestre' ? e.target.value : e.target.value.replace(/\D/g, "").slice(0, 15);
@@ -251,9 +248,8 @@ export function PlanForm({ plan, onChange, data, triggerError, mainClient }: Pla
                 maxLength={20}
               />
             </FormField>
-             <FormField label={<span>Confirmación <span className="text-red-500">*</span></span>}>
+             <FormField label={<span>Confirmación</span>}>
                <Input
-                 required
                  value={plan.confirmationNumber || ""}
                  onChange={(e) => {
                    const cleaned = e.target.value.replace(/[^a-zA-Z0-9-]/g, "").toUpperCase().slice(0, 10);
@@ -263,7 +259,7 @@ export function PlanForm({ plan, onChange, data, triggerError, mainClient }: Pla
                  maxLength={10}
                />
              </FormField>
-            <FormField label={<span>{plan.transportType === 'Terrestre' ? 'Salida (Origen)' : 'Fecha Ida (Vuelo)'} <span className="text-red-500">*</span></span>}>
+            <FormField label={<span>{plan.transportType === 'Terrestre' ? 'Salida (Origen)' : 'Fecha Ida (Vuelo)'}</span>}>
               <DateTimePicker
                 value={plan.flightDepartureDate || ""}
                 onChange={(val) => onChange({ flightDepartureDate: val })}
@@ -272,7 +268,7 @@ export function PlanForm({ plan, onChange, data, triggerError, mainClient }: Pla
                 fieldName="Salida de ida del plan"
               />
             </FormField>
-            <FormField label={<span>{plan.transportType === 'Terrestre' ? 'Llegada (Destino)' : 'Llegada Ida (Vuelo)'} <span className="text-red-500">*</span></span>}>
+            <FormField label={<span>{plan.transportType === 'Terrestre' ? 'Llegada (Destino)' : 'Llegada Ida (Vuelo)'}</span>}>
               <DateTimePicker
                 value={plan.flightDepartureArrivalDate || ""}
                 onChange={(val) => onChange({ flightDepartureArrivalDate: val })}
@@ -281,7 +277,7 @@ export function PlanForm({ plan, onChange, data, triggerError, mainClient }: Pla
                 fieldName="Llegada de ida del plan"
               />
             </FormField>
-            <FormField label={<span>{plan.transportType === 'Terrestre' ? 'Regreso (Destino)' : 'Fecha Vuelta (Vuelo)'} <span className="text-red-500">*</span></span>}>
+            <FormField label={<span>{plan.transportType === 'Terrestre' ? 'Regreso (Destino)' : 'Fecha Vuelta (Vuelo)'}</span>}>
               <DateTimePicker
                 value={plan.flightReturnDate || ""}
                 onChange={(val) => onChange({ flightReturnDate: val })}
@@ -290,7 +286,7 @@ export function PlanForm({ plan, onChange, data, triggerError, mainClient }: Pla
                 fieldName="Salida de vuelta del plan"
               />
             </FormField>
-            <FormField label={<span>{plan.transportType === 'Terrestre' ? 'Llegada Regreso (Origen)' : 'Llegada Vuelta (Vuelo)'} <span className="text-red-500">*</span></span>}>
+            <FormField label={<span>{plan.transportType === 'Terrestre' ? 'Llegada Regreso (Origen)' : 'Llegada Vuelta (Vuelo)'}</span>}>
               <DateTimePicker
                 value={plan.flightReturnArrivalDate || ""}
                 onChange={(val) => onChange({ flightReturnArrivalDate: val })}
@@ -299,7 +295,7 @@ export function PlanForm({ plan, onChange, data, triggerError, mainClient }: Pla
                 fieldName="Llegada de vuelta del plan"
               />
             </FormField>
-            <FormField label={<span>Ingreso Hotel <span className="text-red-500">*</span></span>}>
+            <FormField label={<span>Ingreso Hotel</span>}>
               <DateTimePicker
                 value={plan.startDate || ""}
                 onChange={(val) => onChange({ startDate: val })}
@@ -308,7 +304,7 @@ export function PlanForm({ plan, onChange, data, triggerError, mainClient }: Pla
                 fieldName="Ingreso al hotel del plan"
               />
             </FormField>
-            <FormField label={<span>Salida Hotel <span className="text-red-500">*</span></span>}>
+            <FormField label={<span>Salida Hotel</span>}>
               <DateTimePicker
                 value={plan.endDate || ""}
                 onChange={(val) => onChange({ endDate: val })}
@@ -336,7 +332,6 @@ export function PlanForm({ plan, onChange, data, triggerError, mainClient }: Pla
           </FormField>
           <FormField label="Costo Proveedor">
             <CurrencyInput
-              required
               value={plan.supplierCost === 0 ? "" : plan.supplierCost}
               onChange={(val) =>
                 onChange({
@@ -347,7 +342,6 @@ export function PlanForm({ plan, onChange, data, triggerError, mainClient }: Pla
           </FormField>
           <FormField label="Valor TA">
             <CurrencyInput
-              required
               value={plan.ta === 0 ? "" : plan.ta}
               onChange={(val) =>
                 onChange({

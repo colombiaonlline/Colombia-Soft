@@ -570,124 +570,58 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
       }
 
       if (form.selectedProducts.includes("planes")) {
-        if (!form.plans || form.plans.length === 0) {
-          errs.products = "Debes configurar al menos un paquete";
-        } else {
+        if (form.plans && form.plans.length > 0) {
           for (let i = 0; i < form.plans.length; i++) {
             const plan = form.plans[i];
             const errors: string[] = [];
-            if (!plan) errors.push("Plan inválido");
-            else {
-              // Campo común a ambos tipos
-              if (!plan.planName || plan.planName.trim().length > 50) errors.push("Nombre del Plan (máx 50 chars)");
-
-              if (plan.packageType === 'supplier') {
-                // ── PAQUETE POR PROVEEDOR: solo campos mínimos ──────────────
-                if (!plan.supplier || plan.supplier.trim().length === 0) errors.push("Proveedor (requerido)");
-
-                if (!plan.vouchers || plan.vouchers.length === 0) {
-                  if (!plan.voucher) errors.push("Debe adjuntar el voucher del proveedor");
-                }
-
-                if (plan.supplierCost === undefined || plan.supplierCost <= 0) errors.push("Costo Proveedor (> $0)");
-                if (plan.ta === undefined || plan.ta < 0) errors.push("Valor TA (>= $0)");
-                if (!plan.supplierPaymentMethod) errors.push("Método de Pago Proveedor (requerido)");
-
-              } else {
-                // ── PAQUETE POR EMPRESA: validación completa ────────────────
-                if (!plan.hotelName || plan.hotelName.trim().length < 2 || plan.hotelName.trim().length > 50) errors.push("Nombre del Hotel (2-50 chars)");
-                if (!plan.reservationNumber || plan.reservationNumber.trim().length === 0 || plan.reservationNumber.trim().length > 20) errors.push("Número de Reservación (1-20 chars)");
-                if (plan.adultsCount === undefined || plan.adultsCount < 0 || plan.adultsCount > 999) errors.push("Adultos (0-999)");
-                if (plan.childrenCount === undefined || plan.childrenCount < 0 || plan.childrenCount > 999) errors.push("Menores (0-999)");
-                if (!plan.flightNumber || plan.flightNumber.trim().length === 0) {
-                  errors.push(plan.transportType === 'Terrestre' ? "Placa / Vehículo (requerido)" : "Número de Vuelo (requerido)");
-                } else if (plan.transportType !== 'Terrestre') {
-                  if (plan.flightNumber.length > 12) {
-                    errors.push("Número de Vuelo (máx 12 caracteres)");
-                  } else if (!/^[A-Z0-9-]+$/.test(plan.flightNumber)) {
-                    errors.push("Número de Vuelo (debe ser alfanumérico en mayúsculas)");
-                  }
-                }
-                
-                if (plan.transportType !== 'Terrestre') {
-                  if (!plan.ticketNumber || plan.ticketNumber.trim().length === 0) {
-                    errors.push("Número de Tiquete (requerido)");
-                  } else if (plan.ticketNumber.length < 13 || plan.ticketNumber.length > 20) {
-                    errors.push("Número de Tiquete (mínimo 13 y máximo 20 dígitos)");
-                  } else if (!/^\d+$/.test(plan.ticketNumber)) {
-                    errors.push("Número de Tiquete (debe ser estrictamente numérico)");
-                  }
-                }
-                
-                if (!plan.confirmationNumber || plan.confirmationNumber.trim().length === 0) {
-                  errors.push("Confirmación (requerido)");
-                } else if (plan.transportType !== 'Terrestre') {
-                  if (plan.confirmationNumber.length !== 6) {
-                    errors.push("Confirmación (debe tener exactamente 6 caracteres)");
-                  } else if (!/^[A-Z0-9-]+$/.test(plan.confirmationNumber)) {
-                    errors.push("Confirmación (debe ser alfanumérico en mayúsculas)");
-                  }
-                }
-                if (!plan.supplier || plan.supplier.trim().length === 0) errors.push("Proveedor (requerido)");
-
-                if (!plan.flightDepartureDate) errors.push("Fecha Ida (requerido)");
-                if (!plan.flightReturnDate) errors.push("Fecha Vuelta (requerido)");
-                if (!plan.startDate) errors.push("Ingreso Hotel (requerido)");
-                if (!plan.endDate) errors.push("Salida Hotel (requerido)");
-                if (!plan.flightDepartureArrivalDate) errors.push("Llegada Ida (requerido)");
-                if (!plan.flightReturnArrivalDate) errors.push("Llegada Vuelta (requerido)");
-
-                const now = new Date();
-                now.setHours(0, 0, 0, 0);
-                if (plan.flightDepartureDate && new Date(plan.flightDepartureDate) < now) errors.push("Fecha Ida no puede ser anterior a la fecha actual");
-                if (plan.flightReturnDate && new Date(plan.flightReturnDate) < now) errors.push("Fecha Vuelta no puede ser anterior a la fecha actual");
-                if (plan.startDate && new Date(plan.startDate) < now) errors.push("Ingreso Hotel no puede ser anterior a la fecha actual");
-                if (plan.endDate && new Date(plan.endDate) < now) errors.push("Salida Hotel no puede ser anterior a la fecha actual");
-                if (plan.flightDepartureArrivalDate && new Date(plan.flightDepartureArrivalDate) < now) errors.push("Llegada Ida no puede ser anterior a la fecha actual");
-                if (plan.flightReturnArrivalDate && new Date(plan.flightReturnArrivalDate) < now) errors.push("Llegada Vuelta no puede ser anterior a la fecha actual");
-
-                if (plan.flightDepartureDate && plan.flightDepartureArrivalDate && new Date(plan.flightDepartureArrivalDate) < new Date(plan.flightDepartureDate)) {
-                  errors.push("Llegada Ida debe ser posterior a la Fecha Ida");
-                }
-                if (plan.flightReturnDate && plan.flightReturnArrivalDate && new Date(plan.flightReturnArrivalDate) < new Date(plan.flightReturnDate)) {
-                  errors.push("Llegada Vuelta debe ser posterior a la Fecha Vuelta");
-                }
-                if (plan.flightDepartureDate && plan.flightReturnDate && new Date(plan.flightReturnDate) < new Date(plan.flightDepartureDate)) {
-                  errors.push("Fecha Vuelta debe ser posterior a la Fecha Ida");
-                }
-                if (plan.startDate && plan.endDate && new Date(plan.endDate) < new Date(plan.startDate)) {
-                  errors.push("Salida Hotel debe ser posterior al Ingreso Hotel");
-                }
-
-                if (plan.supplierCost === undefined || plan.supplierCost <= 0) errors.push("Costo Proveedor (> $0)");
-                if (plan.ta === undefined || plan.ta < 0) errors.push("Valor TA (>= $0)");
-                if (!plan.supplierPaymentMethod) errors.push("Método de Pago Proveedor (requerido)");
+            if (plan) {
+              // Todos los campos de paquetes son opcionales. Solo validamos congruencia si se ingresan datos.
+              if (plan.planName && plan.planName.trim().length > 50) {
+                errors.push("Nombre del Plan (máx 50 chars)");
+              }
+              if (plan.flightNumber && plan.transportType !== 'Terrestre' && plan.flightNumber.length > 12) {
+                errors.push("Número de Vuelo (máx 12 caracteres)");
+              }
+              if (plan.ticketNumber && plan.transportType !== 'Terrestre' && (plan.ticketNumber.length < 13 || plan.ticketNumber.length > 20)) {
+                errors.push("Número de Tiquete (mínimo 13 y máximo 20 dígitos)");
               }
 
-              // Integrantes: requeridos en ambos tipos
+              if (plan.flightDepartureDate && plan.flightDepartureArrivalDate && new Date(plan.flightDepartureArrivalDate) < new Date(plan.flightDepartureDate)) {
+                errors.push("Llegada Ida debe ser posterior a la Fecha Ida");
+              }
+              if (plan.flightReturnDate && plan.flightReturnArrivalDate && new Date(plan.flightReturnArrivalDate) < new Date(plan.flightReturnDate)) {
+                errors.push("Llegada Vuelta debe ser posterior a la Fecha Vuelta");
+              }
+              if (plan.flightDepartureDate && plan.flightReturnDate && new Date(plan.flightReturnDate) < new Date(plan.flightDepartureDate)) {
+                errors.push("Fecha Vuelta debe ser posterior a la Fecha Ida");
+              }
+              if (plan.startDate && plan.endDate && new Date(plan.endDate) < new Date(plan.startDate)) {
+                errors.push("Salida Hotel debe ser posterior al Ingreso Hotel");
+              }
+
+              // Validar integrantes solo si se ingresó algún nombre/documento parcialmente
               if (plan.guests && plan.guests.length > 0) {
                 plan.guests.forEach((g, gIdx) => {
-                  if (!g.name || g.name.trim().length < 3 || g.name.trim().length > 70) {
-                    errors.push(`Integrante #${gIdx + 1}: Nombre Completo (3-70 caracteres)`);
-                  } else if (/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/.test(g.name)) {
-                    errors.push(`Integrante #${gIdx + 1}: Nombre Completo solo permite letras y espacios`);
+                  if (g.name && g.name.trim().length > 0) {
+                    if (g.name.trim().length < 3 || g.name.trim().length > 70) {
+                      errors.push(`Integrante #${gIdx + 1}: Nombre Completo (3-70 caracteres)`);
+                    } else if (/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/.test(g.name)) {
+                      errors.push(`Integrante #${gIdx + 1}: Nombre Completo solo permite letras y espacios`);
+                    }
                   }
-                  if (!g.docType || g.docType.trim().length === 0) {
-                    errors.push(`Integrante #${gIdx + 1}: Tipo de Documento es requerido`);
-                  }
-                  if (!g.docNumber || g.docNumber.trim().length < 5 || g.docNumber.trim().length > 15) {
-                    errors.push(`Integrante #${gIdx + 1}: Número de Documento (5-20 caracteres)`);
-                  } else if (/[^a-zA-Z0-9]/.test(g.docNumber)) {
-                    errors.push(`Integrante #${gIdx + 1}: Número de Documento debe ser alfanumérico`);
+                  if (g.docNumber && g.docNumber.trim().length > 0) {
+                    if (g.docNumber.trim().length < 5 || g.docNumber.trim().length > 15) {
+                      errors.push(`Integrante #${gIdx + 1}: Número de Documento (5-20 caracteres)`);
+                    } else if (/[^a-zA-Z0-9]/.test(g.docNumber)) {
+                      errors.push(`Integrante #${gIdx + 1}: Número de Documento debe ser alfanumérico`);
+                    }
                   }
                 });
-              } else {
-                errors.push("Debes registrar al menos un integrante en el plan");
               }
             }
 
             if (errors.length > 0) {
-              triggerError(`El servicio de Paquetes #${i + 1} tiene errores: ${errors.join(", ")}`);
+              triggerError(`El servicio de Paquetes #${i + 1} tiene errores de formato: ${errors.join(", ")}`);
               errs.planesValidation = "invalid";
               break;
             }
