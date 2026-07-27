@@ -805,6 +805,8 @@ exports.getById = async (req, res, next) => {
   }
 };
 
+const safeDate = (val) => (val && !isNaN(new Date(val).getTime()) ? new Date(val) : null);
+
 const PRODUCT_HANDLERS = {
   ticketData: {
     category: 'tiqueteria', table: 'prodTiqueteria',
@@ -835,8 +837,8 @@ const PRODUCT_HANDLERS = {
       tipoHotel: d.hotelType || 'hotel',
       destino: d.destination || null,
       nroReserva: d.reservationNumber || null,
-      fechaEntrada: d.startDate ? new Date(d.startDate) : null,
-      fechaSalida: d.endDate ? new Date(d.endDate) : null,
+      fechaEntrada: safeDate(d.startDate),
+      fechaSalida: safeDate(d.endDate),
       observaciones: d.observations || null
     })
   },
@@ -848,8 +850,8 @@ const PRODUCT_HANDLERS = {
       tipoSeguro: d.insuranceType || 'basico',
       coberturaUsd: Number(d.coverageAmount) || 0,
       diasCobertura: Number(d.coverageDays) || 0,
-      fechaInicioVigencia: d.startDate ? new Date(d.startDate) : null,
-      fechaFinVigencia: d.endDate ? new Date(d.endDate) : null,
+      fechaInicioVigencia: safeDate(d.startDate),
+      fechaFinVigencia: safeDate(d.endDate),
       telefonoContacto: d.phone || null
     })
   },
@@ -858,29 +860,30 @@ const PRODUCT_HANDLERS = {
     nombreServicio: 'Planes',
     transform: async (d, detalleId, tx) => {
       const aerolineaId = await resolveAirlineId(tx, d.airline);
-      return {
+      const resData = {
         detalleVentaId: detalleId,
-        paqueteId: d.packageId ? (parseInt(d.packageId) || null) : null,
-        paqueteTarifaId: d.packageRateId ? (parseInt(d.packageRateId) || null) : null,
         nombrePlan: d.planName || null,
         nombreHotel: d.hotelName || null,
-        aerolineaId,
         nroVuelo: d.flightNumber || null,
         nroReserva: d.reservationNumber || null,
         nroTiquete: d.ticketNumber || null,
-        fechaViajeInicio: d.startDate ? new Date(d.startDate) : null,
-        fechaViajeFin: d.endDate ? new Date(d.endDate) : null,
-        fechaSalidaVuelo: d.flightDepartureDate ? new Date(d.flightDepartureDate) : null,
-        fechaLlegadaVuelo: d.flightDepartureArrivalDate ? new Date(d.flightDepartureArrivalDate) : null,
-        fechaRegresoVuelo: d.flightReturnDate ? new Date(d.flightReturnDate) : null,
-        fechaLlegadaRegresoVuelo: d.flightReturnArrivalDate ? new Date(d.flightReturnArrivalDate) : null,
-        adultsCount: d.adultsCount || 0,
+        adultosCount: d.adultsCount || 0,
         menoresCount: d.childrenCount || 0,
         numeroConfirmacion: d.confirmationNumber || null,
         observaciones: d.observations || null,
         tipoPaquete: d.packageType || 'own',
         tipoTransporte: d.transportType || 'Aéreo'
       };
+      if (d.packageId && !isNaN(parseInt(d.packageId))) resData.paqueteId = parseInt(d.packageId);
+      if (d.packageRateId && !isNaN(parseInt(d.packageRateId))) resData.paqueteTarifaId = parseInt(d.packageRateId);
+      if (aerolineaId) resData.aerolineaId = aerolineaId;
+      if (safeDate(d.startDate)) resData.fechaViajeInicio = safeDate(d.startDate);
+      if (safeDate(d.endDate)) resData.fechaViajeFin = safeDate(d.endDate);
+      if (safeDate(d.flightDepartureDate)) resData.fechaSalidaVuelo = safeDate(d.flightDepartureDate);
+      if (safeDate(d.flightDepartureArrivalDate)) resData.fechaLlegadaVuelo = safeDate(d.flightDepartureArrivalDate);
+      if (safeDate(d.flightReturnDate)) resData.fechaRegresoVuelo = safeDate(d.flightReturnDate);
+      if (safeDate(d.flightReturnArrivalDate)) resData.fechaLlegadaRegresoVuelo = safeDate(d.flightReturnArrivalDate);
+      return resData;
     }
   },
   checkInData: {
@@ -1238,8 +1241,8 @@ async function createProductItems(tx, ventaId, clienteId, data) {
             metodoPagoProveedorId: resolvedSupplierPaymentMethodId,
             origen: item.legs?.[0]?.origin || item.pickupLocation || null,
             destino: item.destination || item.destinationCountry || item.legs?.[0]?.destination || null,
-            fechaInicioViaje: item.startDate ? new Date(item.startDate) : item.departureDate ? new Date(item.departureDate) : item.pickupDate ? new Date(item.pickupDate) : null,
-            fechaFinViaje: item.endDate ? new Date(item.endDate) : item.arrivalDate ? new Date(item.arrivalDate) : item.returnDate ? new Date(item.returnDate) : null,
+            fechaInicioViaje: safeDate(item.startDate) || safeDate(item.departureDate) || safeDate(item.pickupDate),
+            fechaFinViaje: safeDate(item.endDate) || safeDate(item.arrivalDate) || safeDate(item.returnDate),
             observaciones: item.observations || null
           }
         });
@@ -1444,8 +1447,8 @@ exports.create = async (req, res, next) => {
             metodoPagoProveedorId: resolvedSupplierPaymentMethodId,
             origen: item.legs?.[0]?.origin || item.pickupLocation || null,
             destino: item.destination || item.destinationCountry || item.legs?.[0]?.destination || null,
-            fechaInicioViaje: item.startDate ? new Date(item.startDate) : item.departureDate ? new Date(item.departureDate) : item.pickupDate ? new Date(item.pickupDate) : null,
-            fechaFinViaje: item.endDate ? new Date(item.endDate) : item.arrivalDate ? new Date(item.arrivalDate) : item.returnDate ? new Date(item.returnDate) : null,
+            fechaInicioViaje: safeDate(item.startDate) || safeDate(item.departureDate) || safeDate(item.pickupDate),
+            fechaFinViaje: safeDate(item.endDate) || safeDate(item.arrivalDate) || safeDate(item.returnDate),
             observaciones: item.observations || null,
             [handler.table]: {
               create: productData
@@ -1578,12 +1581,6 @@ exports.create = async (req, res, next) => {
       let finalAsesorId = req.user.id;
       if (data.asesorId && parseInt(data.asesorId) !== req.user.id) {
         finalAsesorId = parseInt(data.asesorId);
-      }
-      // Bloquear usuario desarrolladores (ID 1) como asesor de ventas
-      if (finalAsesorId === 1) {
-        const err = new Error('El usuario de desarrollo no puede ser asignado como asesor de una venta');
-        err.statusCode = 400;
-        throw err;
       }
 
       const ventaCreateData = {
