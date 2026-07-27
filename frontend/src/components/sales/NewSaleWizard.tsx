@@ -87,15 +87,34 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Si el borrador tiene al usuario desarrolladores (ID 1) como asesor,
-        // reemplazarlo con el usuario actual
-        if (!parsed.asesorId || String(parsed.asesorId) === '1') {
-          parsed.asesorId = user?.id ? String(user.id) : '';
-          parsed.asesorName = user?.name || '';
+        if (parsed && typeof parsed === 'object') {
+          const merged = { ...INITIAL_FORM, ...parsed };
+          if (!merged.asesorId || String(merged.asesorId) === '1') {
+            merged.asesorId = user?.id ? String(user.id) : '';
+            merged.asesorName = user?.name || '';
+          }
+          // Garantizar que todos los arreglos estén inicializados
+          merged.selectedProducts = Array.isArray(merged.selectedProducts) ? merged.selectedProducts : [];
+          merged.tickets = Array.isArray(merged.tickets) ? merged.tickets : [];
+          merged.hotels = Array.isArray(merged.hotels) ? merged.hotels : [];
+          merged.insurances = Array.isArray(merged.insurances) ? merged.insurances : [];
+          merged.plans = Array.isArray(merged.plans) ? merged.plans : [];
+          merged.checkIns = Array.isArray(merged.checkIns) ? merged.checkIns : [];
+          merged.migrations = Array.isArray(merged.migrations) ? merged.migrations : [];
+          merged.simCards = Array.isArray(merged.simCards) ? merged.simCards : [];
+          merged.baggages = Array.isArray(merged.baggages) ? merged.baggages : [];
+          merged.carRentals = Array.isArray(merged.carRentals) ? merged.carRentals : [];
+          merged.fincas = Array.isArray(merged.fincas) ? merged.fincas : [];
+          merged.tours = Array.isArray(merged.tours) ? merged.tours : [];
+          merged.conventions = Array.isArray(merged.conventions) ? merged.conventions : [];
+          merged.restaurants = Array.isArray(merged.restaurants) ? merged.restaurants : [];
+          merged.visas = Array.isArray(merged.visas) ? merged.visas : [];
+          merged.passports = Array.isArray(merged.passports) ? merged.passports : [];
+          merged.petServices = Array.isArray(merged.petServices) ? merged.petServices : [];
+          return merged;
         }
-        return parsed;
       } catch (e) {
-        return INITIAL_FORM;
+        // En caso de corrupción en localStorage
       }
     }
     return {
@@ -122,7 +141,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
   // Saber si el formulario de tiquetería está completamente vacío (sin tocar)
   const isTicketFormEmpty = (() => {
     if (activeForm === "tiqueteria" && activeIdx !== null) {
-      const ticket = form.tickets[activeIdx];
+      const ticket = (form.tickets || [])[activeIdx];
       if (!ticket) return true;
       
       const hasAirline = !!ticket.airline?.trim();
@@ -131,8 +150,8 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
       const paxList = ticket.passengers || ((ticket as any).passengerInfo ? [(ticket as any).passengerInfo] : []);
       const titular = paxList.find((p: any) => p.esTitular) || paxList[0];
       const hasTicketNumber = titular ? !!titular.nroTiquete?.trim() : false;
-      const hasCost = ticket.supplierCost > 0;
-      const hasTa = ticket.ta > 0;
+      const hasCost = (ticket.supplierCost || 0) > 0;
+      const hasTa = (ticket.ta || 0) > 0;
       
       // Comprobar si hay tramos con texto
       let hasLegsContent = false;
@@ -171,7 +190,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
 
   const isHotelFormEmpty = (() => {
     if (activeForm === "hoteleria" && activeIdx !== null) {
-      const hotel = form.hotels[activeIdx];
+      const hotel = (form.hotels || [])[activeIdx];
       if (!hotel) return true;
       const hasHotelName = !!hotel.hotelName?.trim();
       const hasDestination = !!hotel.destination?.trim();
@@ -181,11 +200,11 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
       const hasEndDate = !!hotel.endDate?.trim();
       const hasHotelType = !!hotel.hotelType?.trim();
       const hasObservations = !!hotel.observations?.trim();
-      const hasCost = hotel.supplierCost > 0;
-      const hasTa = hotel.ta > 0;
+      const hasCost = (hotel.supplierCost || 0) > 0;
+      const hasTa = (hotel.ta || 0) > 0;
       
       // Ignore initial prefilled passenger in guests list for empty check
-      const client = data.clients.find((c: any) => c.name === form.clientId);
+      const client = (data.clients || []).find((c: any) => c.name === form.clientId);
       const initialGuestName = client?.name || "";
       const initialGuestDoc = client?.docNumber || "";
       
@@ -203,15 +222,15 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
 
   const isInsuranceFormEmpty = (() => {
     if (activeForm === "seguros_viaje" && activeIdx !== null) {
-      const ins = form.insurances[activeIdx];
+      const ins = (form.insurances || [])[activeIdx];
       if (!ins) return true;
       const hasInsuranceType = !!ins.insuranceType?.trim();
       const hasPhone = !!ins.phone?.trim();
       const hasSupplier = !!ins.supplier?.trim();
-      const hasCost = ins.supplierCost > 0;
-      const hasTa = ins.ta > 0;
+      const hasCost = (ins.supplierCost || 0) > 0;
+      const hasTa = (ins.ta || 0) > 0;
       
-      const client = data.clients.find((c: any) => c.name === form.clientId);
+      const client = (data.clients || []).find((c: any) => c.name === form.clientId);
       const initialMemberName = client?.name || "";
       const initialMemberDoc = client?.docNumber || "";
       

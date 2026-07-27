@@ -49,6 +49,8 @@ export default function Sales() {
   const [salesDetails, setSalesDetails] = useState<Record<number, Sale>>({});
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [activeTab, setActiveTab] = useState<'list' | 'credit'>('list');
   const [detailedProduct, setDetailedProduct] = useState<{
     type: string;
@@ -339,7 +341,7 @@ export default function Sales() {
       const dataUri = doc.output('datauristring');
       const base64Data = dataUri.split(',')[1];
 
-      await api.sendVoucher(voucherSale.id, { pdfBuffer: base64Data });
+      await api.sendVoucher(voucherSale.id, base64Data);
 
       setSuccessMessage(`✅ Voucher enviado correctamente`);
       setTimeout(() => setShowSuccess(false), 3000);
