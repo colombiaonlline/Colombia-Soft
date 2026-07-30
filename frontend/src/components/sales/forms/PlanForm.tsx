@@ -240,11 +240,8 @@ export function PlanForm({ plan, onChange, data, triggerError, mainClient }: Pla
             <FormField label={<span>{plan.transportType === 'Terrestre' ? 'Tiquete / Puesto' : 'Número de Tiquete'}</span>}>
               <Input
                 value={plan.ticketNumber}
-                onChange={(e) => {
-                  const cleaned = plan.transportType === 'Terrestre' ? e.target.value : e.target.value.replace(/\D/g, "").slice(0, 15);
-                  onChange({ ticketNumber: cleaned });
-                }}
-                placeholder={plan.transportType === 'Terrestre' ? 'Opcional (Ej: Asiento 12)' : '13 a 14 dígitos numéricos'}
+                onChange={(e) => onChange({ ticketNumber: e.target.value })}
+                placeholder={plan.transportType === 'Terrestre' ? 'Opcional (Ej: Asiento 12)' : 'Opcional (Ej: 1382948201948)'}
                 maxLength={20}
               />
             </FormField>
@@ -255,7 +252,7 @@ export function PlanForm({ plan, onChange, data, triggerError, mainClient }: Pla
                    const cleaned = e.target.value.replace(/[^a-zA-Z0-9-]/g, "").toUpperCase().slice(0, 10);
                    onChange({ confirmationNumber: cleaned });
                  }}
-                 placeholder={plan.transportType === 'Terrestre' ? 'Ej: CONF123' : '6 caracteres (Ej: AB1234)'}
+                 placeholder={plan.transportType === 'Terrestre' ? 'Opcional (Ej: CONF123)' : 'Opcional (Ej: AB1234)'}
                  maxLength={10}
                />
              </FormField>

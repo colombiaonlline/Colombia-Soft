@@ -598,11 +598,14 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
               if (plan.planName && plan.planName.trim().length > 50) {
                 errors.push("Nombre del Plan (máx 50 chars)");
               }
-              if (plan.flightNumber && plan.transportType !== 'Terrestre' && plan.flightNumber.length > 12) {
-                errors.push("Número de Vuelo (máx 12 caracteres)");
+              if (plan.hotelName && plan.hotelName.trim().length > 50) {
+                errors.push("Nombre del Hotel (máx 50 chars)");
               }
-              if (plan.ticketNumber && plan.transportType !== 'Terrestre' && (plan.ticketNumber.length < 13 || plan.ticketNumber.length > 20)) {
-                errors.push("Número de Tiquete (mínimo 13 y máximo 20 dígitos)");
+              if (plan.flightNumber && plan.flightNumber.length > 12) {
+                errors.push(plan.transportType === 'Terrestre' ? "Placa / Vehículo (máx 12 caracteres)" : "Número de Vuelo (máx 12 caracteres)");
+              }
+              if (plan.ticketNumber && plan.ticketNumber.length > 20) {
+                errors.push("Número de Tiquete (máx 20 caracteres)");
               }
 
               if (plan.flightDepartureDate && plan.flightDepartureArrivalDate && new Date(plan.flightDepartureArrivalDate) < new Date(plan.flightDepartureDate)) {
@@ -1280,14 +1283,14 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
               if (plan.planName && plan.planName.trim().length > 50) {
                 errors.push("Nombre del Plan (máx 50 chars)");
               }
-              if (plan.hotelName && (plan.hotelName.trim().length < 2 || plan.hotelName.trim().length > 50)) {
-                errors.push("Nombre del Hotel (2-50 chars)");
+              if (plan.hotelName && plan.hotelName.trim().length > 50) {
+                errors.push("Nombre del Hotel (máx 50 chars)");
               }
-              if (plan.flightNumber && plan.transportType !== 'Terrestre' && plan.flightNumber.length > 12) {
-                errors.push("Número de Vuelo (máx 12 caracteres)");
+              if (plan.flightNumber && plan.flightNumber.length > 12) {
+                errors.push(plan.transportType === 'Terrestre' ? "Placa / Vehículo (máx 12 caracteres)" : "Número de Vuelo (máx 12 caracteres)");
               }
-              if (plan.ticketNumber && plan.transportType !== 'Terrestre' && (plan.ticketNumber.length < 13 || plan.ticketNumber.length > 20)) {
-                errors.push("Número de Tiquete (mínimo 13 y máximo 20 dígitos)");
+              if (plan.ticketNumber && plan.ticketNumber.length > 20) {
+                errors.push("Número de Tiquete (máx 20 caracteres)");
               }
 
               if (plan.flightDepartureDate && plan.flightDepartureArrivalDate && new Date(plan.flightDepartureArrivalDate) < new Date(plan.flightDepartureDate)) {
