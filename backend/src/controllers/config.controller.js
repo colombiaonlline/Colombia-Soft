@@ -213,13 +213,23 @@ const createPackageRelations = async (tx, paqueteId, body) => {
     });
   }
 
+const VALID_TIPO_HOTEL = ['hotel', 'resort', 'boutique', 'apartamento', 'hostal', 'fincas'];
+function sanitizeTipoHotel(type) {
+  if (!type) return 'hotel';
+  const clean = String(type).toLowerCase().trim();
+  if (clean === 'finca') return 'fincas';
+  if (clean === 'hotel_turistico' || clean === 'turistico') return 'hotel';
+  if (VALID_TIPO_HOTEL.includes(clean)) return clean;
+  return 'hotel';
+}
+
   // 2. Relación de Hotel / Alojamiento
   if (body.accommodation) {
     await tx.paqueteHotel.create({
       data: {
         paqueteId,
         hotelNombre: body.accommodation.hotel || '',
-        tipoHotel: body.accommodation.hotelType || 'hotel',
+        tipoHotel: sanitizeTipoHotel(body.accommodation.hotelType),
         regimen: body.accommodation.mealPlan || 'todo_incluido',
         noches: body.nights || 0
       }

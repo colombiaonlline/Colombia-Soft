@@ -807,6 +807,16 @@ exports.getById = async (req, res, next) => {
 
 const safeDate = (val) => (val && !isNaN(new Date(val).getTime()) ? new Date(val) : null);
 
+const VALID_TIPO_HOTEL = ['hotel', 'resort', 'boutique', 'apartamento', 'hostal', 'fincas'];
+function sanitizeTipoHotel(type) {
+  if (!type) return 'hotel';
+  const clean = String(type).toLowerCase().trim();
+  if (clean === 'finca') return 'fincas';
+  if (clean === 'hotel_turistico' || clean === 'turistico') return 'hotel';
+  if (VALID_TIPO_HOTEL.includes(clean)) return clean;
+  return 'hotel';
+}
+
 const PRODUCT_HANDLERS = {
   ticketData: {
     category: 'tiqueteria', table: 'prodTiqueteria',
@@ -834,7 +844,7 @@ const PRODUCT_HANDLERS = {
     transform: (d, detalleId) => ({
       detalleVentaId: detalleId,
       hotelNombre: d.hotelName || null,
-      tipoHotel: d.hotelType || 'hotel',
+      tipoHotel: sanitizeTipoHotel(d.hotelType),
       destino: d.destination || null,
       nroReserva: d.reservationNumber || null,
       fechaEntrada: safeDate(d.startDate),

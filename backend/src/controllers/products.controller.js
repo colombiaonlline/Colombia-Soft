@@ -306,13 +306,23 @@ exports.createTicket = H(CATEGORIES.ticket, 'prodTiqueteria', (d, detalleId) => 
 exports.updateTicket = H(CATEGORIES.ticket, 'prodTiqueteria').update;
 exports.deleteTicket = H(CATEGORIES.ticket, 'prodTiqueteria').delete;
 
+const VALID_TIPO_HOTEL = ['hotel', 'resort', 'boutique', 'apartamento', 'hostal', 'fincas'];
+function sanitizeTipoHotel(type) {
+  if (!type) return 'hotel';
+  const clean = String(type).toLowerCase().trim();
+  if (clean === 'finca') return 'fincas';
+  if (clean === 'hotel_turistico' || clean === 'turistico') return 'hotel';
+  if (VALID_TIPO_HOTEL.includes(clean)) return clean;
+  return 'hotel';
+}
+
 // =========================================================
 // Hotelería
 // =========================================================
 exports.createHotel = H(CATEGORIES.hotel, 'prodHoteleria', (d, detalleId) => ({
   detalleVentaId: detalleId,
   hotelNombre: d.hotelName || null,
-  tipoHotel: d.hotelType || 'hotel',
+  tipoHotel: sanitizeTipoHotel(d.hotelType),
   destino: d.destination || null,
   nroReserva: d.reservationNumber || null,
   fechaEntrada: d.startDate ? new Date(d.startDate) : null,
