@@ -148,21 +148,7 @@ export default function SaleDetailModal({
     { key: "petServiceData", label: "Mascotas", summaryType: "mascotas" },
   ];
 
-  const suppliersList = (() => {
-    const suppliers = new Set<string>();
-    productSections.forEach(({ key }) => {
-      const dataArr = (sale as any)[key];
-      if (Array.isArray(dataArr)) {
-        dataArr.forEach((item: any) => {
-          const name = item.supplier || item.supplierName;
-          if (name && typeof name === "string" && name.trim()) {
-            suppliers.add(name.trim());
-          }
-        });
-      }
-    });
-    return Array.from(suppliers).join(", ") || "No especificado";
-  })();
+
 
   const hasAnyProduct = (sale.servicesSummary && sale.servicesSummary.length > 0) || productSections.some(
     ({ key }) => (sale as any)[key] && (sale as any)[key].length > 0
@@ -316,14 +302,7 @@ export default function SaleDetailModal({
                 </span>
               </div>
             )}
-            <div>
-              <span className="text-gray-500 text-xs block">
-                Proveedor(es)
-              </span>
-              <span className="font-medium text-gray-800 break-words" title={suppliersList}>
-                {suppliersList}
-              </span>
-            </div>
+
             <div>
               <span className="text-gray-500 text-xs block">
                 Pago a Proveedores

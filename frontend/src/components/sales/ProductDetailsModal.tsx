@@ -1,7 +1,7 @@
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
-import { formatDate, formatDateTime } from "../../utils/formatters";
+import { formatDate, formatDateTime, formatCurrency } from "../../utils/formatters";
 import { type AirportInfo } from "../../utils/airportInfo";
 
 // Format time in 12-hour AM/PM
@@ -116,6 +116,27 @@ function renderGrid(items: { label: string; value: any }[]) {
   );
 }
 
+
+function renderSupplierCost(item: any) {
+  const supplierName = item.supplier || item.supplierName || item.proveedor || "-";
+  const cost = item.supplierCost ?? item.costoProveedor ?? item.costo ?? 0;
+  
+  if (supplierName === "-" && cost === 0) return null;
+
+  return (
+    <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 p-2.5 rounded-lg mb-4">
+      <div>
+        <span className="font-bold uppercase tracking-wider text-[10px] text-emerald-600 block mb-0.5">Proveedor del Servicio</span>
+        <span className="font-semibold text-emerald-900 text-sm">{supplierName}</span>
+      </div>
+      <div className="text-right">
+        <span className="font-bold uppercase tracking-wider text-[10px] text-emerald-600 block mb-0.5">Valor Pagado</span>
+        <span className="font-black text-emerald-700 text-sm">{formatCurrency(cost)}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function ProductDetailsModal({ product, onClose, airportMap }: ProductDetailsModalProps) {
   if (!product) return null;
 
@@ -218,6 +239,7 @@ export default function ProductDetailsModal({ product, onClose, airportMap }: Pr
                 <Plane size={16} className="text-accent" /> Ticket #{idx + 1}
                 {mainPassenger?.name && ` - ${mainPassenger.name}`}
               </h4>
+            {renderSupplierCost(ticket)}
               {renderGrid([
                 { label: "Aerolínea", value: ticket.airlineName || ticket.airline },
                 { label: "Equipaje", value: ticket.baggagePlan || "-" },
@@ -331,6 +353,7 @@ export default function ProductDetailsModal({ product, onClose, airportMap }: Pr
             <h4 className="font-bold text-primary flex items-center gap-2 mb-3 pb-2 border-b">
               <Building2 size={16} className="text-accent" /> Hotel #{idx + 1} - {hotel.hotelName || "Sin Nombre"}
             </h4>
+            {renderSupplierCost(hotel)}
             {renderGrid([
               { label: "Destino", value: hotel.destination },
               { label: "Proveedor", value: hotel.supplier || hotel.hotelName },
@@ -350,6 +373,7 @@ export default function ProductDetailsModal({ product, onClose, airportMap }: Pr
             <h4 className="font-bold text-primary flex items-center gap-2 mb-3 pb-2 border-b">
               <ShieldCheck size={16} className="text-accent" /> Seguro #{idx + 1}
             </h4>
+            {renderSupplierCost(ins)}
             {renderGrid([
               { label: "Plan", value: ins.planName || ins.insuranceType },
               { label: "Cobertura", value: ins.coverageAmount ? `$${Number(ins.coverageAmount).toLocaleString("es-CO")}` : ins.coverageAmount },
@@ -374,6 +398,7 @@ export default function ProductDetailsModal({ product, onClose, airportMap }: Pr
               <h4 className="font-bold text-primary flex items-center gap-2 mb-3 pb-2 border-b">
                 <Package size={16} className="text-accent" /> Paquete #{idx + 1} - {plan.planName || "Sin Nombre"}
               </h4>
+            {renderSupplierCost(plan)}
               {plan.packageType === "supplier" ? (
                 renderGrid([
                   { label: "Tipo de Paquete", value: "Por Proveedor" },
@@ -413,6 +438,7 @@ export default function ProductDetailsModal({ product, onClose, airportMap }: Pr
             <h4 className="font-bold text-primary flex items-center gap-2 mb-3 pb-2 border-b">
               <Luggage size={16} className="text-accent" /> Check-in #{idx + 1}
             </h4>
+            {renderSupplierCost(item)}
             {renderGrid([
               { label: "Vuelo o Reserva", value: item.flightOrReservation },
               { label: "Fecha de Viaje", value: item.travelDate ? formatDate(item.travelDate) : "-" },
@@ -436,6 +462,7 @@ export default function ProductDetailsModal({ product, onClose, airportMap }: Pr
             <h4 className="font-bold text-primary flex items-center gap-2 mb-3 pb-2 border-b">
               <FileInput size={16} className="text-accent" /> Migración #{idx + 1}
             </h4>
+            {renderSupplierCost(item)}
             {renderGrid([
               { label: "Trámite Migratorio", value: item.requestedDocType },
               { label: "Nacionalidad", value: item.nationality },
@@ -452,6 +479,7 @@ export default function ProductDetailsModal({ product, onClose, airportMap }: Pr
             <h4 className="font-bold text-primary flex items-center gap-2 mb-3 pb-2 border-b">
               <Smartphone size={16} className="text-accent" /> SIM Card #{idx + 1}
             </h4>
+            {renderSupplierCost(item)}
             {renderGrid([
               { label: "País Destino", value: item.destinationCountry },
               { label: "Fecha de Llegada", value: item.arrivalDate ? formatDate(item.arrivalDate) : "-" },
@@ -469,6 +497,7 @@ export default function ProductDetailsModal({ product, onClose, airportMap }: Pr
             <h4 className="font-bold text-primary flex items-center gap-2 mb-3 pb-2 border-b">
               <Luggage size={16} className="text-accent" /> Equipaje #{idx + 1}
             </h4>
+            {renderSupplierCost(item)}
             {renderGrid([
               { label: "Aerolínea", value: item.aerolinea?.nombre || item.airline || "-" },
               { label: "Pasajero", value: item.pasajeroNombre || item.passengerName || "-" },
@@ -488,6 +517,7 @@ export default function ProductDetailsModal({ product, onClose, airportMap }: Pr
             <h4 className="font-bold text-primary flex items-center gap-2 mb-3 pb-2 border-b">
               <Car size={16} className="text-accent" /> Alquiler de Auto #{idx + 1}
             </h4>
+            {renderSupplierCost(item)}
             {renderGrid([
               { label: "Conductor Nombre", value: item.mainDriver },
               { label: "Nro Licencia", value: item.licenseNumber },
@@ -508,6 +538,7 @@ export default function ProductDetailsModal({ product, onClose, airportMap }: Pr
             <h4 className="font-bold text-primary flex items-center gap-2 mb-3 pb-2 border-b">
               <TreePine size={16} className="text-accent" /> Renta de Finca #{idx + 1}
             </h4>
+            {renderSupplierCost(item)}
             {renderGrid([
               { label: "Responsable Nombre", value: item.responsibleName },
               { label: "Documento Responsable", value: item.docNumber },
@@ -533,6 +564,7 @@ export default function ProductDetailsModal({ product, onClose, airportMap }: Pr
             <h4 className="font-bold text-primary flex items-center gap-2 mb-3 pb-2 border-b">
               <Compass size={16} className="text-accent" /> Actividad o Tour #{idx + 1}
             </h4>
+            {renderSupplierCost(item)}
             {renderGrid([
               { label: "Nombre Pasajero", value: item.passengerName },
               { label: "Adultos", value: item.adultsCount },
@@ -565,6 +597,7 @@ export default function ProductDetailsModal({ product, onClose, airportMap }: Pr
             <h4 className="font-bold text-primary flex items-center gap-2 mb-3 pb-2 border-b">
               <Music size={16} className="text-accent" /> Convención o Evento #{idx + 1}
             </h4>
+            {renderSupplierCost(item)}
             {renderGrid([
               { label: "Organización", value: item.organization },
               { label: "Nombre Contacto", value: item.contactName },
@@ -592,6 +625,7 @@ export default function ProductDetailsModal({ product, onClose, airportMap }: Pr
             <h4 className="font-bold text-primary flex items-center gap-2 mb-3 pb-2 border-b">
               <UtensilsCrossed size={16} className="text-accent" /> Reserva en Restaurante #{idx + 1}
             </h4>
+            {renderSupplierCost(item)}
             {renderGrid([
               { label: "Nombre Reserva", value: item.reservationName },
               { label: "Fecha y Hora", value: item.dateTime ? formatDate(item.dateTime) + " " + new Date(item.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "-" },
@@ -616,6 +650,7 @@ export default function ProductDetailsModal({ product, onClose, airportMap }: Pr
             <h4 className="font-bold text-primary flex items-center gap-2 mb-3 pb-2 border-b">
               <FileText size={16} className="text-accent" /> Visa #{idx + 1}
             </h4>
+            {renderSupplierCost(item)}
             {renderGrid([
               { label: "Nombre Completo", value: item.fullName },
               { label: "Fecha Nacimiento", value: item.birthDate ? formatDate(item.birthDate) : "-" },
@@ -636,6 +671,7 @@ export default function ProductDetailsModal({ product, onClose, airportMap }: Pr
             <h4 className="font-bold text-primary flex items-center gap-2 mb-3 pb-2 border-b">
               <FileText size={16} className="text-accent" /> Pasaporte #{idx + 1}
             </h4>
+            {renderSupplierCost(item)}
             {renderGrid([
               { label: "Nombre Completo", value: item.fullName },
               { label: "Nro Documento", value: item.idNumber },
@@ -654,6 +690,7 @@ export default function ProductDetailsModal({ product, onClose, airportMap }: Pr
             <h4 className="font-bold text-primary flex items-center gap-2 mb-3 pb-2 border-b">
               <PawPrint size={16} className="text-accent" /> Mascotas #{idx + 1}
             </h4>
+            {renderSupplierCost(item)}
             {renderGrid([
               { label: "Nombre Mascota", value: item.petName },
               { label: "Especie", value: item.species },

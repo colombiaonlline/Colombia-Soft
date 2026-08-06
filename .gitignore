@@ -22,6 +22,7 @@ lerna-debug.log*
 # IDEs / Editors / System Files
 .vscode/
 .idea/
+.agents/
 *.suo
 *.ntvs*
 *.njsproj
@@ -31,6 +32,13 @@ lerna-debug.log*
 Thumbs.db
 ehthumbs.db
 *.tmp
+
+# Temporary scripts
+backend/check_*.js
+backend/delete_*.js
+backend/query_*.js
+backend/reorganize_*.js
+frontend/*.cjs
 
 # ==========================================
 # Backend Specific
