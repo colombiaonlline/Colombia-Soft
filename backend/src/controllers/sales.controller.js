@@ -939,17 +939,20 @@ const PRODUCT_HANDLERS = {
   baggageData: {
     category: 'equipaje', table: 'prodEquipajes',
     nombreServicio: 'Equipaje',
-    transform: (d, detalleId) => ({
-      detalleVentaId: detalleId,
-      aerolineaId: d.airline ? parseInt(d.airline) : null,
-      nroReserva: d.reservationNumber || null,
-      pasajeroNombre: d.passengerName || null,
-      tipoTarifa: d.fareType || null,
-      articuloPersonal: d.personalItem || null,
-      equipajeMano: d.carryOn || null,
-      equipajeBodega: d.checkedBag || null,
-      notas: d.notes || null
-    })
+    transform: async (d, detalleId, tx) => {
+      const aerolineaId = await resolveAirlineId(tx, d.airlineId || d.airline);
+      return {
+        detalleVentaId: detalleId,
+        aerolineaId,
+        nroReserva: d.reservationNumber || null,
+        pasajeroNombre: d.passengerName || null,
+        tipoTarifa: d.fareType || null,
+        articuloPersonal: d.personalItem || null,
+        equipajeMano: d.carryOn || null,
+        equipajeBodega: d.checkedBag || null,
+        notas: d.notes || d.observations || null
+      };
+    }
   },
   carRentalData: {
     category: 'renta_vehiculos', table: 'prodAutos',
@@ -1447,14 +1450,11 @@ exports.create = async (req, res, next) => {
 
           const detalleObj = {
             id: item._generatedId,
-            parentDetalleId,
             categoria: handler.category,
             nombreServicio: handler.nombreServicio,
             subtotal: (item.supplierCost || 0) + (item.ta || 0),
             costoProveedor: item.supplierCost || 0,
             ta: item.ta || 0,
-            proveedorId: resolvedSupplierId,
-            metodoPagoProveedorId: resolvedSupplierPaymentMethodId,
             origen: item.legs?.[0]?.origin || item.pickupLocation || null,
             destino: item.destination || item.destinationCountry || item.legs?.[0]?.destination || null,
             fechaInicioViaje: safeDate(item.startDate) || safeDate(item.departureDate) || safeDate(item.pickupDate),
@@ -1464,6 +1464,16 @@ exports.create = async (req, res, next) => {
               create: productData
             }
           };
+
+          if (resolvedSupplierId) {
+            detalleObj.proveedorId = resolvedSupplierId;
+          }
+          if (resolvedSupplierPaymentMethodId) {
+            detalleObj.metodoPagoProveedorId = resolvedSupplierPaymentMethodId;
+          }
+          if (parentDetalleId) {
+            detalleObj.parentDetalle = { connect: { id: parentDetalleId } };
+          }
 
           if (pasajerosDetalleData.length > 0) {
             detalleObj.pasajerosDetalle = {
@@ -1599,12 +1609,9 @@ exports.create = async (req, res, next) => {
         montoTotal: data.total || 0,
         costoProveedorTotal: data.supplierCost || 0,
         taTotal: data.ta || 0,
-        comisionistaId: data.commissionAgentId || null,
-        responsableId: data.responsableId || null,
         montoComisionBruto: data.commissionAgentAmount || 0,
         porcentajeRetencionComision: data.commissionAgentRetentionPercentage || 0,
         montoComisionNeto: data.commissionAgentNetPayment || 0,
-        metodoPagoPrincipalId: metodoPagoId,
         status: data.status || 'credito',
         esCredito: data.isCredit || false,
         fechaVenceCredito: data.creditDueDate ? new Date(data.creditDueDate) : null,
@@ -1612,13 +1619,29 @@ exports.create = async (req, res, next) => {
         observaciones: data.observations || ''
       };
 
+      if (metodoPagoId) {
+        ventaCreateData.metodoPagoPrincipalId = metodoPagoId;
+      }
+      if (data.commissionAgentId) {
+        ventaCreateData.comisionistaId = data.commissionAgentId;
+      }
+      if (data.responsableId) {
+        ventaCreateData.responsableId = data.responsableId;
+      }
+
       if (data.payments && data.payments.length > 0) {
         ventaCreateData.pagosVenta = {
-          create: await Promise.all(data.payments.map(async p => ({
-            monto: p.amount,
-            metodoPagoId: await resolvePaymentMethodId(prisma, p.method),
-            referencia: p.reference || null
-          })))
+          create: await Promise.all(data.payments.map(async p => {
+            const pmId = await resolvePaymentMethodId(tx, p.paymentMethod || p.method, memCache);
+            const pObj = {
+              monto: p.amount,
+              referencia: p.reference || null
+            };
+            if (pmId) {
+              pObj.metodoPagoId = pmId;
+            }
+            return pObj;
+          }))
         };
       }
 

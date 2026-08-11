@@ -4,7 +4,7 @@ const { success, error } = require('../utils/apiResponse');
 const CATEGORIES = {
   ticket: 'tiqueteria', hotel: 'hoteleria', insurance: 'seguros_viaje',
   plan: 'planes', checkin: 'checkin', migration: 'documentacion_migratoria',
-  simcard: 'simcard', carRental: 'renta_vehiculos', finca: 'renta_fincas',
+  simcard: 'simcard', baggage: 'equipaje', carRental: 'renta_vehiculos', finca: 'renta_fincas',
   tour: 'tours', convention: 'centros_convencion', restaurant: 'restaurantes',
   visa: 'visa', passport: 'pasaporte', petService: 'servicio_mascotas'
 };
@@ -574,6 +574,24 @@ exports.updatePetService = H(CATEGORIES.petService, 'prodMascotas').update;
 exports.deletePetService = H(CATEGORIES.petService, 'prodMascotas').delete;
 
 // =========================================================
+// Equipaje
+// =========================================================
+exports.createBaggage = H(CATEGORIES.baggage, 'prodEquipajes', (d, detalleId) => ({
+  detalleVentaId: detalleId,
+  aerolineaId: d.airlineId ? parseInt(d.airlineId) : (d.airline && !isNaN(parseInt(d.airline)) ? parseInt(d.airline) : null),
+  nroReserva: d.reservationNumber || null,
+  pasajeroNombre: d.passengerName || null,
+  tipoTarifa: d.fareType || null,
+  articuloPersonal: d.personalItem || null,
+  equipajeMano: d.carryOn || null,
+  equipajeBodega: d.checkedBag || null,
+  notas: d.notes || d.observations || null
+})).create;
+
+exports.updateBaggage = H(CATEGORIES.baggage, 'prodEquipajes').update;
+exports.deleteBaggage = H(CATEGORIES.baggage, 'prodEquipajes').delete;
+
+// =========================================================
 // Voucher Upload
 // =========================================================
 exports.uploadVoucher = async (req, res, next) => {
@@ -584,7 +602,7 @@ exports.uploadVoucher = async (req, res, next) => {
     const productTables = {
       ticket: 'prodTiqueteria', hotel: 'prodHoteleria', insurance: 'prodSeguros',
       plan: 'prodPlanes', checkin: 'prodCheckins', migration: 'prodMigracion',
-      simcard: 'prodSimcards', carRental: 'prodAutos', finca: 'prodFincas',
+      simcard: 'prodSimcards', baggage: 'prodEquipajes', carRental: 'prodAutos', finca: 'prodFincas',
       tour: 'prodTours', convention: 'prodEventos', restaurant: 'prodRestaurantes',
       visa: 'prodVisas', passport: 'prodPasaportes', petService: 'prodMascotas'
     };
