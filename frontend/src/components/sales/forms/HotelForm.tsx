@@ -191,7 +191,7 @@ export function HotelForm({ hotel, onChange, data, triggerError, mainClient }: H
           <FormField label="Costo Proveedor">
             <CurrencyInput
               required
-              value={hotel.supplierCost === 0 ? "" : hotel.supplierCost}
+              value={hotel.supplierCost === undefined || hotel.supplierCost === null ? "" : hotel.supplierCost}
               onChange={(val) => {
                 onChange({
                   supplierCost: val === "" ? 0 : Number(val),
@@ -202,7 +202,7 @@ export function HotelForm({ hotel, onChange, data, triggerError, mainClient }: H
           <FormField label="Tarifa Administrativa (TA)">
             <CurrencyInput
               required
-              value={hotel.ta === 0 ? "" : hotel.ta}
+              value={hotel.ta === undefined || hotel.ta === null ? "" : hotel.ta}
               onChange={(val) => {
                 onChange({
                   ta: val === "" ? 0 : Number(val),

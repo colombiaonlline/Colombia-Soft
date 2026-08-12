@@ -154,7 +154,7 @@ export function InsuranceForm({ insurance, onChange, data, client }: InsuranceFo
           <FormField label="Costo Proveedor">
             <CurrencyInput
               required
-              value={insurance.supplierCost === 0 ? "" : insurance.supplierCost}
+              value={insurance.supplierCost === undefined || insurance.supplierCost === null ? "" : insurance.supplierCost}
               onChange={(val) =>
                 onChange({
                   supplierCost: val === "" ? 0 : Number(val),
@@ -165,7 +165,7 @@ export function InsuranceForm({ insurance, onChange, data, client }: InsuranceFo
           <FormField label="Valor TA">
             <CurrencyInput
               required
-              value={insurance.ta === 0 ? "" : insurance.ta}
+              value={insurance.ta === undefined || insurance.ta === null ? "" : insurance.ta}
               onChange={(val) =>
                 onChange({
                   ta: val === "" ? 0 : Number(val),

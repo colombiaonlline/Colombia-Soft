@@ -29,6 +29,8 @@ exports.dashboard = async (req, res, next) => {
       where.usuarioId = req.user.id;
     }
 
+    const currentMonth = new Date().getMonth() + 1;
+
     const aggregatesSql = `
       SELECT
         COUNT(CASE WHEN status != 'anulado' THEN 1 END)::int as "totalOperations",
@@ -39,6 +41,7 @@ exports.dashboard = async (req, res, next) => {
         COALESCE(SUM(CASE WHEN status = 'pagado' THEN monto_total ELSE 0 END), 0) as "paids",
         COALESCE(SUM(CASE WHEN status = 'credito' THEN monto_total ELSE 0 END), 0) as "credits",
         COALESCE(SUM(CASE WHEN status = 'abonado' THEN monto_total ELSE 0 END), 0) as "partPaids",
+        COALESCE(SUM(CASE WHEN EXTRACT(YEAR FROM creado_at) = ${currentYear} AND EXTRACT(MONTH FROM creado_at) = ${currentMonth} AND status != 'anulado' THEN monto_total ELSE 0 END), 0) as "currentMonthSales",
         COALESCE(SUM(CASE WHEN EXTRACT(YEAR FROM creado_at) = ${currentYear} AND status != 'anulado' THEN monto_total ELSE 0 END), 0) as "currentYearSales",
         COALESCE(SUM(CASE WHEN EXTRACT(YEAR FROM creado_at) = ${currentYear - 1} AND status != 'anulado' THEN monto_total ELSE 0 END), 0) as "prevYearSales",
         COALESCE(SUM(CASE WHEN status IN ('credito', 'abonado') AND monto_total > 0 THEN (costo_proveedor_total * ((monto_total - COALESCE(monto_pagado_credito, 0)) / monto_total)) ELSE 0 END), 0) as "creditProveedores",
@@ -106,6 +109,7 @@ exports.dashboard = async (req, res, next) => {
     const paids = Number(agg.paids) || 0;
     const credits = Number(agg.credits) || 0;
     const partPaids = Number(agg.partPaids) || 0;
+    const currentMonthSales = Number(agg.currentMonthSales) || 0;
     const currentYearSales = Number(agg.currentYearSales) || 0;
     const prevYearSales = Number(agg.prevYearSales) || 0;
     const creditProveedores = Number(agg.creditProveedores) || 0;
@@ -175,7 +179,7 @@ exports.dashboard = async (req, res, next) => {
       pendingBalance: Math.round(pendingBalance),
       pendingCount,
       suppliersTotal: Math.round(suppliersTotal),
-      monthlyRevenue: Math.round(currentYearSales),
+      monthlyRevenue: Math.round(currentMonthSales),
       categoryDistribution: categoryDistribution.slice(0, 8),
       carteraStatus,
       monthlyTrend: groupedTrend,

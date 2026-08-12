@@ -1343,14 +1343,14 @@ export function TicketForm({
           <FormField label="Valor Pagado al Proveedor">
             <CurrencyInput
               required
-              value={ticket.supplierCost === 0 ? "" : ticket.supplierCost}
+              value={ticket.supplierCost === undefined || ticket.supplierCost === null ? "" : ticket.supplierCost}
               onChange={(val) => onChange({ supplierCost: val === "" ? 0 : Number(val) })}
             />
           </FormField>
           <FormField label="Valor TA">
             <CurrencyInput
               required
-              value={ticket.ta === 0 ? "" : ticket.ta}
+              value={ticket.ta === undefined || ticket.ta === null ? "" : ticket.ta}
               onChange={(val) => onChange({ ta: val === "" ? 0 : Number(val) })}
             />
           </FormField>
