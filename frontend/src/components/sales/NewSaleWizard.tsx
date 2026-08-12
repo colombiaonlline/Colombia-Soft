@@ -507,9 +507,9 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
               }
               
               // Campos financieros
-              if (ticket.supplierCost <= 0) return false;
+              if (ticket.supplierCost < 0) return false;
               if (ticket.ta < 0) return false;
-              if (!ticket.supplierPaymentMethod) return false;
+              if ((ticket.supplierCost || 0) > 0 && !ticket.supplierPaymentMethod) return false;
               return true;
             })();
 
@@ -541,9 +541,9 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
               now.setHours(0, 0, 0, 0);
               if (new Date(hotel.startDate) < now || new Date(hotel.endDate) < now) return false;
 
-              if (hotel.supplierCost <= 0) return false;
+              if (hotel.supplierCost < 0) return false;
               if (hotel.ta < 0) return false;
-              if (!hotel.supplierPaymentMethod) return false;
+              if ((hotel.supplierCost || 0) > 0 && !hotel.supplierPaymentMethod) return false;
               return true;
             })();
 
@@ -572,9 +572,9 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
               const cleanedPhone = ins.phone ? ins.phone.replace(/\D/g, "") : "";
               if (cleanedPhone.length < 7 || cleanedPhone.length > 15) return false;
 
-              // Validar financieros: obligatorios y mayores de 0
-              if (ins.supplierCost <= 0 || ins.ta < 0) return false;
-              if (!ins.supplierPaymentMethod) return false;
+              // Validar financieros: obligatorios y no negativos
+              if (ins.supplierCost < 0 || ins.ta < 0) return false;
+              if ((ins.supplierCost || 0) > 0 && !ins.supplierPaymentMethod) return false;
 
               return true;
             })();
@@ -847,7 +847,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
               if (finca.checkInDate && new Date(finca.checkInDate) < now) errors.push("Check-in no puede ser pasado");
               if (finca.checkOutDate && new Date(finca.checkOutDate) < now) errors.push("Check-out no puede ser pasado");
               if (finca.checkInDate && finca.checkOutDate && new Date(finca.checkOutDate) < new Date(finca.checkInDate)) errors.push("Check-out debe ser posterior al Check-in");
-              if (!finca.supplierPaymentMethod) errors.push("Método de Pago Proveedor (requerido)");
+              if ((finca.supplierCost || 0) > 0 && !finca.supplierPaymentMethod) errors.push("Método de Pago Proveedor (requerido)");
             }
 
             if (errors.length > 0) {
@@ -874,7 +874,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
               if (tour.adultsCount === undefined || isNaN(Number(tour.adultsCount)) || Number(tour.adultsCount) < 0 || Number(tour.adultsCount) > 999) errors.push("Número de Adultos (0-999)");
               if (tour.childrenCount === undefined || isNaN(Number(tour.childrenCount)) || Number(tour.childrenCount) < 0 || Number(tour.childrenCount) > 999) errors.push("Número de Niños (0-999)");
 
-              if (!tour.supplierPaymentMethod) errors.push("Método de Pago Proveedor (requerido)");
+              if ((tour.supplierCost || 0) > 0 && !tour.supplierPaymentMethod) errors.push("Método de Pago Proveedor (requerido)");
             }
 
             if (errors.length > 0) {
@@ -919,7 +919,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
               if (conv.startDate && new Date(conv.startDate) < now) errors.push("Fecha Inicio no puede ser pasada");
               if (conv.endDate && new Date(conv.endDate) < now) errors.push("Fecha Fin no puede ser pasada");
               if (conv.startDate && conv.endDate && new Date(conv.endDate) < new Date(conv.startDate)) errors.push("Fecha Fin debe ser posterior a la de Inicio");
-              if (!conv.supplierPaymentMethod) errors.push("Método de Pago Proveedor (requerido)");
+              if ((conv.supplierCost || 0) > 0 && !conv.supplierPaymentMethod) errors.push("Método de Pago Proveedor (requerido)");
             }
 
             if (errors.length > 0) {
@@ -1169,7 +1169,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
                   errors.push("Teléfono no puede contener letras");
                 }
               }
-              if (!pet.supplierPaymentMethod) errors.push("Método de Pago Proveedor (requerido)");
+              if ((pet.supplierCost || 0) > 0 && !pet.supplierPaymentMethod) errors.push("Método de Pago Proveedor (requerido)");
             }
 
             if (errors.length > 0) {

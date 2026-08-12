@@ -235,12 +235,16 @@ export function FinancialSection({ supplierName, supplierCost, ta, supplierPayme
   const supplierOptions = suppliers.map(s => ({ value: s.name, label: s.name }));
 
   const handleNumericChange = (field: 'supplierCost' | 'ta', value: string) => {
-    // Convertimos a número, prevenimos negativos y manejamos valores vacíos
+    if (value === "") {
+      onChange({ [field]: undefined });
+      return;
+    }
     const numValue = Math.max(0, parseFloat(value) || 0);
     onChange({ [field]: numValue });
   };
 
   const totalCost = (Number(supplierCost) || 0) + (Number(ta) || 0);
+  const paymentRequired = Boolean(isPaymentMethodRequired && (Number(supplierCost) || 0) > 0);
 
   return (
     <div className="mt-6 p-5 bg-emerald-50/50 dark:bg-emerald-500/10 rounded-2xl border border-emerald-100 dark:border-emerald-500/20 space-y-4">
@@ -271,9 +275,9 @@ export function FinancialSection({ supplierName, supplierCost, ta, supplierPayme
           <div className="relative group">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
             <CurrencyInput 
-              value={supplierCost || ""} 
+              value={supplierCost === undefined || supplierCost === null ? "" : supplierCost} 
               onChange={(val) => handleNumericChange('supplierCost', val)} 
-              className={`pl-7 transition-all ${!supplierCost ? 'border-amber-200 dark:border-amber-500/30 bg-amber-50/30 dark:bg-amber-500/10' : 'border-emerald-200 dark:border-emerald-500/30 focus:border-emerald-500 dark:focus:border-emerald-400 dark:bg-slate-900/50'}`}
+              className={`pl-7 transition-all ${supplierCost === undefined || supplierCost === null ? 'border-amber-200 dark:border-amber-500/30 bg-amber-50/30 dark:bg-amber-500/10' : 'border-emerald-200 dark:border-emerald-500/30 focus:border-emerald-500 dark:focus:border-emerald-400 dark:bg-slate-900/50'}`}
               placeholder="0.00" 
             />
           </div>
@@ -282,14 +286,14 @@ export function FinancialSection({ supplierName, supplierCost, ta, supplierPayme
           <div className="relative group">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
             <CurrencyInput 
-              value={ta || ""} 
+              value={ta === undefined || ta === null ? "" : ta} 
               onChange={(val) => handleNumericChange('ta', val)} 
-              className={`pl-7 transition-all ${!ta ? 'border-amber-200 dark:border-amber-500/30 bg-amber-50/30 dark:bg-amber-500/10' : 'border-emerald-200 dark:border-emerald-500/30 focus:border-emerald-500 dark:focus:border-emerald-400 dark:bg-slate-900/50'}`}
+              className={`pl-7 transition-all ${ta === undefined || ta === null ? 'border-amber-200 dark:border-amber-500/30 bg-amber-50/30 dark:bg-amber-500/10' : 'border-emerald-200 dark:border-emerald-500/30 focus:border-emerald-500 dark:focus:border-emerald-400 dark:bg-slate-900/50'}`}
               placeholder="0.00" 
             />
           </div>
         </FormField>
-        <FormField label={`Método de Pago${isPaymentMethodRequired ? ' *' : ''}`}>
+        <FormField label={`Método de Pago${paymentRequired ? ' *' : ''}`}>
           <div className="relative group">
             <LuCreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10" size={16} />
             <Combobox
@@ -300,7 +304,7 @@ export function FinancialSection({ supplierName, supplierCost, ta, supplierPayme
                 label: m.lastFourDigits ? `${m.name} (**${m.lastFourDigits})` : m.name
               }))}
               placeholder="Seleccionar método..."
-              inputClassName={`pl-8 ${isPaymentMethodRequired && !supplierPaymentMethod ? 'border-amber-200 dark:border-amber-500/30 bg-amber-50/30 dark:bg-amber-500/10' : 'border-emerald-200 dark:border-emerald-500/30 dark:bg-slate-900/50'}`}
+              inputClassName={`pl-8 ${paymentRequired && !supplierPaymentMethod ? 'border-amber-200 dark:border-amber-500/30 bg-amber-50/30 dark:bg-amber-500/10' : 'border-emerald-200 dark:border-emerald-500/30 dark:bg-slate-900/50'}`}
               preventNumbers={false}
             />
           </div>
