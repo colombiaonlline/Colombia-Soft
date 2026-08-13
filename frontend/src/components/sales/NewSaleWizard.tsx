@@ -958,8 +958,8 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
               
               if (rest.dateTime && new Date(rest.dateTime) < now) errors.push("Fecha y Hora no puede ser pasada");
 
-              if (rest.ta === undefined || rest.ta <= 0) {
-                errors.push("Tarifa Admin (TA) obligatoria (> $0)");
+              if (rest.ta === undefined || rest.ta < 0) {
+                errors.push("Tarifa Admin (TA) requerida (no negativa)");
               }
             }
 
@@ -1183,7 +1183,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
 
     }
     if (s === 3) {
-      if (!form.total || Number(form.total) <= 0) errs.total = "El valor total debe ser mayor a $0";
+      if (form.total === undefined || form.total === null || Number(form.total) < 0) errs.total = "El valor total no puede ser negativo";
       
       const hasPayments = form.payments && form.payments.length > 0;
       if (form.status !== "credito" && !form.paymentMethod && !hasPayments) {
