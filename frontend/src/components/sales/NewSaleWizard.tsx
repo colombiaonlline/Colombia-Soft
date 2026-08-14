@@ -150,8 +150,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
       const paxList = ticket.passengers || ((ticket as any).passengerInfo ? [(ticket as any).passengerInfo] : []);
       const titular = paxList.find((p: any) => p.esTitular) || paxList[0];
       const hasTicketNumber = titular ? !!titular.nroTiquete?.trim() : false;
-      const hasCost = (ticket.supplierCost || 0) > 0;
-      const hasTa = (ticket.ta || 0) > 0;
+
       
       // Comprobar si hay tramos con texto
       let hasLegsContent = false;
@@ -183,7 +182,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
         );
       }
 
-      return !(hasAirline || hasSupplier || hasResNumber || hasTicketNumber || hasCost || hasTa || hasLegsContent || hasStopsContent || hasReturnContent || hasReturnStopsContent);
+      return !(hasAirline || hasSupplier || hasResNumber || hasTicketNumber || hasLegsContent || hasStopsContent || hasReturnContent || hasReturnStopsContent);
     }
     return false;
   })();
@@ -200,10 +199,6 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
       const hasEndDate = !!hotel.endDate?.trim();
       const hasHotelType = !!hotel.hotelType?.trim();
       const hasObservations = !!hotel.observations?.trim();
-      const hasCost = (hotel.supplierCost || 0) > 0;
-      const hasTa = (hotel.ta || 0) > 0;
-      
-      // Ignore initial prefilled passenger in guests list for empty check
       const client = (data.clients || []).find((c: any) => c.name === form.clientId);
       const initialGuestName = client?.name || "";
       const initialGuestDoc = client?.docNumber || "";
@@ -215,7 +210,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
         return !!g.name?.trim() || !!g.docNumber?.trim();
       });
 
-      return !(hasHotelName || hasDestination || hasSupplier || hasReservationNumber || hasStartDate || hasEndDate || hasHotelType || hasObservations || hasCost || hasTa || hasGuests);
+      return !(hasHotelName || hasDestination || hasSupplier || hasReservationNumber || hasStartDate || hasEndDate || hasHotelType || hasObservations || hasGuests);
     }
     return false;
   })();
@@ -227,8 +222,6 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
       const hasInsuranceType = !!ins.insuranceType?.trim();
       const hasPhone = !!ins.phone?.trim();
       const hasSupplier = !!ins.supplier?.trim();
-      const hasCost = (ins.supplierCost || 0) > 0;
-      const hasTa = (ins.ta || 0) > 0;
       
       const client = (data.clients || []).find((c: any) => c.name === form.clientId);
       const initialMemberName = client?.name || "";
@@ -241,7 +234,7 @@ export default function NewSaleWizard({ onClose, onSuccess }: Props) {
         return !!m.name?.trim() || !!m.docNumber?.trim();
       });
 
-      return !(hasInsuranceType || hasPhone || hasSupplier || hasCost || hasTa || hasMembers);
+      return !(hasInsuranceType || hasPhone || hasSupplier || hasMembers);
     }
     return false;
   })();
@@ -2020,9 +2013,9 @@ function isItemEmpty(item: any, category: SaleProductId): boolean {
         !item.destinationCountry
       );
     case "simcard":
-      return !item.passengerName && !item.destinationCountry && !item.supplierCost && !item.ta;
+      return !item.passengerName && !item.destinationCountry;
     case "equipaje":
-      return !item.passengerName && !item.airline && !item.airlineId && !item.supplierCost && !item.ta && !item.reservationNumber;
+      return !item.passengerName && !item.airline && !item.airlineId && !item.reservationNumber;
     case "renta_vehiculos":
       return (
         !item.licenseNumber &&
