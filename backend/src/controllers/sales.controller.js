@@ -673,7 +673,11 @@ exports.getById = async (req, res, next) => {
       prisma.detalleVenta.findMany({
         where: { ventaId: id },
         include: {
-          pasajerosDetalle: { include: { persona: true } },
+          // Orden estable: titular primero y luego por orden de registro de la persona
+          pasajerosDetalle: {
+            include: { persona: true },
+            orderBy: [{ esTitular: { sort: 'desc', nulls: 'last' } }, { personaId: 'asc' }]
+          },
           proveedor: true
         }
       })

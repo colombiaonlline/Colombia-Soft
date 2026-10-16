@@ -198,9 +198,64 @@ export default function Sales() {
     // Altura máxima del contenido por página A4 (820px de ancho -> 1160px de alto. Restando pie de página ~75px y margen de seguridad)
     const maxContentHeight = 1070;
 
+    const flushPage = () => {
+      pagesData.push(currentPageContent);
+      currentPageContent = [];
+      currentPageHeight = 0;
+    };
+
+    // Mínimo de filas a dejar en una página al partir una tabla, para no dejar el título huérfano
+    const MIN_SPLIT_ROWS = 3;
+
     for (const child of childrenToDistribute) {
       const childHeight = getElementHeightWithMargins(child);
-      
+
+      // Bloques marcados con data-pdf-split (p. ej. pasajeros del vuelo) se parten por filas
+      // de la tabla cuando no caben completos en el espacio que queda de la página.
+      if (child.hasAttribute('data-pdf-split') && currentPageHeight + childHeight > maxContentHeight) {
+        const rows = Array.from(child.querySelectorAll('tbody > tr')) as HTMLElement[];
+        const rowHeights = rows.map(r => r.getBoundingClientRect().height);
+        const overhead = childHeight - rowHeights.reduce((a, b) => a + b, 0);
+
+        let start = 0;
+        while (start < rows.length) {
+          const available = maxContentHeight - currentPageHeight;
+          let count = 0;
+          let pieceHeight = overhead;
+          while (start + count < rows.length && pieceHeight + rowHeights[start + count] <= available) {
+            pieceHeight += rowHeights[start + count];
+            count++;
+          }
+
+          const remaining = rows.length - start;
+          if (count < Math.min(MIN_SPLIT_ROWS, remaining) && currentPageContent.length > 0) {
+            flushPage();
+            continue;
+          }
+          if (count === 0) {
+            // Ni una fila cabe en una página vacía: se fuerza una para no entrar en bucle
+            count = 1;
+            pieceHeight = overhead + rowHeights[start];
+          }
+
+          const piece = child.cloneNode(true) as HTMLElement;
+          Array.from(piece.querySelectorAll('tbody > tr')).forEach((r, ri) => {
+            if (ri < start || ri >= start + count) r.remove();
+          });
+          if (start > 0) {
+            const title = piece.querySelector('[data-pdf-split-title]');
+            const continuationTitle = title?.getAttribute('data-pdf-continuation-title');
+            if (title && continuationTitle) title.textContent = continuationTitle;
+          }
+
+          currentPageContent.push(piece);
+          currentPageHeight += pieceHeight;
+          start += count;
+          if (start < rows.length) flushPage();
+        }
+        continue;
+      }
+
       if (currentPageHeight + childHeight > maxContentHeight && currentPageContent.length > 0) {
         pagesData.push(currentPageContent);
         currentPageContent = [child];

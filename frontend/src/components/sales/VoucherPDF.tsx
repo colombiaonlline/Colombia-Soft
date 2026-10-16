@@ -153,40 +153,55 @@ function FlightBlock({ ticket, idx, airportMap, baggageList }: { ticket: TicketD
         })}
       </div>
 
-      {ticket.passengers && ticket.passengers.length > 0 && (
-        <div style={{ marginTop: '20px' }}>
-          <div style={{ color: '#6b7280', marginBottom: '8px', textTransform: 'uppercase', fontSize: '11px', fontWeight: 'bold' }}>
-            PASAJEROS DEL VUELO:
-          </div>
-          <table className="v-flight-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
-            <thead>
-              <tr>
-                <th style={{ textAlign: 'left', padding: '8px 12px', backgroundColor: '#0d5ca7', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>NOMBRE</th>
-                <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#0d5ca7', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>DOCUMENTO</th>
-                <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#0d5ca7', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>N° RESERVA</th>
-                <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#0d5ca7', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>N° TIQUETE</th>
-                <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#0d5ca7', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>ASIENTO</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ticket.passengers.map((p, i) => (
-                <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                  <td style={{ padding: '12px', fontWeight: 'bold', color: '#000000' }}>
-                    {p.name}
-                    {p.esTitular && (
-                      <span style={{ marginLeft: '8px', padding: '2px 8px', color: '#0369a1', borderRadius: '12px', fontSize: '9px', fontWeight: 'bold' }}>PASAJERO PRINCIPAL</span>
-                    )}
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#000000' }}>{p.docNumber || '—'}</td>
-                  <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#000000' }}>{p.nroReserva || '—'}</td>
-                  <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#000000' }}>{p.nroTiquete || '—'}</td>
-                  <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#000000' }}>{p.asiento || '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+    </div>
+  );
+}
+
+type TicketPassenger = NonNullable<TicketData['passengers']>[number];
+
+/**
+ * Tabla de pasajeros como bloque propio del voucher. Va marcada con `data-pdf-split`
+ * para que el paginador del PDF (Sales.tsx) la parta por filas cuando no cabe en la
+ * página, repitiendo título y encabezado en la continuación.
+ */
+function FlightPassengersBlock({ passengers }: { passengers: TicketPassenger[] }) {
+  if (passengers.length === 0) return null;
+  return (
+    <div className="v-flight-block" data-pdf-split style={{ marginTop: 0, padding: '0 0 4px' }}>
+      <div
+        data-pdf-split-title
+        data-pdf-continuation-title="PASAJEROS DEL VUELO (CONTINUACIÓN):"
+        style={{ color: '#6b7280', margin: '12px 12px 8px', textTransform: 'uppercase', fontSize: '11px', fontWeight: 'bold' }}
+      >
+        PASAJEROS DEL VUELO:
+      </div>
+      <table className="v-flight-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+        <thead>
+          <tr>
+            <th style={{ textAlign: 'left', padding: '8px 12px', backgroundColor: '#0d5ca7', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>NOMBRE</th>
+            <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#0d5ca7', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>DOCUMENTO</th>
+            <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#0d5ca7', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>N° RESERVA</th>
+            <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#0d5ca7', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>N° TIQUETE</th>
+            <th style={{ textAlign: 'center', padding: '8px 12px', backgroundColor: '#0d5ca7', color: 'white', fontWeight: 'bold', fontSize: '10px' }}>ASIENTO</th>
+          </tr>
+        </thead>
+        <tbody>
+          {passengers.map((p, i) => (
+            <tr key={i} style={{ borderBottom: '1px solid #f3f4f6' }}>
+              <td style={{ padding: '12px', fontWeight: 'bold', color: '#000000' }}>
+                {p.name}
+                {p.esTitular && (
+                  <span style={{ marginLeft: '8px', padding: '2px 8px', color: '#0369a1', borderRadius: '12px', fontSize: '9px', fontWeight: 'bold' }}>PASAJERO PRINCIPAL</span>
+                )}
+              </td>
+              <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#000000' }}>{p.docNumber || '—'}</td>
+              <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#000000' }}>{p.nroReserva || '—'}</td>
+              <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#000000' }}>{p.nroTiquete || '—'}</td>
+              <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', color: '#000000' }}>{p.asiento || '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -298,7 +313,12 @@ export const VoucherPDF = forwardRef<HTMLDivElement, VoucherPDFProps>(({ sale, a
         </div>
 
         {/* ══ TIQUETERÍA ══════════════════════════════════════════════ */}
-        {tickets.map((ticket, i) => <FlightBlock key={`ticket-${i}`} ticket={ticket} idx={i} airportMap={airportMap} baggageList={baggageList} />)}
+        {tickets.map((ticket, i) => (
+          <React.Fragment key={`ticket-${i}`}>
+            <FlightBlock ticket={ticket} idx={i} airportMap={airportMap} baggageList={baggageList} />
+            <FlightPassengersBlock passengers={ticket.passengers || []} />
+          </React.Fragment>
+        ))}
 
         {/* ══ SECTION TITLE FOR OTHER PRODUCTS ════════════════════════ */}
         {hasOtherProducts && (
